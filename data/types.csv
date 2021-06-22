@@ -1,0 +1,38 @@
+﻿GARROW_TYPE,description,name,getValue,getValues,Jmemr
+GARROW_TYPE_NA,A degenerate NULL type represented as 0 bytes/bits.,NA,NA,NA,0
+GARROW_TYPE_BOOLEAN,A boolean value represented as 1-bit.,bool,garrow_boolean_array_get_value,garrow_boolean_array_get_values,1
+GARROW_TYPE_UINT8,Little-endian 8-bit unsigned integer.,int8,garrow_uint8_array_get_value,garrow_uint8_array_get_values,4
+GARROW_TYPE_INT8,Little-endian 8-bit signed integer.,int8,garrow_int8_array_get_value,garrow_int8_array_get_values,4
+GARROW_TYPE_UINT16,Little-endian 16-bit unsigned integer.,int16,garrow_uint16_array_get_value,garrow_uint16_array_get_values,4
+GARROW_TYPE_INT16,Little-endian 16-bit signed integer.,int16,garrow_int16_array_get_value,garrow_int16_array_get_values,4
+GARROW_TYPE_UINT32,Little-endian 32-bit unsigned integer.,int32,garrow_uint32_array_get_value,garrow_uint32_array_get_values,4
+GARROW_TYPE_INT32,Little-endian 32-bit signed integer.,int32,garrow_int32_array_get_value,garrow_int32_array_get_values,4
+GARROW_TYPE_UINT64,Little-endian 64-bit unsigned integer.,int64,garrow_uint64_array_get_value,garrow_uint64_array_get_values,4
+GARROW_TYPE_INT64,Little-endian 64-bit signed integer.,int64,garrow_int64_array_get_value,garrow_int64_array_get_values,4
+GARROW_TYPE_HALF_FLOAT,2-byte floating point value.,float,NA,NA,8
+GARROW_TYPE_FLOAT,4-byte floating point value.,float,garrow_float_array_get_value,garrow_float_array_get_values,8
+GARROW_TYPE_DOUBLE,8-byte floating point value.,double,garrow_double_array_get_value,garrow_double_array_get_values,8
+GARROW_TYPE_STRING,UTF-8 variable-length string.,string,garrow_string_array_get_string,NA,2
+GARROW_TYPE_BINARY,Variable-length bytes (no guarantee of UTF-8-ness).,NA,garrow_binary_array_get_value,NA,2
+GARROW_TYPE_FIXED_SIZE_BINARY,Fixed-size binary. Each value occupies the same number of bytes.,NA,garrow_fixed_size_binary_array_get_value,NA,2
+GARROW_TYPE_DATE32,int32 days since the UNIX epoch.,int32,garrow_date32_array_get_value,garrow_date32_array_get_values,4
+GARROW_TYPE_DATE64,int64 milliseconds since the UNIX epoch.,int64,garrow_date64_array_get_value,garrow_date64_array_get_values,4
+GARROW_TYPE_TIMESTAMP,Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.,NA,garrow_timestamp_array_get_value,garrow_timestamp_array_get_values,4
+GARROW_TYPE_TIME32,"Exact time encoded with int32, supporting seconds or milliseconds",int32,garrow_time32_array_get_value,garrow_time32_array_get_values,4
+GARROW_TYPE_TIME64,"Exact time encoded with int64, supporting micro- or nanoseconds",int64,garrow_time64_array_get_value,garrow_time64_array_get_values,4
+GARROW_TYPE_INTERVAL_MONTHS,YEAR_MONTH interval in SQL style.,NA,NA,NA,4
+GARROW_TYPE_INTERVAL_DAY_TIME,DAY_TIME interval in SQL style.,NA,NA,NA,4
+GARROW_TYPE_DECIMAL128,Precision- and scale-based decimal type with 128-bit. Storage type depends on the parameters.,int128,garrow_decimal128_array_get_value,NA,8
+GARROW_TYPE_DECIMAL256,Precision- and scale-based decimal type with 256-bit. Storage type depends on the parameters.,int256,garrow_decimal256_array_get_value,NA,8
+GARROW_TYPE_LIST,A list of some logical data type.,NA,NA,NA,0
+GARROW_TYPE_STRUCT,Struct of logical types.,NA,NA,NA,0
+GARROW_TYPE_SPARSE_UNION,Sparse unions of logical types.,NA,NA,NA,0
+GARROW_TYPE_DENSE_UNION,Dense unions of logical types.,NA,NA,NA,0
+GARROW_TYPE_DICTIONARY,Dictionary aka Category type.,NA,NA,NA,0
+GARROW_TYPE_MAP,A repeated struct logical type.,NA,NA,NA,0
+GARROW_TYPE_EXTENSION,"Custom data type, implemented by user.",NA,NA,NA,0
+GARROW_TYPE_FIXED_SIZE_LIST,Fixed size list of some logical type.,NA,NA,NA,0
+GARROW_TYPE_DURATION,"Measure of elapsed time in either seconds, milliseconds, microseconds or nanoseconds.",NA,NA,NA,0
+GARROW_TYPE_LARGE_STRING,64bit offsets UTF-8 variable-length string.,NA,NA,NA,0
+GARROW_TYPE_LARGE_BINARY,64bit offsets Variable-length bytes (no guarantee of UTF-8-ness).,NA,garrow_large_binary_array_get_value,NA,0
+GARROW_TYPE_LARGE_LIST,A list of some logical data type with 64-bit offsets.,NA,NA,NA,0
