@@ -1,6 +1,6 @@
 ## Usage
 Ultimately:
-load'data/arrow'
+`load'data/arrow'`
 (This will work if the project has already been opened and built with Ctrl+F9)
 
 
@@ -9,7 +9,9 @@ load'data/arrow'
 
 Example:
 File > Configure > Folders
-JPackageDev /code/JPackageDev
+`JPackageDev /code/JPackageDev`
+(or the path of your choice in, then modify build.ijs)
+
 
 2) Place the arrow directory in JPackageDev
 
@@ -22,7 +24,7 @@ Ctrl + F9
 5) Run the addon.
  F9 (if the arrow project is open)
  or
- load'data/arrow' (if the project has already been built with Ctrl+F9)
+ `load'data/arrow'` (if the project has already been built with Ctrl+F9)
 
 Examples:
 see run.ijs
@@ -59,8 +61,15 @@ echo readsParquetTable ppath2
 readParquetColumn ppath2;14
 ```
 
-TODO:
+##### TODO
 [ ] Figure out how to formalize data/arrow.ijs as an add-on
-[ ] install 'github:interregna/JArrow@main' 
-	- Looks like a conflicting process
-	- Seems to copy the whole repo, thus overwriting data/arrow.ijs
+[ ] `install 'github:interregna/JArrow@main'`
+[ ] J for buffers
+[ ] J for errors
+[ ] J for IPC
+[ ] J for tensors
+
+##### Notes
+`install 'github...'` looks like a conflicting process vs Jqt project F9 build
+`install 'github...'` seems to copy the whole repo, overwriting data/arrow.ijs
+
