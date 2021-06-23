@@ -21,7 +21,7 @@ end.
 
 cbind =: 3 : 0"1
 'type name args' =. y
-v =. (libParquet,name,' ',type)&cd
+v =. (libParquet,' ',name,' ',type)&cd
 (". 'name') =: v
 1
 )
