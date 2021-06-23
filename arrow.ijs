@@ -11,31 +11,29 @@ getChar (ret ptr garrow_data_type_get_name < dataTypePt)
 }}
 readArrayTypeIndex=:{{
 'arrayPt' =. y
-dtp =. ptr garrow_array_get_value_data_type < arrayPt
-ret garrow_data_type_get_id < dtp
+datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
+ret garrow_data_type_get_id < datatypePt
 }}
 readArrayBitWidth=:{{
 'arrayPt' =. y
-dtp =. ptr garrow_array_get_value_data_type < arrayPt
-ret garrow_fixed_width_data_type_get_bit_width < dtp
+datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
+ret garrow_fixed_width_data_type_get_bit_width < datatypePt
 }}
-readArrayLength=:{{0{::garrow_array_get_length < y}}
+readArrayLength=:{{ret garrow_array_get_length < y}}
 writeArrayWidth=:{{<lengthPt [ length memw (] lengthPt =. mema width),0,1,4 [ 'length width' =. y}}
 readArray=:{{
 'arrayPt' =. y
 indexType =. readArrayTypeIndex arrayPt
 arrayType =. readArrayType arrayPt
 length =. readArrayLength arrayPt
-NB. width =. readArrayBitWidth arrayPt
 lengthPt =. writeArrayWidth length;width
-
 getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
 fRun =. getValueFunc,', arrayPt;<'
 results =. ; ret@". each (fRun&,)@": each <"0 i.length
 NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
 NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
 NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
-NB. results =. memr (0{::arrayValuesPt),0,length,Jtype
+NB. results =. memr (ret arrayValuesPt),0,length,Jtype
 NB. memf > lengthPt
 results
 }}
@@ -104,20 +102,24 @@ NB. Schema
 NB. =========================================================
 getSchemaPt =: {{
 tablePt =. y
-ptr garrow_table_get_schema (< tablePt)
+ptr garrow_table_get_schema < tablePt
 }}
 getSchemaFieldPt =: {{
 'schemaPt index'=.y
 ptr garrow_schema_get_field schemaPt;index
 }}
+getSchemaName=:{{
+'schemaPt index'=.y
+fieldPts =. getSchemaFieldPt (<schemaPt),< index
+name =. getFieldName < fieldPts
+name
+}}
 getSchemaNames=:{{
 schemaPt =. y
 nFields =. ret garrow_schema_n_fields < schemaPt
-fieldPts =. getSchemaFieldPt each <"1 (<schemaPt),.<"0 i. nFields
-names =. getFieldName@< each fieldPts
+names =. getSchemaName each <"1 (<schemaPt),.<"0 i. nFields
 names
 }}
-
 getSchemaFields=:{{
 schemaPt =. y
 nFields =. ret garrow_schema_n_fields < schemaPt
@@ -136,6 +138,10 @@ tablePt =. y
 schemaPt =. getSchemaPt tablePt
 getSchemaFields schemaPt
 }}
+readSchemaColumnName=:{{
+'tablePt index'=.y
+getSchemaName (getSchemaPt tablePt);<index
+}}
 readSchemaNames=:{{
 tablePt =. y
 schemaPt =. getSchemaPt tablePt
@@ -145,8 +151,8 @@ getSchemaNames schemaPt
 NB. =========================================================
 NB. Table
 NB. =========================================================
-tableNRows 	=: {{0{:: garrow_table_get_n_rows (< y)}}
-tableNCols =: {{0{:: garrow_table_get_n_columns (< y)}}
+tableNRows 	=: {{ret garrow_table_get_n_rows (< y)}}
+tableNCols =: {{ret garrow_table_get_n_columns (< y)}}
 readData =: {{
 'tablePt' =. y
 ncols =. tableNCols tablePt
@@ -159,6 +165,10 @@ ncols =. tableNCols tablePt
 'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
 chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
 ,. > readChunkedArray each chunkedArrayPts
+}}
+readColumn=:{{
+'tablePt colIndex' =. y
+((<@readSchemaColumnName),.readDataColumn) (< tablePt),< colIndex
 }}
 readTable=:{{
 'tablePt' =. y
@@ -198,7 +208,7 @@ readsTable@readParquet filepath
 }}
 readParquetColumn =: {{
 'filepath index' =. y
-readDataColumn (readParquet filepath);<index
+readColumn (readParquet filepath);<index
 }}
 writeParquet=: {{}}
 writeParquetFromTable=: {{}}

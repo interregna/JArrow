@@ -4,6 +4,7 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/compute.html
 NB. =========================================================
 
 computeBindings =: lib 0 : 0
+ADD TYPES
 garrow_numeric_array_sum(GArrowArrayType array, GError **error, const gchar *tag, typename ArrowType::c_type default_value); typename ArrowType::c_type
 garrow_numeric_array_compare(GArrowArrayType array, VALUE value, GArrowCompareOptions *options, GError **error, const gchar *tag); GArrowBooleanArray *
 garrow_take(arrow::Datum arrow_values, arrow::Datum arrow_indices, GArrowTakeOptions *options, GArrowTypeNewRaw garrow_type_new_raw, GError **error, const gchar *tag); auto
@@ -156,6 +157,7 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/datum-classes.html
 NB. =========================================================
 
 datumBindings =: lib 0 : 0
+ADD TYPES
 garrow_datum_finalize(GObject *object); static void
 garrow_datum_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
 garrow_datum_init(GArrowDatum *object); static void

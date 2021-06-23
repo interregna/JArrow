@@ -3,6 +3,7 @@ NB. Codec
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowCodec.html
 NB. =========================================================
 codecBindings =: lib 0 : 0
+ADD TYPES
 garrow_codec_finalize(GObject *object); static void
 garrow_codec_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
 garrow_codec_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void

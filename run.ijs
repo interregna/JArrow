@@ -28,7 +28,7 @@ pd.DataFrame(
 'longlongCol':np.array(np.arange(100, 10, -90/8), dtype=np.longlong),
 'ulonglongCol':np.array(np.arange(100, 10, -90/8), dtype=np.ulonglong),
 'DoubleCol':np.array(np.arange(100, 10, -90/8), dtype=np.double),
-'StringCol':pd.array(['This', ' is', 'all', ' valid ', 'text', None, 'data.', ''], dtype="string"),
+'StringCol':pd.array(['This', ' is', 'all', ' valid ', 'text', None, 'data.', ' '], dtype="string"),
 'boolCol':np.array([1, 0.5, 0, None, 'a', '', True, False], dtype=bool),
 'datetime64Col':np.array(np.arange('2000-01', '2000-01-09', dtype='datetime64[D]')),
 }).to_parquet('WD/test2.parquet')
