@@ -20,7 +20,7 @@ NB. Writer
 NB. https://arrow.apache.org/docs/c_glib/parquet-glib/GParquetArrowFileWriter.html
 
 parquetWriterBindings =: lib 0 : 0
-n *	gparquet_writer_properties_new	(void); GParquetWriterProperties
+*	gparquet_writer_properties_new	(void); GParquetWriterProperties
 n * c *c	gparquet_writer_properties_set_compression	(GParquetWriterProperties *properties, GArrowCompressionType compression_type, const gchar *path); void
 ? * *c	gparquet_writer_properties_get_compression_path	(GParquetWriterProperties *properties, const gchar *path); GArrowCompressionType
 n * *	gparquet_writer_properties_enable_dictionary	(GParquetWriterProperties *properties, const gchar *path); void

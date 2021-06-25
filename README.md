@@ -62,12 +62,12 @@ readParquetColumn ppath2;14
 ```
 
 ##### TODO
-[ ] Figure out how to formalize data/arrow.ijs as an add-on
-[ ] `install 'github:interregna/JArrow@main'`
-[ ] J for buffers
-[ ] J for errors
-[ ] J for IPC
-[ ] J for tensors
+* [ ] Figure out how to formalize data/arrow.ijs as an add-on
+* [ ] `install 'github:interregna/JArrow@main'`
+* [ ] J for buffers
+* [ ] J for errors
+* [ ] J for IPC
+* [ ] J for tensors
 
 ##### Notes
 `install 'github...'` looks like a conflicting process vs Jqt project F9 build

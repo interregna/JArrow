@@ -9,4 +9,3 @@ NB. readsource_jp_ 'JPackageDev/arrow'
 NB. Writes content of all files in .jproj into a single file. 
 NB. Reads all files listed in .jproj
 writesourcex_jp_ 'JPackageDev/arrow';'~addons/data/arrow/arrow.ijs' 
-

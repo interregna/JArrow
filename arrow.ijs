@@ -210,5 +210,9 @@ readParquetColumn =: {{
 'filepath index' =. y
 readColumn (readParquet filepath);<index
 }}
-writeParquet=: {{}}
-writeParquetFromTable=: {{}}
+writeParquet=: {{
+'filepath'=.y
+}}
+writeParquetFromTable=: {{
+'table writeOptions' =. y
+}}

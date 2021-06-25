@@ -36,6 +36,7 @@ libload''
 >./ cbind schemaBindings, fieldBindings
 >./ cbind basicDatatypeBindings, compositeDataTypeBindings
 >./ cbind basicArrayBindings,compositeArrayBindings
+>./ cbind bufferBindings
 
 1
 )
