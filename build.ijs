@@ -12,10 +12,10 @@ NB. writesourcex_jp_ 'JPackageDev/arrow';'~addons/data/arrow/arrow.ijs'
 
 require 'project'
 loc_z_=: 3 : 'jpath > (4!:4 <''y'') { 4!:3 $0'  NB. pathname of script calling it
-AddonPath=: fpath_j_^:2 loc ''
-echo AddonPath
-Proj_Src=: AddonPath,'/arrow'
-Proj_Tgt=: AddonPath,'/arrow/arrow.ijs'
+ProjPath=: fpath_j_ loc ''
+
+Proj_Src=: ProjPath
+Proj_Tgt=: ProjPath,'/arrow.ijs'
 writesource_jp_ Proj_Src;Proj_Tgt
 
 echo 'Built file: ',Proj_Tgt
