@@ -1,0 +1,20 @@
+NB. project: ~Addons/data/arrow
+NB.
+NB. defines list of source files.
+NB. path defaults to project directory.
+
+init.ijs
+data/array.ijs
+data/arraybuilder.ijs
+data/buffer.ijs
+data/codec.ijs
+data/datatype.ijs
+data/error.ijs
+data/parquet.ijs
+data/schema.ijs
+data/table.ijs
+data/tableBuilder.ijs
+data/tensor.ijs
+data/type.ijs
+data/value.ijs
+arrow.ijs
