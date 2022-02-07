@@ -51,6 +51,7 @@ Read (and eventually write) Apache Arrow and Parquet files to and from J.
 
 ## Installation
 Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
+
 From your J session:
 ```j
    install 'github:interregna/JArrow@main'
@@ -58,23 +59,20 @@ From your J session:
 
 ## Development
 1) In Jqt, set your path for JPackageDev
+   File > Configure > Folders
+   `JPackageDev /code/JPackageDev`
+   (or the path of your choice in, then modify build.ijs)
 
-Example:
-File > Configure > Folders
-`JPackageDev /code/JPackageDev`
-(or the path of your choice in, then modify build.ijs)
-
-
-2) Place the arrow directory in JPackageDev
+2) Clone the JArrow repo in JPackageDev
 
 3) Restart Jqt and open the Arrow project
-Project > Open > JPackageDev > arrow
+   Project > Open > JPackageDev > arrow
 
 4) Re-build the addon.
-Ctrl + F9
+   Ctrl + F9
 
 5) Run the addon.
- F9 (Re-build addon scripts, reload and run tests)
+   F9 (Re-build addon scripts, reload and run tests)
 
 Examples:
 see `test/test1.ijs`
