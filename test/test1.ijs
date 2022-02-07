@@ -7,7 +7,7 @@ TempPath=: jpath '~temp/'
   if. -. fexist TempPath&,&.> tstpqs do.
       (TempPath&,&.> tstpqs) fcopynew&> (ProjPath,'/test/')&,&.> tstpqs
   end.
-}}
+}}''
 
 load ProjPath,'/arrow.ijs'
 t1path =. TempPath,'test1.parquet'
