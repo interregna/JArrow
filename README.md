@@ -1,8 +1,60 @@
+# J language bindings for Apache Arrow
+Read (and eventually write) Apache Arrow and Parquet files to and from J.
 ## Usage
-Ultimately:
-`load'data/arrow'`
-(This will work if the project has already been opened and built with Ctrl+F9)
+```j
+   load 'data/arrow'
+   readParquetTable '~addons/data/arrow/test/test1.parquet'
+┌─┬───────────────┐
+│a│0 1 2 3 4 5 6 7│
+├─┼───────────────┤
+│b│8 7 6 5 4 3 2 1│
+└─┴───────────────┘
+   readParquetTable '~addons/data/arrow/test/test2.parquet'
+┌─────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Column 1     │0 1 2 3 4 5 6 7                                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│Column Two   │100 88.75 77.5 66.25 55 43.75 32.5 21.25                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│shortCol     │0 1 2 3 4 5 6 7                                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ushortCol    │0 1 2 3 4 5 6 7                                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│intcCol      │0 1 2 3 4 5 6 7                                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│uintcCol     │100 88 77 66 55 43 32 21                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│int_Col      │100 90 80 70 60 50 40 30                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│uintCol      │100 88 77 66 55 43 32 21                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│int16Col     │300 263 227 191 155 118 82 46                                                                                                  │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│int32Col     │500 443 387 331 275 218 162 106                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│int64Col     │100 88 77 66 55 43 32 21                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│longlongCol  │100 88 77 66 55 43 32 21                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ulonglongCol │100 88 77 66 55 43 32 21                                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│DoubleCol    │100 88.75 77.5 66.25 55 43.75 32.5 21.25                                                                                       │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│StringCol    │┌────┬───┬───┬───────┬────┬┬─────┬─┐                                                                                           │
+│             ││This│ is│all│ valid │text││data.│ │                                                                                           │
+│             │└────┴───┴───┴───────┴────┴┴─────┴─┘                                                                                           │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│boolCol      │1 1 0 0 1 0 1 0                                                                                                                │
+├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│datetime64Col│946684800000000 946771200000000 946857600000000 946944000000000 947030400000000 947116800000000 947203200000000 947289600000000│
+└─────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
+## Installation
+Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
+From your J session:
+```j
+   install 'github:interregna/JArrow@main'
+```
 
 ## Development
 1) In Jqt, set your path for JPackageDev
@@ -18,58 +70,22 @@ File > Configure > Folders
 3) Restart Jqt and open the Arrow project
 Project > Open > JPackageDev > arrow
 
-4) Build the addon.
+4) Re-build the addon.
 Ctrl + F9
 
 5) Run the addon.
- F9 (if the arrow project is open)
- or
- `load'data/arrow'` (if the project has already been built with Ctrl+F9)
+ F9 (Re-build addon scripts, reload and run tests)
 
 Examples:
-see run.ijs
-Create parquet files with Python
-
-```
-ppath =. tempPath,'test1.parquet'
-tp =. readParquet ppath
-echo readSchemaString tp
-echo readSchema tp
-echo readData tp
-echo readTable tp
-echo readsTable tp
-
-echo readParquetData ppath
-echo readParquetSchema ppath
-echo readParquetTable ppath
-echo readsParquetTable ppath
-echo readParquetColumn ppath;1
-
-NB. =========================================================
-ppath2 =. tempPath,'/test2.parquet'
-tp2 =. readParquet ppath2
-echo readSchemaString tp2
-echo readSchema tp2
-echo readData tp2
-echo readTable tp2
-echo readsTable tp2
-
-echo readParquetSchema ppath2
-echo readParquetData ppath2
-echo readParquetTable ppath2
-echo readsParquetTable ppath2
-readParquetColumn ppath2;14
-```
+see `test/test1.ijs`
 
 ##### TODO
-* [ ] Figure out how to formalize data/arrow.ijs as an add-on
-* [ ] `install 'github:interregna/JArrow@main'`
+* [x] Figure out how to formalize data/arrow.ijs as an add-on
+* [x] `install 'github:interregna/JArrow@main'`
 * [ ] J for buffers
 * [ ] J for errors
 * [ ] J for IPC
 * [ ] J for tensors
 
 ##### Notes
-`install 'github...'` looks like a conflicting process vs Jqt project F9 build
-`install 'github...'` seems to copy the whole repo, overwriting data/arrow.ijs
 
