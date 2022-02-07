@@ -13,8 +13,12 @@ RELEASE=:'j903'
 FOLDER=: 'data/arrow'
 
 FILES=: 0 : 0
+LICENSE
 arrow.ijs
-
+test/test1.ijs
+test/make_test_parquet.py
+test/test1.parquet
+test/test2.parquet
 )
 
 DEPENDS=: 0 : 0
