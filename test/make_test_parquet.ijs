@@ -2,7 +2,8 @@ NB. =========================================================
 NB. Testing and Development
 NB. =========================================================
 
-NB. Create python script to make test1.parquet & test2.parquet
+NB. Creates a python script to make test1.parquet & test2.parquet
+NB. Needs python installed with numpy, pandas and pyarrow packages installed
 TempPath =. jpath '~temp/'
 ppath =: TempPath,'make_test_parquet.py'
 
