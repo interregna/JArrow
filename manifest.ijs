@@ -13,31 +13,15 @@ RELEASE=:'j903'
 FOLDER=: 'data/arrow'
 
 FILES=: 0 : 0
-init.ijs
-data/array.ijs
-data/arraybuilder.ijs
-data/buffer.ijs
-data/codec.ijs
-data/datatype.ijs
-data/error.ijs
-data/parquet.ijs
-data/schema.ijs
-data/table.ijs
-data/tableBuilder.ijs
-data/tensor.ijs
-data/type.ijs
-data/value.ijs
-
+LICENSE
 arrow.ijs
-
-data/types.csv
-build.ijs
-run.ijs
-
+test/test1.ijs
+test/make_test_parquet.py
+test/test1.parquet
+test/test2.parquet
 )
 
 DEPENDS=: 0 : 0
-dll
 )
 
-PLATFORMS=:'win linux darwin'
+PLATFORMS=:''
