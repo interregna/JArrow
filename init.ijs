@@ -10,8 +10,8 @@ if. UNAME-:'Linux' do.
   libParquet=: '/lib/x86_64-linux-gnu/libparquet-glib.so'
   libArrow=: '/lib/x86_64-linux-gnu/libarrow-glib.so'
 elseif. UNAME-:'Darwin' do.
-  libParquet =: '"','" ',~  '/usr/local/Cellar/apache-arrow-glib/4.0.1/lib/libparquet-glib.dylib'
-  libArrow   =: '"','" ',~  '/usr/local/Cellar/apache-arrow-glib/4.0.1/lib/libarrow-glib.dylib'
+  libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
+  libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
 elseif. UNAME-:'Win' do.
   libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-400.dll'
   libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-400.dll'
