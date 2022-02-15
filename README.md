@@ -80,10 +80,14 @@ see `test/test1.ijs`
 ##### TODO
 * [x] Figure out how to formalize data/arrow.ijs as an add-on
 * [x] `install 'github:interregna/JArrow@main'`
+* [ ] Drop functions into a jarrow locale and link entry points up to z locale.
+* [ ] Document functions: Print a manual / help dialog.
 * [ ] J for buffers
 * [ ] J for errors
 * [ ] J for IPC
 * [ ] J for tensors
+* [ ] Error catch missing files (empty pointers).
+
 
 ##### Notes
 
