@@ -3,13 +3,13 @@ Read (and eventually write) Apache Arrow and Parquet files to and from J.
 ## Usage
 ```j
    load 'data/arrow'
-   readParquetTable '~addons/data/arrow/test/test1.parquet'
+   readParquetTable jpath '~addons/data/arrow/test/test1.parquet'
 ┌─┬───────────────┐
 │a│0 1 2 3 4 5 6 7│
 ├─┼───────────────┤
 │b│8 7 6 5 4 3 2 1│
 └─┴───────────────┘
-   readParquetTable '~addons/data/arrow/test/test2.parquet'
+   readParquetTable jpath '~addons/data/arrow/test/test2.parquet'
 ┌─────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │Column 1     │0 1 2 3 4 5 6 7                                                                                                                │
 ├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
