@@ -6,8 +6,8 @@ NB. =========================================================
 basicArrayBindings =: lib 0 : 0
 * 	garrow_equal_options_new	(void); GArrowEqualOptions *
 i *	garrow_equal_options_is_approx	(GArrowEqualOptions *options); gboolean
-* * * *	garrow_array_import (gpointer c_abi_array, GArrowDataType *data_type, GError **error); GArrowArray *
-i * * * *	garrow_array_export (GArrowArray *array, gpointer *c_abi_array, gpointer *c_abi_schema, GError **error); gboolean
+* * * *	garrow_array_import	(gpointer c_abi_array, GArrowDataType *data_type, GError **error); GArrowArray *
+i * * * *	garrow_array_export	(GArrowArray *array, gpointer *c_abi_array, gpointer *c_abi_schema, GError **error); gboolean
 c * *	garrow_array_equal	(GArrowArray *array, GArrowArray *other_array); gboolean
 c * * *	garrow_array_equal_options	(GArrowArray *array, GArrowArray *other_array, GArrowEqualOptions *options); gboolean
 c * *	garrow_array_equal_approx	(GArrowArray *array, GArrowArray *other_array); gboolean
