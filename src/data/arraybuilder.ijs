@@ -4,6 +4,7 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/array-builder-classes.html
 NB. =========================================================
 
 arrayBuilderBindings =: lib 0 : 0
+ADD TYPES
 garrow_array_builder_append_value(GArrowArrayBuilder *builder, VALUE value, GError **error, const gchar *context); gboolean
 garrow_array_builder_append_values(VALUE *values, gint64 values_length, const gboolean *is_valids, gint64 is_valids_length, GError **error, const gchar *context, APPEND_FUNCTION append_function); gboolean
 garrow_array_builder_append_values(GArrowArrayBuilder *builder, VALUE *values, gint64 values_length, const gboolean *is_valids, gint64 is_valids_length, GError **error, const gchar *context); gboolean
