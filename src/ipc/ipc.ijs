@@ -68,12 +68,6 @@ NB. ORC File Reader
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/orc-file-reader.html
 NB. =========================================================
 orcFileReaderBindings =: lib 0 : 0
-n *	garrow_orc_file_reader_dispose	(GObject *object); static void
-n *	garrow_orc_file_reader_finalize	(GObject *object); static void
-n *	garrow_orc_file_reader_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_orc_file_reader_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_orc_file_reader_init	(GArrowORCFileReader *object); static void
-n * *	garrow_orc_file_reader_class_init	(GArrowORCFileReaderClass *klass); static void
 * * * i	garrow_orc_file_reader_new	(GArrowSeekableInputStream *input, GError **error); GArrowORCFileReader *
 n * * i	garrow_orc_file_reader_set_field_indexes	(GArrowORCFileReader *reader, const gint *field_indexes, guint n_field_indexes); void
 n * *i	garrow_orc_file_reader_set_field_indices	(GArrowORCFileReader *reader, const gint *field_indices, guint n_field_indices); void
@@ -84,8 +78,6 @@ n * *i	garrow_orc_file_reader_set_field_indices	(GArrowORCFileReader *reader, co
 * * x *	garrow_orc_file_reader_read_stripe	(GArrowORCFileReader *reader, gint64 i, GError **error); GArrowRecordBatch *
 x *	garrow_orc_file_reader_get_n_stripes	(GArrowORCFileReader *reader); gint64
 x *	garrow_orc_file_reader_get_n_rows	(GArrowORCFileReader *reader); gint64
-* * *	garrow_orc_file_reader_new_raw	(GArrowSeekableInputStream *input, arrow::adapters::orc::ORCFileReader *arrow_reader); GArrowORCFileReader *
-* *	garrow_orc_file_reader_get_raw	(GArrowORCFileReader *reader); arrow::adapters::orc::ORCFileReader *
 )
 NB. Writer
 NB. Writer classes
@@ -95,22 +87,9 @@ NB. Writer
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/writer-classes.html
 NB. =========================================================
 writerBindings =: lib 0 : 0
-n *	garrow_record_batch_writer_finalize	(GObject *object); static void
-n * i * *	garrow_record_batch_writer_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_record_batch_writer_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_record_batch_writer_init	(GArrowRecordBatchWriter *object); static void
-n *	garrow_record_batch_writer_class_init	(GArrowRecordBatchWriterClass *klass); static void
 c * * *	garrow_record_batch_writer_write_record_batch	(GArrowRecordBatchWriter *writer, GArrowRecordBatch *record_batch, GError **error); gboolean
 c * * *	garrow_record_batch_writer_write_table	(GArrowRecordBatchWriter *writer, GArrowTable *table, GError **error); gboolean
 c * * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
-n *	garrow_record_batch_stream_writer_init	(GArrowRecordBatchStreamWriter *object); static void
-n *	garrow_record_batch_stream_writer_class_init	(GArrowRecordBatchStreamWriterClass *klass); static void
 * * * *	garrow_record_batch_stream_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchStreamWriter *
-n *	garrow_record_batch_file_writer_init	(GArrowRecordBatchFileWriter *object); static void
-* *	garrow_record_batch_file_writer_class_init	(GArrowRecordBatchFileWriterClass *klass); static void
 * * * *	garrow_record_batch_file_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchFileWriter *
-* *	garrow_record_batch_writer_new_raw	(std::shared_ptr<arrow::ipc::RecordBatchWriter> *arrow_writer); GArrowRecordBatchWriter *
-* *	garrow_record_batch_writer_get_raw	(GArrowRecordBatchWriter *writer); std::shared_ptr<arrow::ipc::RecordBatchWriter>
-* *	garrow_record_batch_stream_writer_new_raw	(std::shared_ptr<arrow::ipc::RecordBatchWriter> *arrow_writer); GArrowRecordBatchStreamWriter *
-* *	garrow_record_batch_file_writer_new_raw	(std::shared_ptr<arrow::ipc::RecordBatchWriter> *arrow_writer); GArrowRecordBatchFileWriter *
 )

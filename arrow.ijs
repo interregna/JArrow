@@ -200,85 +200,34 @@ n *	garrow_decimal256_array_class_init	(GArrowDecimal256ArrayClass *klass); stat
 
 NB. =========================================================
 NB. Composite Array
-NB. https://arrow.apache.org/docs/c_glib/arrow-glib/composite-array-classes.html
+NB. https://arrow.apache.org/docs/c_glib/arrow-glib/composite-data-type-classes.html
 NB. =========================================================
 
 compositeArrayBindings =: lib 0 : 0
-* * x * * * x	garrow_base_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowArray *
-* *	garrow_base_list_array_get_value_type	(GArrowArray *array); GArrowDataType *
-* * x	garrow_base_list_array_get_value	(GArrowArray *array , gint64 i); GArrowArray *
-* *	garrow_base_list_array_get_values	(GArrowArray *array); GArrowArray *
-c i x	garrow_base_list_array_get_value_offset	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-c * x	garrow_base_list_array_get_value_length	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-*c * *x	garrow_base_list_array_get_value_offsets	(GArrowArray *array, gint64 *n_offsets); const typename LIST_ARRAY_CLASS::offset_type *
-n *	garrow_list_array_dispose	(GObject *object); static void
-n * i * *	garrow_list_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_list_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_list_array_init	(GArrowListArray *object); static void
-n *	garrow_list_array_class_init	(GArrowListArrayClass *klass); static void
-* * x * * * * x	garrow_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowListArray *
-* *	garrow_list_array_get_value_type	(GArrowListArray *array); GArrowDataType *
-* * x	garrow_list_array_get_value	(GArrowListArray *array, gint64 i); GArrowArray *
-* *	garrow_list_array_get_values	(GArrowListArray *array); GArrowArray *
-i * x	garrow_list_array_get_value_offset	(GArrowListArray *array, gint64 i); gint32
-i * x	garrow_list_array_get_value_length	(GArrowListArray *array, gint64 i); gint32
-*i * x	garrow_list_array_get_value_offsets	(GArrowListArray *array, gint64 *n_offsets); const gint32 *
-n *	garrow_large_list_array_dispose	(GObject *object); static void
-n * i * *	garrow_large_list_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_large_list_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_large_list_array_init	(GArrowLargeListArray *object); static void
-n *	garrow_large_list_array_class_init	(GArrowLargeListArrayClass *klass); static void
-* * i * * * x	garrow_large_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowLargeListArray *
-* *	garrow_large_list_array_get_value_type	(GArrowLargeListArray *array); GArrowDataType *
-* * x	garrow_large_list_array_get_value	(GArrowLargeListArray *array , gint64 i); GArrowArray *
-* *	garrow_large_list_array_get_values	(GArrowLargeListArray *array); GArrowArray *
-x * x	garrow_large_list_array_get_value_offset	(GArrowLargeListArray *array, gint64 i); gint64
-x * x	garrow_large_list_array_get_value_length	(GArrowLargeListArray *array, gint64 i); gint64
-*x * *x	garrow_large_list_array_get_value_offsets	(GArrowLargeListArray *array, gint64 *n_offsets); const gint64 *
-n *	garrow_struct_array_dispose	(GObject *object); static void
-n *	garrow_struct_array_init	(GArrowStructArray *object); static void
-n *	garrow_struct_array_class_init	(GArrowStructArrayClass *klass); static void
-* * x * * x	garrow_struct_array_new	(GArrowDataType *data_type, gint64 length, GList *fields, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowStructArray *
-* *	garrow_struct_array_get_fields_internal	(GArrowStructArray *array); static GPtrArray *
-* * i	garrow_struct_array_get_field	(GArrowStructArray *array, gint i); GArrowArray *
-* *	garrow_struct_array_get_fields	(GArrowStructArray *array) GList *
-* * *	garrow_struct_array_flatten	(GArrowStructArray *array, GError **error); GList *
-n *	garrow_map_array_dispose	(GObject *object); static void
-n * i * * 	garrow_map_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * * 	garrow_map_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_map_array_init	(GArrowMapArray *object); static void
-n * 	garrow_map_array_class_init	(GArrowMapArrayClass *klass); static void
-* * * * * 	garrow_map_array_new	(GArrowArray *offsets, GArrowArray *keys, GArrowArray *items, GError **error); GArrowMapArray *
-* *	garrow_map_array_get_keys	(GArrowMapArray *array); GArrowArray *
-* *	garrow_map_array_get_items	(GArrowMapArray *array); GArrowArray *
-n *	garrow_union_array_dispose	(GObject *object); static void
-n * i * *	garrow_union_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_union_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_union_array_init	(GArrowUnionArray *object); static void
-n * 	garrow_union_array_class_init	(GArrowUnionArrayClass *klass); static void
-* * i	garrow_union_array_get_field	(GArrowUnionArray *array, gint i); GArrowArray *
-n *	garrow_sparse_union_array_init	(GArrowSparseUnionArray *object); static void
-n *	garrow_sparse_union_array_class_init	(GArrowSparseUnionArrayClass *klass); static void
-* * * * * *	garrow_sparse_union_array_new_internal	(GArrowSparseUnionDataType *data_type, GArrowInt8Array *type_ids, GList *fields, GError **error, const char *context); static GArrowSparseUnionArray *
-* * * *	garrow_sparse_union_array_new	(GArrowInt8Array *type_ids, GList *fields, GError **error); GArrowSparseUnionArray *
-* * * * 	garrow_sparse_union_array_new_data_type	(GArrowSparseUnionDataType *data_type, GArrowInt8Array *type_ids, GList *fields, GError **error); GArrowSparseUnionArray *
-n *	garrow_dense_union_array_dispose	(GObject *object); static void
-n * i * *	garrow_dense_union_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i *	garrow_dense_union_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_dense_union_array_init	(GArrowDenseUnionArray *object); static void
-n *	garrow_dense_union_array_class_init	(GArrowDenseUnionArrayClass *klass); static void
-* * * * * * *c	garrow_dense_union_array_new_internal	(GArrowDenseUnionDataType *data_type, GArrowInt8Array *type_ids, GArrowInt32Array *value_offsets, GList *fields, GError **error, const gchar *context); static GArrowDenseUnionArray *
-* * * * *	garrow_dense_union_array_new	(GArrowInt8Array *type_ids, GArrowInt32Array *value_offsets, GList *fields, GError **error); GArrowDenseUnionArray *
-* * * * * *	garrow_dense_union_array_new_data_type	(GArrowDenseUnionDataType *data_type, GArrowInt8Array *type_ids, GArrowInt32Array *value_offsets, GList *fields, GError **error); GArrowDenseUnionArray *
-n *	garrow_dictionary_array_dispose	(GObject *object); static void
-n * i * * 	garrow_dictionary_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_dictionary_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_dictionary_array_init	(GArrowDictionaryArray *object); static void
-n *	garrow_dictionary_array_class_init	(GArrowDictionaryArrayClass *klass); static void
-* * * * *	garrow_dictionary_array_new	(GArrowDataType *data_type, GArrowArray *indices, GArrowArray *dictionary, GError **error); GArrowDictionaryArray *
-* *	garrow_dictionary_array_get_indices	(GArrowDictionaryArray *array); GArrowArray *
-* *	garrow_dictionary_array_get_dictionary	(GArrowDictionaryArray *array); GArrowArray *
-* *	garrow_dictionary_array_get_dictionary_data_type	(GArrowDictionaryArray *array); GArrowDictionaryDataType *
+* *	garrow_list_data_type_new	(GArrowField *field);GArrowListDataType *
+* *	garrow_list_data_type_get_value_field	(GArrowListDataType *list_data_type); GArrowField *
+* *	garrow_list_data_type_get_field	(GArrowListDataType *list_data_type); GArrowField *
+* *	garrow_large_list_data_type_new 	(GArrowField *field); GArrowLargeListDataType *
+* *	garrow_large_list_data_type_get_field 	(GArrowLargeListDataType *large_list_data_type);GArrowField *
+* *	garrow_struct_data_type_new	(GList *fields);GArrowStructDataType *
+i *	garrow_struct_data_type_get_n_fields	(GArrowStructDataType *struct_data_type);gint
+* *	garrow_struct_data_type_get_fields	(GArrowStructDataType *struct_data_type);GList *
+* * i	garrow_struct_data_type_get_field	(GArrowStructDataType *struct_data_type, gint i); GArrowField *
+* * *	garrow_struct_data_type_get_field_by_name	(GArrowStructDataType *struct_data_type, const gchar *name); GArrowField *
+i * *	garrow_struct_data_type_get_field_index	(GArrowStructDataType *struct_data_type, const gchar *name); gint
+* * *	garrow_map_data_type_new	(GArrowDataType *key_type, GArrowDataType *item_type); GArrowMapDataType *
+* *	garrow_map_data_type_get_key_type	(GArrowMapDataType *map_data_type); GArrowDataType *
+* *	garrow_map_data_type_get_item_type	(GArrowMapDataType *map_data_type); GArrowDataType *
+i *	garrow_union_data_type_get_n_fields	(GArrowUnionDataType *union_data_type); gint
+* *	garrow_union_data_type_get_fields	(GArrowUnionDataType *union_data_type); GList *
+* * i	garrow_union_data_type_get_field	(GArrowUnionDataType *union_data_type, gint i); GArrowField *
+* * *	garrow_union_data_type_get_type_codes	(GArrowUnionDataType *union_data_type, gsize *n_type_codes); gint8 *
+* * * i	garrow_sparse_union_data_type_new	(GList *fields, gint8 *type_codes, gsize n_type_codes); GArrowSparseUnionDataType *
+* * * i	garrow_dense_union_data_type_new	(GList *fields, gint8 *type_codes, gsize n_type_codes); GArrowDenseUnionDataType *
+* * * i	garrow_dictionary_data_type_new	(GArrowDataType *index_data_type, GArrowDataType *value_data_type, gboolean ordered); GArrowDictionaryDataType *
+* *	garrow_dictionary_data_type_get_index_data_type	(GArrowDictionaryDataType *dictionary_data_type); GArrowDataType *
+* *	garrow_dictionary_data_type_get_value_data_type	(GArrowDictionaryDataType *dictionary_data_type); GArrowDataType *
+i *	garrow_dictionary_data_type_is_ordered	(GArrowDictionaryDataType *dictionary_data_type); gboolean
 )
 NB. =========================================================
 NB. Array Builder
