@@ -182,7 +182,7 @@ readDataColumn=:{{
   ncols =. tableNCols tablePt
   'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
   chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-  ,. > readChunkedArray each chunkedArrayPts
+  ,. ; each readChunkedArray each chunkedArrayPts
 }}
 
 readColumn=:{{

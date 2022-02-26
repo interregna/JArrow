@@ -3,12 +3,14 @@ NB. init
 lib =: >@((3&{.)@(TAB&cut)&.>)@(LF&cut)
 ret =: 0&{::
 ptr =: <@(0&{::)
-getChar =: {{memr (>y),0,_1}}
+getChar =: {{memr (>y),0,_1,2}}
+getCharFree =: {{res [ memf y [ res=.memr (y=.>y),0,_1,2}}
+setChar =: {{p [ y memw p,0,(# y),2 [ p=.mema # y=.(>y),{.a.}}
 
-libload =: {{)v
-  if. UNAME-:'Linux' do.
-    libParquet=: '/lib/x86_64-linux-gnu/libparquet-glib.so'
-    libArrow=: '/lib/x86_64-linux-gnu/libarrow-glib.so'
+libload =: {{
+  if.     UNAME-:'Linux' do.
+    libParquet =: '/lib/x86_64-linux-gnu/libparquet-glib.so'
+    libArrow   =: '/lib/x86_64-linux-gnu/libarrow-glib.so'
   elseif. UNAME-:'Darwin' do.
     libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
@@ -19,24 +21,25 @@ libload =: {{)v
   1
 }}
 
-cbind =: 3 : 0"1
+cbind =: 4 : 0"1 1
   'type name args' =. y
-  v =. (libParquet,' ',name,' ',type)&cd
+  v =. (x,' ',name,' ',type)&cd
   (". 'name') =: v
   1
 )
 
-init =: {{)v
+init =: {{
 
   libload''
 
-  >./ cbind parquetReaderBindings, parquetWriterBindings
-  >./ cbind tableBindings, recordBatchBindings, chunkedArrayBindings
-  >./ cbind basicArrayBindings, compositeArrayBindings
-  >./ cbind schemaBindings, fieldBindings
-  >./ cbind basicDatatypeBindings, compositeDataTypeBindings
-  >./ cbind basicArrayBindings,compositeArrayBindings
-  >./ cbind bufferBindings
+  >./ libParquet cbind parquetReaderBindings, parquetWriterBindings
+  >./ libArrow cbind tableBindings, recordBatchBindings, chunkedArrayBindings
+  >./ libArrow cbind basicArrayBindings, compositeArrayBindings
+  >./ libArrow cbind schemaBindings, fieldBindings
+  >./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
+  >./ libArrow cbind basicArrayBindings,compositeArrayBindings
+  >./ libArrow cbind bufferBindings
+  >./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
 
   1
 }}
@@ -1057,7 +1060,7 @@ NB. Type
 NB. =========================================================
 
 NB. garrow_string_array_get_stringSHIM =: <@getChar@>@{.@garrow_string_array_get_string
-garrow_string_array_get_stringSHIM =: <@<@getChar@{.@garrow_string_array_get_string
+garrow_string_array_get_stringSHIM =: <@<@getCharFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
@@ -1374,7 +1377,7 @@ readDataColumn=:{{
   ncols =. tableNCols tablePt
   'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
   chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-  ,. > readChunkedArray each chunkedArrayPts
+  ,. ; each readChunkedArray each chunkedArrayPts
 }}
 
 readColumn=:{{
