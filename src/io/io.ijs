@@ -58,7 +58,7 @@ NB. =========================================================
 writeableFileBindings =: lib 0 : 0
 n *	garrow_writable_file_default_init	(GArrowWritableFileInterface *iface); static void
 i * l i i *	garrow_writable_file_write_at	(GArrowWritableFile *writable_file, gint64 position, const guint8 *data, gint64 n_bytes, GError **error); gboolean
-* *	garrow_writable_file_get_raw(GArrowWritableFile *writable_file); std::shared_ptr<arrow::io::WritableFile>
+* *	garrow_writable_file_get_raw	(GArrowWritableFile *writable_file); std::shared_ptr<arrow::io::WritableFile>
 )
 
 NB. Output stream classes

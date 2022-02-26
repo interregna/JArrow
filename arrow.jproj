@@ -17,4 +17,5 @@ src/data/tableBuilder.ijs
 src/data/tensor.ijs
 src/data/type.ijs
 src/data/value.ijs
+src/io/io.ijs
 src/arrow.ijs

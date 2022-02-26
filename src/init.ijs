@@ -39,6 +39,7 @@ init =: {{
   >./ libArrow cbind schemaBindings, fieldBindings
   >./ libArrow cbind bufferBindings
   >./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
+  >./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
 
   1
 }}
