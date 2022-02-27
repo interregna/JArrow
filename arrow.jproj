@@ -18,4 +18,5 @@ src/data/tensor.ijs
 src/data/type.ijs
 src/data/value.ijs
 src/io/io.ijs
+src/ipc/ipc.ijs
 src/arrow.ijs

@@ -8,12 +8,12 @@ basicArrayBindings =: lib 0 : 0
 i *	garrow_equal_options_is_approx	(GArrowEqualOptions *options); gboolean
 * * * *	garrow_array_import	(gpointer c_abi_array, GArrowDataType *data_type, GError **error); GArrowArray *
 i * * * *	garrow_array_export	(GArrowArray *array, gpointer *c_abi_array, gpointer *c_abi_schema, GError **error); gboolean
-c * *	garrow_array_equal	(GArrowArray *array, GArrowArray *other_array); gboolean
-c * * *	garrow_array_equal_options	(GArrowArray *array, GArrowArray *other_array, GArrowEqualOptions *options); gboolean
-c * *	garrow_array_equal_approx	(GArrowArray *array, GArrowArray *other_array); gboolean
-c * x * x x *	garrow_array_equal_range	(GArrowArray *array, gint64 start_index, GArrowArray *other_array, gint64 other_start_index, gint64 end_index, GArrowEqualOptions *options); gboolean
-c * x	garrow_array_is_null	(GArrowArray *array, gint64 i); gboolean
-c * x	garrow_array_is_valid	(GArrowArray *array, gint64 i); gboolean
+i * *	garrow_array_equal	(GArrowArray *array, GArrowArray *other_array); gboolean
+i * * *	garrow_array_equal_options	(GArrowArray *array, GArrowArray *other_array, GArrowEqualOptions *options); gboolean
+i * *	garrow_array_equal_approx	(GArrowArray *array, GArrowArray *other_array); gboolean
+i * x * x x *	garrow_array_equal_range	(GArrowArray *array, gint64 start_index, GArrowArray *other_array, gint64 other_start_index, gint64 end_index, GArrowEqualOptions *options); gboolean
+i * x	garrow_array_is_null	(GArrowArray *array, gint64 i); gboolean
+i * x	garrow_array_is_valid	(GArrowArray *array, gint64 i); gboolean
 x *	garrow_array_get_length	(GArrowArray *array); gint64
 x *	garrow_array_get_offset	(GArrowArray *array); gint64
 x *	garrow_array_get_n_nulls	(GArrowArray *array); gint64
@@ -28,8 +28,8 @@ i *	garrow_array_get_value_type	(GArrowArray *array); GArrowType
 * l	garrow_null_array_new	(gint64 length); GArrowNullArray *
 * *	garrow_primitive_array_get_data_buffer	(GArrowPrimitiveArray *array); GArrowBuffer *
 *c x * * x	garrow_boolean_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowBooleanArray *
-c * x	garrow_boolean_array_get_value	(GArrowBooleanArray *array, gint64 i); gboolean
-*c * *	garrow_boolean_array_get_values	(GArrowBooleanArray *array, gint64 *length); gboolean *
+i * x	garrow_boolean_array_get_value	(GArrowBooleanArray *array, gint64 i); gboolean
+*i * *	garrow_boolean_array_get_values	(GArrowBooleanArray *array, gint64 *length); gboolean *
 * x * * x	garrow_int8_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowInt8Array *
 *l * x	garrow_int8_array_get_value	(GArrowInt8Array *array, gint64 i); gint8
 *l * *x	garrow_int8_array_get_values	(GArrowInt8Array *array, gint64 *length); const gint8 *

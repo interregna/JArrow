@@ -8,8 +8,8 @@ tableBindings =: lib 0 : 0
 * * * * i * 	garrow_table_new_chunked_arrays	(GArrowSchema *schema, GArrowChunkedArray **chunked_arrays, gsize n_chunked_arrays, GError **error); GArrowTable * 
 * * * i *	garrow_table_new_arrays	(GArrowSchema *schema, GArrowArray **arrays, gsize n_arrays, GError **error); GArrowTable *
 * * * o *	garrow_table_new_record_batches	(GArrowSchema *schema, GArrowRecordBatch **record_batches, gsize n_record_batches, GError **error); GArrowTable *
-c * *	garrow_table_equal	(GArrowTable *table, GArrowTable *other_table); gboolean
-c * * c	garrow_table_equal_metadata	(GArrowTable *table, GArrowTable *other_table, gboolean check_metadata); gboolean
+i * *	garrow_table_equal	(GArrowTable *table, GArrowTable *other_table); gboolean
+i * * i	garrow_table_equal_metadata	(GArrowTable *table, GArrowTable *other_table, gboolean check_metadata); gboolean
 * *	garrow_table_get_schema	(GArrowTable *table); GArrowSchema *
 * * i	garrow_table_get_column_data	(GArrowTable *table, gint i); GArrowChunkedArray *
 i *	garrow_table_get_n_columns	(GArrowTable *table); guint
@@ -27,7 +27,7 @@ n * i * *	garrow_feather_write_properties_get_property	(GObject *object, guint p
 n *	garrow_feather_write_properties_init	(GArrowFeatherWriteProperties *object); static void 
 n *	garrow_feather_write_properties_class_init	(GArrowFeatherWritePropertiesClass *klass); static void 
 * n	garrow_feather_write_properties_new	(void); GArrowFeatherWriteProperties *
-c * * * *	garrow_table_write_as_feather	(GArrowTable *table, GArrowOutputStream *sink, GArrowFeatherWriteProperties *properties, GError **error); gboolean 
+i * * * *	garrow_table_write_as_feather	(GArrowTable *table, GArrowOutputStream *sink, GArrowFeatherWriteProperties *properties, GError **error); gboolean 
 )
 
 NB. =========================================================
@@ -41,8 +41,8 @@ n * i * *	garrow_record_batch_get_property	(GObject *object, guint prop_id, GVal
 n *	garrow_record_batch_init	(GArrowRecordBatch *object); static void
 n *	garrow_record_batch_class_init	(GArrowRecordBatchClass *klass); static void
 * * i * *	garrow_record_batch_new	(GArrowSchema *schema, guint32 n_rows, GList *columns, GError **error); GArrowRecordBatch *
-c * *	garrow_record_batch_equal	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch); gboolean
-c * * c	garrow_record_batch_equal_metadata	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch, gboolean check_metadata); gboolean
+i * *	garrow_record_batch_equal	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch); gboolean
+i * * c	garrow_record_batch_equal_metadata	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch, gboolean check_metadata); gboolean
 * *	garrow_record_batch_get_schema	(GArrowRecordBatch *record_batch); GArrowSchema *
 * * i	garrow_record_batch_get_column_data	(GArrowRecordBatch *record_batch, gint i); GArrowArray *
 * * i	garrow_record_batch_get_column_name	(GArrowRecordBatch *record_batch, gint i); const gchar *
@@ -59,7 +59,7 @@ n *	garrow_record_batch_iterator_init	(GArrowRecordBatchIterator *object); stati
 n *	garrow_record_batch_iterator_class_init	(GArrowRecordBatchIteratorClass *klass); static void
 * *	garrow_record_batch_iterator_new	(GList *record_batches); GArrowRecordBatchIterator *
 * * *	garrow_record_batch_iterator_next	(GArrowRecordBatchIterator *iterator, GError **error); GArrowRecordBatch *
-c * *	garrow_record_batch_iterator_equal	(GArrowRecordBatchIterator *iterator, GArrowRecordBatchIterator *other_iterator); gboolean
+i * *	garrow_record_batch_iterator_equal	(GArrowRecordBatchIterator *iterator, GArrowRecordBatchIterator *other_iterator); gboolean
 * * *	garrow_record_batch_iterator_to_list	(GArrowRecordBatchIterator *iterator, GError **error); GList*
 * *	garrow_record_batch_new_raw	(std::shared_ptr<arrow::RecordBatch> *arrow_record_batch); ArrowRecordBatch *
 * *	garrow_record_batch_get_raw	(GArrowRecordBatch *record_batch); std::shared_ptr<arrow::RecordBatch>
@@ -78,7 +78,7 @@ n * i * *	garrow_chunked_array_get_property	(GObject *object, guint prop_id, GVa
 n *	garrow_chunked_array_init	(GArrowChunkedArray *object); static void
 n *	garrow_chunked_array_class_init	(GArrowChunkedArrayClass *klass); static void
 * *	garrow_chunked_array_new	(GList *chunks); GArrowChunkedArray *
-c * *	garrow_chunked_array_equal	(GArrowChunkedArray *chunked_array, GArrowChunkedArray *other_chunked_array); gboolean
+i * *	garrow_chunked_array_equal	(GArrowChunkedArray *chunked_array, GArrowChunkedArray *other_chunked_array); gboolean
 * *	garrow_chunked_array_get_value_data_type	(GArrowChunkedArray *chunked_array); GArrowDataType *
 i *	garrow_chunked_array_get_value_type	(GArrowChunkedArray *chunked_array); GArrowType
 x *	garrow_chunked_array_get_length	(GArrowChunkedArray *chunked_array); guint64

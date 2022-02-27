@@ -15,8 +15,8 @@ libload =: {{
     libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-600.dll'
-    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-600.dll'
+    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-700.dll'
+    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-700.dll'
   end.
   1
 }}

@@ -6,7 +6,7 @@ Apache Arrow API
 See details at: https://arrow.apache.org
 )
 
-VERSION=: '0.0.1'
+VERSION=: '7.0.0'
 
 RELEASE=:'j903'
 
@@ -22,6 +22,11 @@ test/test2.parquet
 )
 
 DEPENDS=: 0 : 0
+Version number should match Apache Arrow GLib and Apache Parquet GLib.
+
+See documentation at:
+https://arrow.apache.org/docs/c_glib/arrow-glib/
+https://arrow.apache.org/docs/c_glib/parquet-glib/
 )
 
-PLATFORMS=:''
+PLATFORMS=:'Linux Darwin Windows'

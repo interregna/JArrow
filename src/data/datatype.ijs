@@ -6,14 +6,14 @@ NB. =========================================================
 basicDatatypeBindings =: lib 0 : 0
 * * *	garrow_data_type_import	(gpointer c_abi_schema, GError **error); GArrowDataType *
 * * *	garrow_data_type_export	(GArrowDataType *data_type, GError **error); gpointer	
-c * *	garrow_data_type_equal	(GArrowDataType *data_type, GArrowDataType *other_data_type); gboolean
+i * *	garrow_data_type_equal	(GArrowDataType *data_type, GArrowDataType *other_data_type); gboolean
 *c *	garrow_data_type_to_string	(GArrowDataType *data_type); gchar *
 i *	garrow_data_type_get_id	(GArrowDataType *data_type); GArrowType
 *c *	garrow_data_type_get_name	(GArrowDataType *data_type); gchar *
 i *	garrow_fixed_width_data_type_get_bit_width	(GArrowFixedWidthDataType *data_type); gint
 *	garrow_null_data_type_new	(void); GArrowNullDataType *
 *	garrow_boolean_data_type_new	(void); GArrowBooleanDataType *
-c *	garrow_integer_data_type_is_signed	(GArrowIntegerDataType *data_type); gboolean
+i *	garrow_integer_data_type_is_signed	(GArrowIntegerDataType *data_type); gboolean
 *	garrow_int8_data_type_new	(void);GArrowInt8DataType *
 *	garrow_uint8_data_type_new	(void); GArrowUInt8DataType *
 *	garrow_int16_data_type_new	(void); GArrowInt16DataType *
@@ -48,8 +48,8 @@ i	garrow_decimal256_data_type_max_precision	(); gint32
 * * *	garrow_extension_data_type_wrap_array	(GArrowExtensionDataType *data_type, GArrowArray *storage); GArrowExtensionArray *
 * * *	garrow_extension_data_type_wrap_chunked_array	(GArrowExtensionDataType *data_type, GArrowChunkedArray *storage); GArrowChunkedArray *
 *	garrow_extension_data_type_registry_default	(void); GArrowExtensionDataTypeRegistry *
-c * * *	garrow_extension_data_type_registry_register	(GArrowExtensionDataTypeRegistry *registry, GArrowExtensionDataType *data_type, GError **error); gboolean
-c * *c *	garrow_extension_data_type_registry_unregister	(GArrowExtensionDataTypeRegistry *registry, const gchar *name, GError **error); gboolean
+i * * *	garrow_extension_data_type_registry_register	(GArrowExtensionDataTypeRegistry *registry, GArrowExtensionDataType *data_type, GError **error); gboolean
+i * *c *	garrow_extension_data_type_registry_unregister	(GArrowExtensionDataTypeRegistry *registry, const gchar *name, GError **error); gboolean
 * * *c	garrow_extension_data_type_registry_lookup	(GArrowExtensionDataTypeRegistry *registry, const gchar *name); GArrowExtensionDataType *
 )
 
