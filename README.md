@@ -1,4 +1,4 @@
-# J language bindings for Apache Arrow
+# J language wrapper for Apache Arrow (C api)
 Read (and eventually write) Apache Arrow and Parquet files to and from J.
 ## Usage
 ```j
