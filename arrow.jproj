@@ -20,3 +20,4 @@ src/data/value.ijs
 src/io/io.ijs
 src/ipc/ipc.ijs
 src/arrow.ijs
+src/public.ijs
