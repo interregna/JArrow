@@ -1,4 +1,5 @@
 NB. init
+cocurrent 'parrow'
 
 lib =: >@((3&{.)@(TAB&cut)&.>)@(LF&cut)
 ret =: 0&{::
@@ -9,8 +10,8 @@ setChar =: {{p [ y memw p,0,(# y),2 [ p=.mema # y=.(>y),{.a.}}
 
 libload =: {{
   if.     UNAME-:'Linux' do.
-    libParquet =: '/lib/x86_64-linux-gnu/libparquet-glib.so'
-    libArrow   =: '/lib/x86_64-linux-gnu/libarrow-glib.so'
+    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
+    libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
   elseif. UNAME-:'Darwin' do.
     libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
@@ -1447,3 +1448,9 @@ writeParquet=: {{
 writeParquetFromTable=: {{
   'table writeOptions' =. y
 }}
+NB. ====================
+NB. Expose public interface in z locale
+
+readParquetTable_z_=: readParquetTable_parrow_
+readsParquetTable_z_=: readsParquetTable_parrow_
+readParquetSchema_z_=: readParquetSchema_parrow_

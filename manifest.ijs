@@ -4,6 +4,12 @@ DESCRIPTION=: 0 : 0
 Apache Arrow API
 
 See details at: https://arrow.apache.org
+
+Version number should match Apache Arrow GLib and Apache Parquet GLib.
+
+See documentation at:
+https://arrow.apache.org/docs/c_glib/arrow-glib/
+https://arrow.apache.org/docs/c_glib/parquet-glib/
 )
 
 VERSION=: '7.0.0'
@@ -22,11 +28,6 @@ test/test2.parquet
 )
 
 DEPENDS=: 0 : 0
-Version number should match Apache Arrow GLib and Apache Parquet GLib.
-
-See documentation at:
-https://arrow.apache.org/docs/c_glib/arrow-glib/
-https://arrow.apache.org/docs/c_glib/parquet-glib/
 )
 
-PLATFORMS=:'Linux Darwin Windows'
+PLATFORMS=:''

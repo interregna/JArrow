@@ -11,6 +11,8 @@ NB. copy test parquet files to ~temp if they're not already there
 }}''
 
 load ProjPath,'/arrow.ijs'
+coinsert 'parrow'
+
 t1path =. TempPath,'test1.parquet'
 tp1 =. readParquet t1path
 echo readSchemaString tp1
