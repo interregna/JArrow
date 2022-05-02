@@ -9,8 +9,8 @@ setChar =: {{p [ y memw p,0,(# y),2 [ p=.mema # y=.(>y),{.a.}}
 
 libload =: {{
   if.     UNAME-:'Linux' do.
-    libParquet =: '/lib/x86_64-linux-gnu/libparquet-glib.so'
-    libArrow   =: '/lib/x86_64-linux-gnu/libarrow-glib.so'
+    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
+    libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
   elseif. UNAME-:'Darwin' do.
     libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
