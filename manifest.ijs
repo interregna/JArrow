@@ -30,3 +30,4 @@ test/test2.parquet
 DEPENDS=: 0 : 0
 )
 
+PLATFORMS=:''
