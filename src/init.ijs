@@ -1,4 +1,5 @@
 NB. init
+cocurrent 'parrow'
 
 lib =: >@((3&{.)@(TAB&cut)&.>)@(LF&cut)
 ret =: 0&{::
