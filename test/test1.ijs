@@ -18,13 +18,16 @@ tp1 =. readParquet t1path
 echo readSchemaString tp1
 echo readSchema tp1
 echo readData tp1
+echo readDataInverted tp2
 echo readTable tp1
 echo readsTable tp1
+echo readDataframe tp1
 
 echo readParquetData t1path
 echo readParquetSchema t1path
 echo readParquetTable t1path
 echo readsParquetTable t1path
+echo readParquetDataframe t1path
 echo readParquetColumn t1path;1
 
 NB. =========================================================
@@ -33,11 +36,14 @@ tp2 =. readParquet t2path
 echo readSchemaString tp2
 echo readSchema tp2
 echo readData tp2
+echo readDataInverted tp2
 echo readTable tp2
 echo readsTable tp2
+echo readDataframe tp2
 
 echo readParquetSchema t2path
 echo readParquetData t2path
 echo readParquetTable t2path
 echo readsParquetTable t2path
+echo readParquetDataframe t2path
 echo readParquetColumn t2path;14

@@ -173,8 +173,15 @@ tableNCols=:{{ret garrow_table_get_n_columns (< y)}}
 readData=:{{
   'tablePt' =. y
   ncols =. tableNCols tablePt
-  chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt),. <"0 i. ncols
+  chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
   ,. > readChunkedArray each chunkedArrayPts
+}}
+
+readDataInverted=:{{
+  'tablePt' =. y
+  ncols =. tableNCols tablePt
+  chunkedArrayPts =. {."1 garrow_table_get_column_data tablePt ;"0 i. ncols
+  , readChunkedArray"0 chunkedArrayPts
 }}
 
 readDataColumn=:{{
@@ -200,6 +207,11 @@ readsTable=:{{
   ((,@readSchemaNames),:(,@:(,.&.>)@:readData)) tablePt
 }}
 
+readDataframe=:{{
+  'tablePt' =. y
+  (readSchemaNames,:readDataInverted) tablePt
+}}
+
 NB. =========================================================
 NB. Parquet
 NB. =========================================================
@@ -222,6 +234,11 @@ readParquetData=:{{
   readData@readParquet filepath
 }}
 
+readParquetDataInverted=:{{
+  'filepath'=.y
+  readDataInverted@readParquet filepath
+}}
+
 readParquetTable=:{{
   'filepath'=.y
   readTable@readParquet filepath
@@ -230,6 +247,11 @@ readParquetTable=:{{
 readsParquetTable=:{{
   'filepath'=.y
   readsTable@readParquet filepath
+}}
+
+readParquetDataframe=:{{
+  'filepath'=.y
+  readDataframe@readParquet filepath
 }}
 
 readParquetColumn =: {{
