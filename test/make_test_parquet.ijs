@@ -23,6 +23,8 @@ pd.DataFrame(
 'int16Col':np.array(np.arange(300, 10, -290/8), dtype='int16'),
 'int32Col':np.array(np.arange(500, 50, -450/8), dtype='int32'),
 'int64Col':np.array(np.arange(100, 10, -90/8), dtype='int64'),
+'float32Col':np.array(np.arange(600, 50, -550/8), dtype='float32'),
+'float64Col':np.array(np.arange(700, 10, -690/8), dtype='float64'),
 'uintCol':np.array(np.arange(100, 10, -90/8), dtype=np.uint),
 'longlongCol':np.array(np.arange(100, 10, -90/8), dtype=np.longlong),
 'ulonglongCol':np.array(np.arange(100, 10, -90/8), dtype=np.ulonglong),

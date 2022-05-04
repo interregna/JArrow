@@ -18,7 +18,7 @@ GARROW_TYPE_UINT32	uint32	garrow_uint32_array_get_value	garrow_uint32_array_get_
 GARROW_TYPE_INT32	int32	garrow_int32_array_get_value	garrow_int32_array_get_values	int	4	Little-endian 32-bit signed integer.
 GARROW_TYPE_UINT64	uint64	garrow_uint64_array_get_value	garrow_uint64_array_get_values	int	4	Little-endian 64-bit unsigned integer.
 GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_values	int	4	Little-endian 64-bit signed integer.
-GARROW_TYPE_HALF_FLOAT	float	NA	NA	float	8	2-byte floating point value.
+GARROW_TYPE_HALF_FLOAT	NA	NA	NA	float	8	2-byte floating point value.
 GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_values	float	8	4-byte floating point value.
 GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	float	8	8-byte floating point value.
 GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	NA	char	2	UTF-8 variable-length string.
@@ -53,8 +53,8 @@ typeNameLookup =: {{> x {~ typeNameIndex y}}
 NB. typeNameIndex each typeName
 
 NB. Examples:
-NB. typeNameIndex 'int64'
-NB. typeGetValue&typeNameLookup 'int64'
+NB. typeNameIndex 'float'
+NB. typeGetValue&typeNameLookup 'float'
 NB. typeNameIndex 'utf8'
 NB. typeDescription typeNameLookup 'utf8'
 NB. typeGetValue&typeNameLookup 'utf8'

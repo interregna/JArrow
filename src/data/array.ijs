@@ -55,7 +55,7 @@ x * x	garrow_int64_array_get_value	(GArrowInt64Array *array, gint64 i); gint64
 x * x	garrow_uint64_array_get_value	(GArrowUInt64Array *array, gint64 i); guint64
 *x * *x	garrow_uint64_array_get_values	(GArrowUInt64Array *array, gint64 *length); const guint64 *
 * x * * x	garrow_float_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowFloatArray *
-d * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
+f * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
 *d * *x	garrow_float_array_get_values	(GArrowFloatArray *array, gint64 *length); const gfloat *
 * x * * x	garrow_double_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowDoubleArray *
 d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdouble

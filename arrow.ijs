@@ -101,7 +101,7 @@ x * x	garrow_int64_array_get_value	(GArrowInt64Array *array, gint64 i); gint64
 x * x	garrow_uint64_array_get_value	(GArrowUInt64Array *array, gint64 i); guint64
 *x * *x	garrow_uint64_array_get_values	(GArrowUInt64Array *array, gint64 *length); const guint64 *
 * x * * x	garrow_float_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowFloatArray *
-d * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
+f * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
 *d * *x	garrow_float_array_get_values	(GArrowFloatArray *array, gint64 *length); const gfloat *
 * x * * x	garrow_double_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowDoubleArray *
 d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdouble
@@ -898,7 +898,7 @@ GARROW_TYPE_UINT32	uint32	garrow_uint32_array_get_value	garrow_uint32_array_get_
 GARROW_TYPE_INT32	int32	garrow_int32_array_get_value	garrow_int32_array_get_values	int	4	Little-endian 32-bit signed integer.
 GARROW_TYPE_UINT64	uint64	garrow_uint64_array_get_value	garrow_uint64_array_get_values	int	4	Little-endian 64-bit unsigned integer.
 GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_values	int	4	Little-endian 64-bit signed integer.
-GARROW_TYPE_HALF_FLOAT	float	NA	NA	float	8	2-byte floating point value.
+GARROW_TYPE_HALF_FLOAT	NA	NA	NA	float	8	2-byte floating point value.
 GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_values	float	8	4-byte floating point value.
 GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	float	8	8-byte floating point value.
 GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	NA	char	2	UTF-8 variable-length string.
@@ -933,8 +933,8 @@ typeNameLookup =: {{> x {~ typeNameIndex y}}
 NB. typeNameIndex each typeName
 
 NB. Examples:
-NB. typeNameIndex 'int64'
-NB. typeGetValue&typeNameLookup 'int64'
+NB. typeNameIndex 'float'
+NB. typeGetValue&typeNameLookup 'float'
 NB. typeNameIndex 'utf8'
 NB. typeDescription typeNameLookup 'utf8'
 NB. typeGetValue&typeNameLookup 'utf8'
@@ -1234,10 +1234,11 @@ readArray=:{{
   indexType =. readArrayTypeIndex arrayPt
   arrayType =. readArrayType arrayPt
   length =. readArrayLength arrayPt
-  lengthPt =. writeArrayWidth length;width
   getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
   fRun =. getValueFunc,', arrayPt;<'
   results =. ; ret@". each (fRun&,)@": each <"0 i.length
+  NB. width =. readArrayBitWidth arrayPt
+  NB. lengthPt =. writeArrayWidth length;width
   NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
   NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
   NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
