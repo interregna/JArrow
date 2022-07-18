@@ -1,7 +1,6 @@
 NB. =========================================================
 NB. Fast read numbers (e.g. batch read values)
 
-
 readArrayLength=:{{ret garrow_array_get_length < y}}
 writeArrayLength=.{{<lengthPt [ (3 (3!:4) length) memw (] lengthPt =. mema 2),0,8,2 [ length =. y}}
 
@@ -45,13 +44,12 @@ getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
 fRun =. getValueFunc,', arrayPointer;<'
 results =. ; 0&{::@". each (fRun&,)@": each <"0 i.length
 
-
 indexType =. readArrayTypeIndex arrayPointer
 arrayType =. readArrayType arrayPointer
 length =. readArrayLength arrayPointer
 NB. if. -. arrayType = 'string' do.
 
-width =. readArrayBitWidth arrayPointer NB. "value" data only NB. FIX!!
+width =. readArrayBitWidth arrayPointer
 writeArrayLength=.{{<lengthPt [ length memw (] lengthPt =. mema 1),0,1,4 [ length =. y}}
 lengthPointer =. writeArrayLength length
 
@@ -60,9 +58,10 @@ arrayValuesPointer =.  ptr ". getValuesFunc,', arrayPointer;<lengthPointer'
 
 if. width ~: 64 do.
  type =. typeJ&typeIndexLookup indexType NB. lookup type functions  
- f =. (3!:4)`(3!:5)@. ((('int';'float')&I.) < type)
- memxarg =. ((_1,_1,_2,_1,_1)&({~))@:(('uint16';'int16';'int32';'float';'float32')&i.) < arrayType
- memsize=. ((2,4,1)&({~))@:((16,32,64)&I.) width
+ f =. (3!:4)`(3!:4)`(3!:5)@. ((('bool';'int';'float')&I.) < type)
+ fs=.'bool';'uint16';'int16';'int32';'float';'float32'
+ memxarg =. ((_2,_1,_1,_2,_1,_1)&({~))@:(('bool';'uint16';'int16';'int32';'float';'float32')&i.) < arrayType
+ memsize=. ((4,2,4,1)&({~))@:((1,16,32,64)&I.) width
  results2 =. memxarg f memr (0{::arrayValuesPointer),0,(length * memsize),2
 else.
  xarg =. 'non-converted'
@@ -74,22 +73,84 @@ NB. _1 (3!:4) memr (0{::arrayValuesPointer),0,length,2
 }}
 
 (,~({"0)@:i.@#@{.) readsParquetTable t2path
-(vs"0) (i.16),18 NB. Do not read strings or booleans yet.
-
+vs 2
+(vs"0) (i.16),17,18 NB. Do not read strings or booleans yet.
 16 NB. Strings ignore for now.
 
-17 NB. Booleans are width 1 byte.
-NB. Correct is 1 1 0 0 1 0 1 0
-memr (0{::arrayValuesPointer),0,(length),1
-0 (3!:4) memr (0{::arrayValuesPointer),0,length,2
-a. i. y =. memr (0{::arrayValuesPointer),0,length,2
 
 NB. =========================================================
+NB. Parquet columns direct to nouns
+
+load'jmf'
+require'jmf'
+
+viewnoun=: {{
+s=. symget <y               NB. pointer to symbol table entry
+sys=. memr s,0 2 4          NB. pointers to name, header
+h=. 1{sys                   NB. header pointer
+assert h = 15!:12 <y        NB. J 9.04
+fheader=. memr h,0 7 4      NB. fixed header
+'offset flag size type refcount len misc'=. fheader
+rank =. 16b3f (17 b.) misc
+shape=. memr h,56,rank,4    NB. shape
+assert (h+offset) = 15!:14 <y  NB. J 9.04
+data=. memr (h+offset),0,len,type
+sys;fheader;shape;data
+}}
+
+'tablePointer colIndex' =. tp2;15
+ncols =. tableNCols tablePointer
+'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
+chunkedArrayPointers =. <"0 ptr"1 garrow_table_get_column_data (< tablePointer), < colIndex
+NB. > readChunks each chunkedArrayPointers
+
+chunkedArrayPointer =. 0{:: chunkedArrayPointers
+nChunks =. 0&{::@garrow_chunked_array_get_n_chunks < chunkedArrayPointer
+arrayPointers =. readChunk each <"1 (<chunkedArrayPointer),.(<"0 i. nChunks)
+
+arrayPointer =. 0{::arrayPointers
+indexType =. readArrayTypeIndex arrayPointer
+arrayType =. readArrayType arrayPointer
+length =. readArrayLength arrayPointer
+
+getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
+fRun =. getValueFunc,', arrayPointer;<'
+results =. ; 0&{::@". each (fRun&,)@": each <"0 i.length
+
+indexType =. readArrayTypeIndex arrayPointer
+arrayType =. readArrayType arrayPointer
+length =. readArrayLength arrayPointer
+NB. if. -. arrayType = 'string' do.
+
+width =. readArrayBitWidth arrayPointer
+writeArrayLength=.{{<lengthPt [ length memw (] lengthPt =. mema 1),0,1,4 [ length =. y}}
+lengthPointer =. writeArrayLength length
+
+getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
+arrayValuesPointer =.  ptr ". getValuesFunc,', arrayPointer;<lengthPointer'
+
+Jtype =.  ". typeJMemr&typeIndexLookup indexType
+results2 =. memr (d2=. 0{::arrayValuesPointer),0,length,Jtype
+
+h2=: allochdr_jmf_ 40
+memsize =. 4 NB. unsure why
+shape =. length
+d2=. (0{::arrayValuesPointer)
+hdr2=: (d2-h2),0,(length*memsize),Jtype,1,length,1,shape NB. shape will be different for tensors
+hdr2 memw h2,0,(#hdr2), 4 NB. Write header
+results3=. (15!:7) h2
+results3
+
+viewnoun 'results3'
+
+NB. Future considerations:
+NB. chunked arrays may/not be contiguous? Can we unify them?
+NB. How to reference strings
 
 
 NB. =========================================================
 NB. IPC
-NB. =========================================================
+
 
 NB. Example for reading CSV
 NB. cmd + F9, F9
@@ -177,8 +238,6 @@ cderx''
 '"/usr/local/lib/libarrow-glib.dylib" GARROW_VERSION_MAJOR > i'&cd ''
 cder''
 cderx''
-
-
 
 NB. Work:
 'filereader';

@@ -14,7 +14,7 @@ https://arrow.apache.org/docs/c_glib/parquet-glib/
 
 VERSION=: '7.0.0'
 
-RELEASE=:'j903'
+RELEASE=:'j904'
 
 FOLDER=: 'data/arrow'
 
@@ -25,6 +25,7 @@ test/test1.ijs
 test/make_test_parquet.py
 test/test1.parquet
 test/test2.parquet
+test/test3.parquet
 )
 
 DEPENDS=: 0 : 0
