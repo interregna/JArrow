@@ -30,17 +30,16 @@ cbind =: 4 : 0"1 1
 )
 
 init =: {{
-
   libload''
-
-  >./ libParquet cbind parquetReaderBindings, parquetWriterBindings
-  >./ libArrow cbind tableBindings, recordBatchBindings, chunkedArrayBindings
-  >./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
-  >./ libArrow cbind basicArrayBindings, compositeArrayBindings
-  >./ libArrow cbind schemaBindings, fieldBindings
-  >./ libArrow cbind bufferBindings
-  >./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
-  >./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
-
-  1
+  r=. 1
+  r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
+  r =. r <. <./ libArrow cbind tableBindings, recordBatchBindings, chunkedArrayBindings
+  r =. r <. <./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
+  r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
+  r =. r <. <./ libArrow cbind schemaBindings, fieldBindings
+  r =. r <. <./ libArrow cbind bufferBindings
+  r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
+  r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
+  r =. r <. <./ libArrow cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
+  r
 }}

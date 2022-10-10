@@ -1,3 +1,120 @@
+load ProjPath,'/arrow.ijs'
+coinsert 'parrow'
+
+ppath=. '/Users/johnference/movies_201k.parquet'
+t1path =. ppath
+
+tp1 =. readParquet t1path
+echo readSchemaString tp1
+NB. echo readSchema tp1
+NB. echo readData tp1
+NB. echo readDataInverted tp1
+NB. echo readTable tp1
+NB. echo readsTable tp1
+NB. echo readDataframe tp1
+
+echo readParquetColumn t1path;1
+NB. readColumn
+ 'tablePt colIndex' =. y =. t1path;1
+'tablePt colIndex' =. tp1 ;1
+readDataColumn (< tablePt),< colIndex
+
+
+'tablePt colIndex' =. y =. tp1;0
+ncols =. tableNCols tablePt
+ncols 
+'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
+chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
+,. ; each readChunkedArray each chunkedArrayPts
+
+NB. readChunks each chunkedArrayPts 
+'chunkedArrayPt' =. y =. > {. chunkedArrayPts 
+nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
+arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
+readArray each arrayPts
+ap =.  > {. arrayPts
+
+
+ret garrow_array_is_valid ap;<0 NB. Is null?
+dtp =. ptr garrow_array_get_value_data_type <ap
+	getChar (ret ptr garrow_data_type_get_name < dtp)
+len =. ret garrow_array_get_length <ap
+
+ret garrow_array_get_offset <ap
+
+valueOffsetsPt=. < mema len * 2^2+IF64
+ (len # 0) memw (>valueOffsetsPt),0,len,4
+ memr (>valueOffsetsPt),0,len,4
+
+
+nNulls =. ret garrow_array_get_n_nulls <ap
+nbp =. ptr garrow_array_get_null_bitmap <ap NB. GArrowBuffer *
+ret garrow_array_get_n_nulls <ap
+
+e=. << mema 4
+stringptr =. ptr garrow_array_to_string ap;e NB. GArrowBuffer *
+memr (>stringptr),0,_1,2
+
+ret garrow_array_is_null ap;<0
+ret garrow_array_get_value_type <ap
+
+NB. The bitmap that shows null elements. The N-th element is null when the N-th bit is 0, not null otherwise. 
+NB. If the array has no null elements, the bitmap must be NULL and n_nulls is 0.
+valueOffsetsPt=. < mema len * 2^2+IF64
+(len # 0) memw (>valueOffsetsPt),0,len,4
++/ memr (>valueOffsetsPt),0,len,4
+valueOffsetsbufferPt=. ptr garrow_buffer_new valueOffsetsPt; len
+
+ret garrow_buffer_get_capacity < valueOffsetsbufferPt
+ret garrow_buffer_get_size  < valueOffsetsbufferPt
+bp =. ptr garrow_buffer_get_data < valueOffsetsbufferPt
+bpp =. memr (> bp),0,1,4
++/ memr bpp,0,len,4
+
+nullarrayptr =. ptr garrow_null_array_new len
+
+offsetArrayPtr =. garrow_int8_array_new len;valueOffsetsbufferPt;nullarrayptr;0
+
+
+
+ret garrow_buffer_get_capacity < valueOffsetsbufferBytesPt 
+ret garrow_buffer_get_size  < valueOffsetsbufferBytesPt 
+ret garrow_buffer_is_mutable < valueOffsetsbufferPt
+
+valueOffsetsPt2=. < mema len * 2^2+IF64
+(len # 1) memw (>valueOffsetsPt2),0,len,4
++/ memr (>valueOffsetsPt2),0,len,4
+valueOffsetsbufferPt2=. ptr garrow_buffer_new valueOffsetsPt; len
+
+ret garrow_buffer_equal valueOffsetsbufferPt;<valueOffsetsbufferPt2 NB. if unederlying pointers are equal, return 1
+
+garrow_buffer_equal_n_bytes valueOffsetsbufferPt;valueOffsetsbufferPt2;len
+
+'"/usr/local/lib/libarrow-glib.dylib"  garrow_list_array_new * * i * * * i'&cd dtp;len;valueOffsetsbufferPt;ap;nbp;nNulls 
+
+'"/usr/local/lib/libarrow-glib.dylib"  garrow_list_array_new * * i * * * i'&cd dtp;len;offsetArrayPtr;ap;nbp;nNulls 
+
+
+
+garrow_primitive_array_get_data_buffer
+
+databufferpptr =. ptr garrow_primitive_array_get_data_buffer <ap
+
+
+# (' ';'') rplc~ ''
+
+
+GArrowDataType *data_type,
+                       gint64 length,
+                       GArrowBuffer *value_offsets,
+                       GArrowArray *values,
+                       GArrowBuffer *null_bitmap,
+                       gint64 n_nulls
+
+
+
+
+
 NB. =========================================================
 NB. Fast read numbers (e.g. batch read values)
 
@@ -502,3 +619,229 @@ G_PARAM_READWRITE
 G_MAXUINT
 read_options.skip_rows,
 static_cast<GParamFlags>(G_PARAM_READWRITE));
+
+
+NB. consider GObject Introspection
+NB. to automatically generate bindings
+
+'/usr/local/lib/girepository-1.0/ArrowFlight-1.0.typelib'
+'/usr/local/lib/libgirepository-1.0.dylib'
+'/usr/local/opt/glib/lib/libgobject-2.0.0.dylib'
+
+'"/usr/local/lib/libgirepository-1.0.dylib" gi_get_major_version i'&cd ''
+
+
+NB. =========================================================
+NB. Arrow flight
+NB. flightclient.py list localhost:5005
+NB. python3 flightclient.py do localhost:5005 shutdown
+NB. python3 flightclient.py put localhost:5005 iGd220525.csv
+
+ptr =. <@(0&({::))
+writeString=:{{<stringPt [ string memw (] stringPt =. mema l1),0,l1,2 [ l1 =. >:@# string =. y}}
+NB. test
+e=. mema 4 NB. pointer to int32 for error codes
+NB. uriPt =. writeString 'localhost:5005'
+uriPt =. writeString 'grpc+tcp://localhost:5005'
+NB. New location NB. gaflight_location_new
+locPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_new * * *'&cd uriPt;<<e
+
+strPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_to_string * *'&cd <locPtr
+memr (> strPtr),0,_1,2
+
+strPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_get_scheme * *'&cd <locPtr
+memr (> strPtr),0,_1,2
+
+clientOptPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_new *'&cd ''
+clientPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * * * *'&cd locPtr;(clientOptPtr);<<e
+callOptPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_new *'&cd ''
+dataPtr =. 
+ticketPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_ticket_new '&cd < dataPtr
+flightStreamReaderPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_do_get *'&cd clientPtr;ticketPtr;callOptPtr;<<e
+descripPtr =. gaflight_path_descriptor_new(const gchar **paths, gsize n_paths)
+NB. gchar * gaflight_descriptor_to_string(GAFlightDescriptor *descriptor)
+infoPtr =. gaflight_client_get_flight_info clientPtr;descripPtr;callOptPtr;<<e
+descripPtr =. gaflight_info_get_descriptor (GAFlightInfo *info)
+strPtr =. gaflight_descriptor_to_string(GAFlightDescriptor *descriptor)
+NB. GAFlightDescriptor * gaflight_info_get_descriptor(GAFlightInfo *info)
+NB. GList * gaflight_info_get_endpoints(GAFlightInfo *info)
+NB. gint64 gaflight_info_get_total_records(GAFlightInfo *info)
+
+NB. List Flights
+bytePtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" g_byte_array_new *'&cd ''
+criteriaPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_criteria_new * *'&cd < bytePtr
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_list_flights * * * * *'&cd clientPtr;criteriaPtr;callOptPtr;<<e
+cder''
+
+healthcheck
+
+NB. Do Action
+NB. Push Data
+csv filepath
+client.do_put
+descriptor file,schema
+writer.write
+
+NB. Get Flight
+descriptor
+info
+endpoint
+ticket & location
+reader = client.do_get(ticket)
+reader.read
+
+
+
+
+
+
+
+
+gaflight_ticket_new
+
+gaflight_descriptor_to_string
+
+
+gaflight_call_options_add_header
+gaflight_call_options_clear_headers
+gaflight_call_options_foreach_header
+
+gaflight_client_close
+gaflight_client_list_flights
+gaflight_client_get_flight_info
+gaflight_client_do_get
+
+gaflight_criteria_new
+gaflight_descriptor_to_string
+gaflight_path_descriptor_new
+gaflight_path_descriptor_get_paths
+
+gaflight_command_descriptor_new
+gaflight_command_descriptor_get_command
+gaflight_ticket_new
+gaflight_endpoint_new
+gaflight_endpoint_get_locations
+
+gaflight_info_new
+gaflight_info_get_schema
+gaflight_info_get_descriptor
+gaflight_info_get_endpoints
+gaflight_info_get_total_records
+gaflight_info_get_total_bytes
+
+gaflight_stream_chunk_get_data
+gaflight_stream_chunk_get_metadata
+gaflight_record_batch_reader_read_next
+gaflight_record_batch_reader_read_all
+
+
+gaflight_client_list_flights(GAFlightClient *client,GAFlightCriteria *criteria, GAFlightCallOptions *options, GError **error);
+
+
+
+
+cder''
+cderx''
+memr (>coTypePtr),0,1,4
+memr (>e),0,1,2
+
+coTypePtr =. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_type i'&cd ''
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_get_type d'&cd ''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_type d'&cd ''
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" g_object_new * * *'&cd coTypePtr;''
+
+
+NB. Not found:
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_raw * *'&cd < clientOptionsPtr
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_set_property n * i * *'&cd clientOptionsPtr;1;1;1
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_set_property n *'&cd <clientOptionsPtr
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_property n *'&cd <clientOptionsPtr
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_init n *'&cd <clientOptionsPtr
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_class_init n *'&cd <clientOptionsPtr
+cder''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_finalize n *'&cd <clientOptionsPtr
+cder''
+
+
+
+tPtr =. writeString 'disable-server-verification' 
+'"/usr/local/lib/libarrow-flight-glib.dylib" g_object_set_property n * * *'&cd clientOptionsPtr;tPtr;1
+cder''
+
+
+
+g_object_get
+g_value_set_boolean
+
+
+objPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_param_spec_boolean * * * * x x'&cd 'disable-server-verification';'';'';1;1
+'"/usr/local/lib/libarrow-flight-glib.dylib" g_object_class_install_property n * i *'&cd  clientOptionsPtr ;1;<objPtr
+cder''
+
+spec = g_param_spec_boolean "disable-server-verification",
+                              NULL,
+                              NULL,
+                              options.disable_server_verification,
+                              static_cast<GParamFlags>(G_PARAM_READWRITE));
+g_object_class_install_property ( gobject_class, 1, spec);
+
+
+
+
+
+cder''
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_raw * *'&cd <clientOptionsPtr 
+
+
+
+
+cder ''
+cderx ''
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * * n n'&cd locPtr;<clientOptionsPtr
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * *'&cd <locPtr
+
+
+NB. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_server_options_new *'&cd ''
+NB. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_data_stream_get_raw * *'&cd ''
+
+
+
+callOptionsPtr =. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_new *'&cd ''
+
+
+
+
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new_raw n *'&cd <clientOptionsPtr
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_get_raw  *'&cd <locPtr
+cder''
+
+
+
+
+
+
+cder''
+gaflight_client_options_get_raw
+
+
+garrow_record_batch_reader_import
+garrow_record_batch_reader_new
+garrow_record_batch_reader_get_schema
+garrow_record_batch_file_reader_new
+GArrowRecordBatchReader
+
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_data_stream_get_type i'&cd ''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_servable_get_type i'&cd ''
+'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_record_batch_stream_get_type * * *'&cd ''
+

@@ -19,5 +19,6 @@ src/data/type.ijs
 src/data/value.ijs
 src/io/io.ijs
 src/ipc/ipc.ijs
+src/flight/flight.ijs
 src/arrow.ijs
 src/public.ijs

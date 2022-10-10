@@ -14,6 +14,7 @@ load ProjPath,'/arrow.ijs'
 coinsert 'parrow'
 
 t1path =. TempPath,'test1.parquet'
+
 tp1 =. readParquet t1path
 echo readSchemaString tp1
 echo readSchema tp1
@@ -22,6 +23,8 @@ echo readDataInverted tp1
 echo readTable tp1
 echo readsTable tp1
 echo readDataframe tp1
+
+
 
 echo readParquetData t1path
 echo readParquetSchema t1path

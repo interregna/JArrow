@@ -1,3 +1,4 @@
+9!:5 (1) NB. Enable nameref caching.
 init ''
 
 NB. =========================================================
@@ -148,7 +149,9 @@ readSchemaString=:{{
   getChar ret ptr garrow_schema_to_string < schemaPt
 }}
 
-readSchema=:{{
+readSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readSchemaString
+
+readSchemaBoxed=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaFields schemaPt
