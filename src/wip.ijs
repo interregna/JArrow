@@ -746,29 +746,13 @@ memr (>coTypePtr),0,1,4
 memr (>e),0,1,2
 
 coTypePtr =. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_type i'&cd ''
+gaflight_client_options_get_type ''
+
 
 '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_get_type d'&cd ''
 '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_type d'&cd ''
 
 '"/usr/local/lib/libarrow-flight-glib.dylib" g_object_new * * *'&cd coTypePtr;''
-
-
-NB. Not found:
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_raw * *'&cd < clientOptionsPtr
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_set_property n * i * *'&cd clientOptionsPtr;1;1;1
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_set_property n *'&cd <clientOptionsPtr
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_property n *'&cd <clientOptionsPtr
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_init n *'&cd <clientOptionsPtr
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_class_init n *'&cd <clientOptionsPtr
-cder''
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_finalize n *'&cd <clientOptionsPtr
-cder''
-
 
 
 tPtr =. writeString 'disable-server-verification' 

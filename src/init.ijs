@@ -12,12 +12,15 @@ libload =: {{
   if.     UNAME-:'Linux' do.
     libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
     libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
+    libFlight   =: '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
   elseif. UNAME-:'Darwin' do.
     libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
+    libFlight   =: '"','" ',~  '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-700.dll'
-    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-700.dll'
+    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-900.dll'
+    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-900.dll'
+    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-900.dll'
   end.
   1
 }}
@@ -40,6 +43,6 @@ init =: {{
   r =. r <. <./ libArrow cbind bufferBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
-  r =. r <. <./ libArrow cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
+  r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
   r
 }}
