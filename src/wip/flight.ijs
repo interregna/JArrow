@@ -42,10 +42,7 @@ flightListPtr =. ptr gaflight_client_list_flights clientPtr;criteriaPtr;callOptP
 
 NB. A list of flights is a list of pointers to 'info'
 flightPtrCount =. ret '"/usr/local/lib/libarrow-flight-glib.dylib" g_list_length * * '&cd <flightListPtr
-NB. firstFlightPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth * * i'&cd flightListPtr;0 NB. Turn this into a function, interate on flightPtrCount
-NB. get flight info pointer from pointer
-NB. infoPtr =. < {. memr (> firstFlightPtr),0,1,4
-infoPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd flightListPtr;3 NB. Turn this into a function, interate on flightPtrCount
+infoPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd flightListPtr; 0 NB. Turn this into a function, interate on flightPtrCount
 
 desPtr =. ptr gaflight_info_get_descriptor < infoPtr
 ret gaflight_info_get_total_records < infoPtr
@@ -54,27 +51,17 @@ desCharPtr =. ptr gaflight_descriptor_to_string < desPtr
 readString desCharPtr
 
 endpointListPtr =. ptr gaflight_info_get_endpoints < infoPtr
-endpointCount =. ret '"/usr/local/lib/libarrow-flight-glib.dylib" g_list_length * * '&cd < endpointListPtr
+endpointCount =. ret '"/usr/local/lib/libarrow-flight-glib.dylib" g_list_length * * '&cd <endpointListPtr
 
-NB. A list of 'endpoints' is a list of points to locations and a ticket
-NB. firstEndpointPtrPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth * * i'&cd endpointListPtr;0 NB. Turn this into a function, interate on flightPtrCount
-NB. firstEndpointPtr =. < {. memr (> firstEndpointPtrPtr),0,1,4
-firstEndpointPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd endpointListPtr;0 NB. Turn this into a function, interate on flightPtrCount
-locsPtr =. ptr gaflight_endpoint_get_locations < firstEndpointPtr
+NB. A list of 'endpoints' is a ticket and list of locations
+endpointPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd endpointListPtr;0 NB. Turn this into a function, interate on flightPtrCount
+locsPtr =. ptr gaflight_endpoint_get_locations < endpointPtr
 
-NB. This works, so properties work
-NB. endpoint->'ticket', info->'info', flight->'data'
-NB. p0 =. ptr gaflight_info_get_type ''
 p0 =. ptr gaflight_endpoint_get_type ''
-fs0 =. ptr gaflight_stream_reader_get_type ''
-
-namePtr =. writeString 'ticket'
-typeNamePtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_type_name * *'&cd  <p0
-readString typeNamePtr
+readString ptr '"/usr/local/lib/libarrow-glib.dylib" g_type_name * *'&cd  <p0
 classPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_type_class_peek * *'&cd  <p0
-paramSpecPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_object_class_find_property * * *'&cd classPtr;<namePtr
-paramSpecNamePtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_param_spec_get_name * *'&cd  <paramSpecPtr
-readString paramSpecNamePtr
+paramSpecPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_object_class_find_property * * *'&cd classPtr;< writeString 'ticket'
+readString ptr '"/usr/local/lib/libarrow-glib.dylib" g_param_spec_get_name * *'&cd  <paramSpecPtr
 NB. The property is found.
 
 NB. =========================================================
@@ -83,10 +70,9 @@ NB. Try to create a new ticket, and then shift the data between byte pointerrs w
 
 t0 =. ptr gaflight_ticket_get_type ''
 ticketPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_type_create_instance * *'&cd  <t0
+'"/usr/local/lib/libarrow-glib.dylib" g_object_get n * * * *'&cd  endpointPtr;(writeString 'ticket');ticketPtr;<<0
+tp =. ptr 1 readInts ticketPtr
 
-tnp=. writeString 'ticket'
-'"/usr/local/lib/libarrow-glib.dylib" g_object_get n * * * *'&cd  firstEndpointPtr;tnp;ticketPtr;<<0
-tp =. < 0&{:: 1 readInts ticketPtr 
 e2q=. mema 4
 FSReaderPtr =. ptr gaflight_client_do_get clientPtr;tp;callOptPtr;<<e2q
 e3=. mema 4 
@@ -97,6 +83,13 @@ NB. see https://github.com/apache/arrow/blob/c2e198b84d6752733bdd20089195dc9c47d
 e4=. mema 4
 rbsPtr =. ptr garrow_record_batch_to_string rbPtr;<<e4
 memr (>rbsPtr),0,_1,2
+
+NB. reader is stateful
+efs=. mema 4
+tblPtr =. ptr gaflight_record_batch_reader_read_all FSReaderPtr;<<efs
+readTable tblPtr
+readsTable tblPtr
+readColumn tblPtr;1
 
 
 NB. =========================================================
@@ -122,74 +115,27 @@ bplen2 =. writeInts ret '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_size *
 dataPtr2 =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_data * * *'&cd bytePtr2;<bplen2
 memr (memr (>dataPtr2),0,1,4),0,_1,2
 
-
-NB. =========================================================
-NB. This actually works, wtf.
-NB. Doesn't pull anything from the endpoint, just creates a ticket directly.
-NB. ticker init 4:
-NB. try a raw string copied from python server output
-ticketlist =. ' (1, None, (b''iGd220525.csv'',))' 
-tnp=. writeString ticketlist
-len =. # ticketlist
-bytePtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_bytes_new * * i'&cd (tnp);len
-ticketPtr =. ptr gaflight_ticket_new <bytePtr
-e2=. mema 4
-[  FSReaderPtr =. ptr gaflight_client_do_get clientPtr;ticketPtr;callOptPtr;<<e2
-NB.   FSReaderPtr =. ptr gaflight_client_do_get clientPtr;ticketPtr;(<0);<<e2 NB. Example with null callOption
-
-
-NB. Can only run this when a non-null pointer is returned to FSReaderPtr
 e3=. mema 4 
-] fsChunkPtr =. ptr gaflight_record_batch_reader_read_next FSReaderPtr;<<e3
-] rbPtr =. ptr gaflight_stream_chunk_get_data < fsChunkPtr NB. GArrowRecordBatch *
-] ptr gaflight_stream_chunk_get_metadata	< fsChunkPtr  NB. (GAFlightStreamChunk *chunk); GArrowBuffer *
+fsChunkPtr =. ptr gaflight_record_batch_reader_read_next FSReaderPtr;<<e3
+rbPtr =. ptr gaflight_stream_chunk_get_data < fsChunkPtr NB. GArrowRecordBatch *
+ptr gaflight_stream_chunk_get_metadata < fsChunkPtr  NB. (GAFlightStreamChunk *chunk); GArrowBuffer *
 NB. see https://github.com/apache/arrow/blob/c2e198b84d6752733bdd20089195dc9c47df73a1/c_glib/arrow-glib/record-batch.cpp
 e4=. mema 4
 rbsPtr =. ptr garrow_record_batch_to_string rbPtr;<<e4
 memr (>rbsPtr),0,_1,2
 
 NB. reader is stateful
-NB. eventually run into some type issues on a column, but otherwise works.
-NB. Types:
-NB. QUALITYTIER: null
-NB. QUALITYTIERTYPE: null
 e5=. mema 4
 tblPtr =. ptr gaflight_record_batch_reader_read_all FSReaderPtr;<<e3
-33 { readTable tblPtr
-33 { readSchemaNames tblPtr
 readData tblPtr
-ncols =. tableNCols tblPtr
-chunkedArrayPts =.  <"0 ptr"1 garrow_table_get_column_data tblPtr ;"0 i. ncols
-,. > readChunkedArray each chunkedArrayPts
-> readChunks each  33 { |. chunkedArrayPts
-chunkedArrayPt=. > 33 { |. chunkedArrayPts
-nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
-arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-readArray each 1{. arrayPts
-'arrayPt' =. >  1{ arrayPts
-indexType =. readArrayTypeIndex arrayPt NB. This is where the error is, column 33 zero-indexed
-arrayType =. readArrayType arrayPt
-length =. readArrayLength arrayPt
-getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
-fRun =. getValueFunc,', arrayPt;<'
-results =. ; ret@". each (fRun&,)@": each <"0 i.length
-  NB. width =. readArrayBitWidth arrayPt
-  NB. lengthPt =. writeArrayWidth length;width
-  NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
-  NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
-  NB. results =. memr (ret arrayValuesPt),0,length,Jtype
-  NB. memf > lengthPt
-  results
 
 
 
 healthcheck
-
 reader.read
 
-gaflight_descriptor_to_string
 
+gaflight_descriptor_to_string
 gaflight_call_options_add_header
 gaflight_call_options_clear_headers
 gaflight_call_options_foreach_header

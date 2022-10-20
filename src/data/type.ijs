@@ -8,7 +8,7 @@ garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_ge
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
-GARROW_TYPE_NA	NA	NA	NA	NA	0	A degenerate NULL type represented as 0 bytes/bits.
+GARROW_TYPE_NA	null	__&[	NA	NA	0	A degenerate NULL type represented as 0 bytes/bits.
 GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	bool	1	A boolean value represented as 1-bit.
 GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	int	4	Little-endian 8-bit unsigned integer.
 GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	int	4	Little-endian 8-bit signed integer.

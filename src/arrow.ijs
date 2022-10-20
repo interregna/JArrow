@@ -1,6 +1,7 @@
 9!:5 (1) NB. Enable nameref caching.
 init ''
 
+
 NB. =========================================================
 NB. Array
 NB. =========================================================
@@ -215,6 +216,7 @@ readDataframe=:{{
   'tablePt' =. y
   (readSchemaNames,:readDataInverted) tablePt
 }}
+
 
 NB. =========================================================
 NB. Parquet
