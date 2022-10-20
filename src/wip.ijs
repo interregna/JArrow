@@ -637,40 +637,106 @@ NB. flightclient.py list localhost:5005
 NB. python3 flightclient.py do localhost:5005 shutdown
 NB. python3 flightclient.py put localhost:5005 iGd220525.csv
 
-ptr =. <@(0&({::))
 writeString=:{{<stringPt [ string memw (] stringPt =. mema l1),0,l1,2 [ l1 =. >:@# string =. y}}
+writeInts=:{{<Pt [ y memw (] Pt =. mema # y),0,1,4}}
+
 NB. test
 e=. mema 4 NB. pointer to int32 for error codes
 NB. uriPt =. writeString 'localhost:5005'
 uriPt =. writeString 'grpc+tcp://localhost:5005'
 NB. New location NB. gaflight_location_new
-locPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_new * * *'&cd uriPt;<<e
+locPtr =. ptr gaflight_location_new uriPt;<<e
 
-strPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_to_string * *'&cd <locPtr
+strPtr =. ptr  gaflight_location_to_string <locPtr
 memr (> strPtr),0,_1,2
 
-strPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_get_scheme * *'&cd <locPtr
+strPtr =. ptr gaflight_location_get_scheme <locPtr
 memr (> strPtr),0,_1,2
 
-clientOptPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_new *'&cd ''
-clientPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * * * *'&cd locPtr;(clientOptPtr);<<e
-callOptPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_new *'&cd ''
-dataPtr =. 
-ticketPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_ticket_new '&cd < dataPtr
-flightStreamReaderPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_do_get *'&cd clientPtr;ticketPtr;callOptPtr;<<e
-descripPtr =. gaflight_path_descriptor_new(const gchar **paths, gsize n_paths)
+clientOptPtr =. ptr  gaflight_client_options_new ''
+clientPtr =. ptr gaflight_client_new locPtr;(clientOptPtr);<<e
+callOptPtr =. ptr gaflight_call_options_new ''
+NB. gaflight_call_options_add_header
+
+NB. dataPtr =. 
+NB. ticketPtr =. ptr gaflight_ticket_new < dataPtr
+NB. flightStreamReaderPtr =. ptr gaflight_ticket_new clientPtr;ticketPtr;callOptPtr;<<e
+NB. descripPtr =. gaflight_path_descriptor_new (const gchar **paths, gsize n_paths)
 NB. gchar * gaflight_descriptor_to_string(GAFlightDescriptor *descriptor)
-infoPtr =. gaflight_client_get_flight_info clientPtr;descripPtr;callOptPtr;<<e
-descripPtr =. gaflight_info_get_descriptor (GAFlightInfo *info)
-strPtr =. gaflight_descriptor_to_string(GAFlightDescriptor *descriptor)
+NB. infoPtr =. gaflight_client_get_flight_info clientPtr;descripPtr;callOptPtr;<<e
+NB. descripPtr =. gaflight_info_get_descriptor (GAFlightInfo *info)
+NB. strPtr =. gaflight_descriptor_to_string (GAFlightDescriptor *descriptor)
 NB. GAFlightDescriptor * gaflight_info_get_descriptor(GAFlightInfo *info)
 NB. GList * gaflight_info_get_endpoints(GAFlightInfo *info)
 NB. gint64 gaflight_info_get_total_records(GAFlightInfo *info)
 
 NB. List Flights
-bytePtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" g_byte_array_new *'&cd ''
-criteriaPtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_criteria_new * *'&cd < bytePtr
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_list_flights * * * * *'&cd clientPtr;criteriaPtr;callOptPtr;<<e
+criteria =. 1 NB. No idea what criteria look like.
+critPtr =. writeInts criteria
+bytePtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_bytes_new * * i'&cd critPtr; # criteria
+NB. bytePtr =. ptr  '"/usr/local/lib/libarrow-flight-glib.dylib" g_byte_array_new *'&cd ''
+criteriaPtr =. ptr  gaflight_criteria_new < bytePtr
+flightListPtr =. ptr gaflight_client_list_flights clientPtr;criteriaPtr;callOptPtr;<<e
+
+NB. A list of flights is a list of pointers to 'info'
+flightPtrCount =. ret '"/usr/local/lib/libarrow-flight-glib.dylib" g_list_length * * '&cd <flightListPtr
+firstFlightPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth * * i'&cd flightListPtr;0 NB. Turn this into a function, interate on flightPtrCount
+NB. firstFlightPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_first * * '&cd <flightListPtr
+firstInfoPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd flightListPtr;0 NB. Turn this into a function, interate on flightPtrCount
+
+NB. get flight info pointer from pointer
+infoPtr =. < {. memr (> firstFlightPtr),0,1,4
+desPtr =. ptr gaflight_info_get_descriptor < infoPtr
+desCharPtr =. ptr gaflight_descriptor_to_string < infoPtr
+getChar desCharPtr
+
+ret gaflight_info_get_total_records < infoPtr
+ret gaflight_info_get_total_bytes < infoPtr
+endpointListPtr =. ptr gaflight_info_get_endpoints < infoPtr
+endpointCount =. ret '"/usr/local/lib/libarrow-flight-glib.dylib" g_list_length * * '&cd < endpointListPtr
+
+NB. A list of 'endpoints' is a list of pointers to tickets
+firstEndpointPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth * * i'&cd endpointListPtr;0 NB. Turn this into a function, interate on flightPtrCount
+NB. firstTicketPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_first * * '&cd <endpointListPtr
+firstTicketPtr =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_list_nth_data * * i'&cd endpointListPtr;0 NB. Turn this into a function, interate on flightPtrCount
+
+
+NB. These do not work:
+gaflight_client_do_get clientPtr;firstTicketPtr;callOptPtr;<<e
+tck2 =.  < {. memr (> firstTicketPtr),0,1,4
+gaflight_client_do_get clientPtr;tck2;callOptPtr;<<e
+
+
+rdOptPtr =. ptr garrow_read_options_new ''
+nFieldsPtr =. writeInts 0 NB. No idea what this is.
+garrow_read_options_set_included_fields rdOptPtr;nFieldsPtr;0
+NB. garrow_read_options_get_included_fields rdOptPtr;<nFieldsPtr
+
+schemaPtr =. ptr gaflight_info_get_schema infoPtr;rdOptPtr;<<e
+getSchemaNames schemaPtr
+getSchemaFields schemaPtr
+getChar ret ptr garrow_schema_to_string < schemaPtr
+
+NB. hw =. ''
+NB. sPtr =. writeString hw
+NB. bytesPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_bytes_new * * i'&cd sPtr;#hw 
+NB. flightPtr =. ptr gaflight_ticket_new <bytesPtr
+
+NB. flightStreamReaderPtr =. ptr 
+
+
+cder''
+cderx''
+
+NB. memr (>flightlistPtr),0,1,4
+
+
+
+gaflight_info_new
+gaflight_info_get_descriptor
+gaflight_descriptor_to_string
+
+
 cder''
 
 healthcheck
@@ -682,18 +748,15 @@ client.do_put
 descriptor file,schema
 writer.write
 
+
 NB. Get Flight
-descriptor
+gaflight_client_list_flights NB. 
+gaflight_info_get_descriptor NB. descriptor
 info
 endpoint
 ticket & location
 reader = client.do_get(ticket)
 reader.read
-
-
-
-
-
 
 
 
@@ -735,18 +798,10 @@ gaflight_record_batch_reader_read_next
 gaflight_record_batch_reader_read_all
 
 
-gaflight_client_list_flights(GAFlightClient *client,GAFlightCriteria *criteria, GAFlightCallOptions *options, GError **error);
-
-
-
-
-cder''
-cderx''
 memr (>coTypePtr),0,1,4
 memr (>e),0,1,2
 
-coTypePtr =. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_type i'&cd ''
-gaflight_client_options_get_type ''
+coTypePtr =. gaflight_client_options_get_type ''
 
 
 '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_get_type d'&cd ''
@@ -760,11 +815,6 @@ tPtr =. writeString 'disable-server-verification'
 cder''
 
 
-
-g_object_get
-g_value_set_boolean
-
-
 objPtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_param_spec_boolean * * * * x x'&cd 'disable-server-verification';'';'';1;1
 '"/usr/local/lib/libarrow-flight-glib.dylib" g_object_class_install_property n * i *'&cd  clientOptionsPtr ;1;<objPtr
 cder''
@@ -776,47 +826,6 @@ spec = g_param_spec_boolean "disable-server-verification",
                               static_cast<GParamFlags>(G_PARAM_READWRITE));
 g_object_class_install_property ( gobject_class, 1, spec);
 
-
-
-
-
-cder''
-
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_options_get_raw * *'&cd <clientOptionsPtr 
-
-
-
-
-cder ''
-cderx ''
-
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * * n n'&cd locPtr;<clientOptionsPtr
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new * *'&cd <locPtr
-
-
-NB. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_server_options_new *'&cd ''
-NB. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_data_stream_get_raw * *'&cd ''
-
-
-
-callOptionsPtr =. '"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_call_options_new *'&cd ''
-
-
-
-
-
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_client_new_raw n *'&cd <clientOptionsPtr
-
-'"/usr/local/lib/libarrow-flight-glib.dylib" gaflight_location_get_raw  *'&cd <locPtr
-cder''
-
-
-
-
-
-
-cder''
-gaflight_client_options_get_raw
 
 
 garrow_record_batch_reader_import

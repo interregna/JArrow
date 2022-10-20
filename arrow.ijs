@@ -1118,7 +1118,7 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/ipc-options-classes.html
 NB. =========================================================
 ipcOptionsBindings =: lib 0 : 0
 *	garrow_read_options_new	(void); GArrowReadOptions *
-*i	garrow_read_options_get_included_fields	(GArrowReadOptions *options, gsize *n_fields); int *
+*i * *	garrow_read_options_get_included_fields	(GArrowReadOptions *options, gsize *n_fields); int *
 n * * i	garrow_read_options_set_included_fields	(GArrowReadOptions *options, int *fields, gsize n_fields); void
 *	garrow_write_options_new	(void); GArrowWriteOptions *
 )
@@ -1256,7 +1256,6 @@ b * *	gaflight_client_close	(GAFlightClient *client, GError **error); gboolean
 i	gaflight_client_get_type	(); int
 * * * * *	gaflight_client_get_flight_info	(GAFlightClient *client, GAFlightDescriptor *descriptor, GAFlightCallOptions *options, GError **error); GAFlightInfo *
 * * * * *	gaflight_client_do_get	(GAFlightClient *client, GAFlightTicket *ticket, GAFlightCallOptions *options, GError **error); GAFlightStreamReader *
-* *	gaflight_stream_reader_new_raw	(arrow::flight::FlightStreamReader *flight_reader); GAFlightStreamReader *
 i	gaflight_stream_reader_get_type 	(void); int
 )
 

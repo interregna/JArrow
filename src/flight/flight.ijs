@@ -50,7 +50,6 @@ b * *	gaflight_client_close	(GAFlightClient *client, GError **error); gboolean
 i	gaflight_client_get_type	(); int
 * * * * *	gaflight_client_get_flight_info	(GAFlightClient *client, GAFlightDescriptor *descriptor, GAFlightCallOptions *options, GError **error); GAFlightInfo *
 * * * * *	gaflight_client_do_get	(GAFlightClient *client, GAFlightTicket *ticket, GAFlightCallOptions *options, GError **error); GAFlightStreamReader *
-* *	gaflight_stream_reader_new_raw	(arrow::flight::FlightStreamReader *flight_reader); GAFlightStreamReader *
 i	gaflight_stream_reader_get_type 	(void); int
 )
 

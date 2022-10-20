@@ -51,6 +51,9 @@ Read (and eventually write) Apache Arrow and Parquet files to and from J.
 ├─────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │datetime64Col│946684800000000 946771200000000 946857600000000 946944000000000 947030400000000 947116800000000 947203200000000 947289600000000│
 └─────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Note `datetime64Col` is compatible with `(6!:16)` and `(6!:17)` to convert to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
+
 ```
 
 ## Installation
@@ -82,16 +85,12 @@ Examples:
 see `test/test1.ijs`
 
 ##### TODO
-* [x] Figure out how to formalize data/arrow.ijs as an add-on
-* [x] `install 'github:interregna/JArrow@main'`
-* [x] Drop functions into a `parrow` locale and link entry points up to z locale.
+* [ ] Flight client/server
+* [ ] Tensors
 * [ ] Document functions: Print a manual / help dialog.
-* [ ] J for buffers
-* [ ] J for errors
-* [ ] J for IPC
-* [ ] J for tensors
-* [ ] Error catch missing files (empty pointers).
-
+* [ ] Buffers
+* [ ] Error catch missing files (empty pointers)
+* [ ] IPC
 
 ##### Notes
 

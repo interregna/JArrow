@@ -7,7 +7,7 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/ipc-options-classes.html
 NB. =========================================================
 ipcOptionsBindings =: lib 0 : 0
 *	garrow_read_options_new	(void); GArrowReadOptions *
-*i	garrow_read_options_get_included_fields	(GArrowReadOptions *options, gsize *n_fields); int *
+*i * *	garrow_read_options_get_included_fields	(GArrowReadOptions *options, gsize *n_fields); int *
 n * * i	garrow_read_options_set_included_fields	(GArrowReadOptions *options, int *fields, gsize n_fields); void
 *	garrow_write_options_new	(void); GArrowWriteOptions *
 )
