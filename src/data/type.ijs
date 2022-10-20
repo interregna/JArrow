@@ -2,8 +2,8 @@ NB. =========================================================
 NB. Type
 NB. =========================================================
 
-NB. garrow_string_array_get_stringSHIM =: <@getChar@>@{.@garrow_string_array_get_string
-garrow_string_array_get_stringSHIM =: <@<@getCharFree@{.@garrow_string_array_get_string
+NB. garrow_string_array_get_stringSHIM =: <@getString@>@{.@garrow_string_array_get_string
+garrow_string_array_get_stringSHIM =: <@<@getStringFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0

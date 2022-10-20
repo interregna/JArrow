@@ -1,7 +1,48 @@
-load ProjPath,'/arrow.ijs'
-coinsert 'parrow'
+NB. =========================================================
+NB. Example of gettting a property:
+NB. Should also work with set
+NB. =========================================================
+pnp1=. writeString 'approx'
+'"/usr/local/lib/libarrow-glib.dylib" g_object_set * * * b *'&cd  eaP;pnp1;1;<<0
 
-ppath=. '/Users/johnference/movies_201k.parquet'
+bp =. mema 8
+'"/usr/local/lib/libarrow-glib.dylib" g_object_get * * * * *'&cd  eaP;pnp1;(<bp);<<0
+memr bp,0,1,4
+
+pnp2=. writeString 'nans-equal'
+p2p =. mema 8
+'"/usr/local/lib/libarrow-glib.dylib" g_object_get * * * * *'&cd  eaP;pnp2;(<p2p);<<0
+1 readInts p2p
+
+'"/usr/local/lib/libarrow-glib.dylib" g_object_set * * * b *'&cd  eaP;pnp2;1;<<0
+'"/usr/local/lib/libarrow-glib.dylib" g_object_get * * * * *'&cd  eaP;pnp2;(<p2p);<<0
+1 readInts p2p
+
+
+
+ticketlist =. ' (1, None, (b''iGd220525.csv'',))'
+ticketListPtr=. writeString ticketlist
+len =. # ticketlist
+bytePtr =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_bytes_new * * i'&cd (ticketListPtr);len
+ticketPtr =. ptr gaflight_ticket_new < bytePtr
+
+NB. New byte pointer
+ticketlist2 =. 'WRONG THING'
+ticketListPtr2=. writeString ticketlist2
+len2 =. # ticketlist2
+bytePtr2 =. ptr '"/usr/local/lib/libarrow-flight-glib.dylib" g_bytes_new * * i'&cd (ticketListPtr2);len2
+
+NB. Get property 
+tnp=. writeString 'data'
+'"/usr/local/lib/libarrow-glib.dylib" g_object_get n * * * *'&cd  ticketPtr;tnp;bytePtr2;<<0
+bplen2 =. writeInts ret '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_size * *'&cd < bytePtr2
+dataPtr2 =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_data * * *'&cd bytePtr2;<bplen2
+memr (memr (>dataPtr2),0,1,4),0,_1,2
+NB. =========================================================
+
+
+
+ppath=. '~/movies_201k.parquet'
 t1path =. ppath
 
 tp1 =. readParquet t1path
@@ -37,7 +78,7 @@ ap =.  > {. arrayPts
 
 ret garrow_array_is_valid ap;<0 NB. Is null?
 dtp =. ptr garrow_array_get_value_data_type <ap
-	getChar (ret ptr garrow_data_type_get_name < dtp)
+	getString (ret ptr garrow_data_type_get_name < dtp)
 len =. ret garrow_array_get_length <ap
 
 ret garrow_array_get_offset <ap
@@ -215,6 +256,9 @@ data=. memr (h+offset),0,len,type
 sys;fheader;shape;data
 }}
 
+
+t2path =. TempPath,'/test2.parquet'
+tp2 =. readParquet t2path
 'tablePointer colIndex' =. tp2;15
 ncols =. tableNCols tablePointer
 'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
@@ -269,21 +313,21 @@ NB. =========================================================
 NB. IPC
 
 
-NB. Example for reading CSV
+NB. Example for reading CSV9
 NB. cmd + F9, F9
 
-NB. fnPtr =. setChar '/test.csv'
-filenamePtr =. setChar TempPath , 'test.csv'
+NB. fnPtr =. setString '/test.csv'
+filenamePtr =. setString TempPath , 'test.csv'
 e=. << mema 4
 fInputStreamPtr =. garrow_file_input_stream_new (<filenamePtr);e
 'Check file exists and is permissioned.' assert * > ptr fInputStreamPtr
 
 NB. Example adding column names:
 readOptionPt =. garrow_csv_read_options_new ''
-NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setChar 'col1')
+NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
 
 NB. ptr i32 =. '"/usr/local/lib/libarrow-glib.dylib" garrow_int32_data_type_get_type *'&cd ''
-NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setChar 'col1');(< ptr i32)
+NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setString 'col1');(< ptr i32)
 
 csvReaderPtr =. garrow_csv_reader_new (ptr fInputStreamPtr);(ptr readOptionPt);e
 gaTablePtr =. garrow_csv_reader_read (ptr csvReaderPtr);e
@@ -298,11 +342,11 @@ memf >>e
 
 NB. CSV options ...
 '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_set_column_names n * * i'&cd 
-(< ptr rdOptPt),(<< setChar 'col1'),< 1
+(< ptr rdOptPt),(<< setString 'col1'),< 1
 NB. cd errors
 cder'' 
 cderx''
-'"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd  rdOptPt;<<setChar 'colname'
+'"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd  rdOptPt;<<setString 'colname'
 
 garrow_csv_reader_new
 garrow_csv_reader_read
@@ -321,7 +365,7 @@ readSchemaString tablePtr
 e=. << mema 4
 pqtWtrPtr =. gparquet_writer_properties_new ''
 schemaPtr =. getSchemaPt tablePtr
-fnPtr =. setChar TempPath,'out1.parquet'
+fnPtr =. setString TempPath,'out1.parquet'
 pqtFileWriterPtr =. gparquet_arrow_file_writer_new_path (ptr schemaPtr);(ptr fnPtr);(ptr pqtWtrPtr); e
 
 gparquet_arrow_file_writer_write_table (ptr pqtFileWriterPtr);(ptr tablePtr); 1000; e
@@ -331,7 +375,7 @@ readTable readParquet TempPath,'out1.parquet'
 NB. =========================================================
 NB. Test for memory mapping ("feather")
 e=. << mema 4
-fnPtr =. setChar TempPath,'test.feather'
+fnPtr =. setString TempPath,'test.feather'
 fosPtr =. garrow_file_output_stream_new (<fnPtr);1;e
 ptr fosPtr
 NB. Align on metadata prefix:
@@ -535,8 +579,7 @@ arrayPt =. arrayPointer =. 0{::arrayPointers
 
 readArrayType=:{{
 'arrayPt' =. y
-dataTypePt =. ptr garrow_array_get_value_data_type < arrayPt
-getChar (ret ptr garrow_data_type_get_name < dataTypePt)
+dataTypePt =. ptr garrow_array_get_value_data_type < arrayPtgetString (ret ptr garrow_data_type_get_name < dataTypePt)
 }}
 readArrayTypeIndex=:{{
 'arrayPt' =. y
@@ -602,7 +645,7 @@ b =. 'N skip rows'
 c =. 'The number of header rows to skip'
 d =. '(not including the row of column names, if any)'
 
-AA =. setChar each a;b;c;d
+AA =. setString each a;b;c;d
 
 paramspec AA,0;1;0;1
 

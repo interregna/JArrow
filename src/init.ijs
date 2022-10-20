@@ -4,9 +4,23 @@ cocurrent 'parrow'
 lib =: >@((3&{.)@(TAB&cut)&.>)@(LF&cut)
 ret =: 0&{::
 ptr =: <@(0&{::)
-getChar =: {{memr (>y),0,_1,2}}
-getCharFree =: {{res [ memf y [ res=.memr (y=.>y),0,_1,2}}
-setChar =: {{p [ y memw p,0,(# y),2 [ p=.mema # y=.(>y),{.a.}}
+
+setString=:{{
+l1 =. >:@# string =. , > y
+string memw (] stringPt =. mema l1),0,l1,2
+<stringPt
+}}
+
+setInts=:{{
+l =. (# , y)
+(,y) memw (] Pt =. mema l * 2^2+IF64),0,l,4
+<Pt
+}}
+
+getString=:{{memr (> y),0,_1,2}}
+getStringFree =: {{res [ memf y [ res=.memr (y=.>y),0,_1,2}}
+getInts=:{{memr (> y),0,x,4}}
+
 
 libload =: {{
   if.     UNAME-:'Linux' do.

@@ -8,7 +8,7 @@ NB. =========================================================
 readArrayType=:{{
   'arrayPt' =. y
   dataTypePt =. ptr garrow_array_get_value_data_type < arrayPt
-  getChar (ret ptr garrow_data_type_get_name < dataTypePt)
+  getString (ret ptr garrow_data_type_get_name < dataTypePt)
 }}
 
 readArrayTypeIndex=:{{
@@ -76,13 +76,13 @@ NB. Field
 NB. =========================================================
 getFieldName=:{{
   fieldPt =. y
-  getChar ptr garrow_field_get_name fieldPt
+  getString ptr garrow_field_get_name fieldPt
 }}
 
 getFieldDataType=:{{
   'fieldPt' =. y
   dataTypePt =. ptr garrow_field_get_data_type fieldPt
-  getChar ret garrow_data_type_get_name < dataTypePt
+  getString ret garrow_data_type_get_name < dataTypePt
 }}
 
 NB. getFieldNullable=:{{
@@ -147,7 +147,7 @@ getSchemaFields=:{{
 readSchemaString=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
-  getChar ret ptr garrow_schema_to_string < schemaPt
+  getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
 readSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readSchemaString
