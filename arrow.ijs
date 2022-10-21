@@ -1034,7 +1034,7 @@ garrow_decimal256_new_raw(std::shared_ptr<arrow::Decimal256> *arrow_decimal256);
 garrow_decimal256_get_raw(GArrowDecimal256 *decimal256); std::shared_ptr<arrow::Decimal256>
 )
 NB. =========================================================
-NB. GObject handling
+NB. GObject bindings
 NB. 
 NB. =========================================================
 
@@ -1471,9 +1471,13 @@ readTableSchemaString=:{{
   getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
-readTableSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readTableSchemaString
+readTableSchema=:{{
+  tablePt =. y
+  schemaPt =. getSchemaPt tablePt
+  getSchemaNames schemaPt
+}}
 
-readTableSchemaData=:{{
+readTableSchemaTypes=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaFields schemaPt
@@ -1484,11 +1488,8 @@ readTableSchemaCol=:{{
   getSchemaName (getSchemaPt tablePt);<index
 }}
 
-readTableSchema=:{{
-  tablePt =. y
-  schemaPt =. getSchemaPt tablePt
-  getSchemaNames schemaPt
-}}
+readTableSchemaList=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readTableSchemaString
+
 
 NB. =========================================================
 NB. Table
@@ -1520,22 +1521,22 @@ readDataColumn=:{{
 
 readColumn=:{{
   'tablePt colIndex' =. y
-  ((<@readSchemaColumnName),.readDataColumn) (< tablePt),< colIndex
+  ((<@readTableSchemaCol),.readDataColumn) (< tablePt),< colIndex
 }}
 
 readTable=:{{
   'tablePt' =. y
-  (readSchemaNames,.readData) tablePt
+  (readTableSchema,.readData) tablePt
 }}
 
 readsTable=:{{
   'tablePt' =. y
-  ((,@readSchemaNames),:(,@:(,.&.>)@:readData)) tablePt
+  ((,@readTableSchema),:(,@:(,.&.>)@:readData)) tablePt
 }}
 
 readDataframe=:{{
   'tablePt' =. y
-  (readSchemaNames,:readDataInverted) tablePt
+  (readTableSchema,:readDataInverted) tablePt
 }}
 
 
@@ -1553,7 +1554,7 @@ readParquet=:{{
 
 readParquetSchema=:{{
   'filepath'=.y
-  readSchema@readParquet (jpath filepath)
+  readTableSchema@readParquet (jpath filepath)
 }}
 
 readParquetData=:{{

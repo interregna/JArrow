@@ -113,7 +113,7 @@ NB. =========================================================
 NB. Testing and examples.
 
 readTableSchema tblPtr
-readSchemaBoxed tblPtr
+readTableSchemaTypes tblPtr
 readTable tblPtr
 readColumn tblPtr;86
 readsTable tblPtr

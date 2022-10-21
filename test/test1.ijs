@@ -16,15 +16,12 @@ coinsert 'parrow'
 t1path =. TempPath,'test1.parquet'
 
 tp1 =. readParquet t1path
-echo readSchemaString tp1
-echo readSchema tp1
+echo readTableSchema tp1
 echo readData tp1
 echo readDataInverted tp1
 echo readTable tp1
 echo readsTable tp1
 echo readDataframe tp1
-
-
 
 echo readParquetData t1path
 echo readParquetSchema t1path
@@ -36,8 +33,7 @@ echo readParquetColumn t1path;1
 NB. =========================================================
 t2path =. TempPath,'/test2.parquet'
 tp2 =. readParquet t2path
-echo readSchemaString tp2
-echo readSchema tp2
+echo readTableSchema tp2
 echo readData tp2
 echo readDataInverted tp2
 echo readTable tp2
