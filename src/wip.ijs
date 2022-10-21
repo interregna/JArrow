@@ -18,8 +18,6 @@ p2p =. mema 8
 '"/usr/local/lib/libarrow-glib.dylib" g_object_get * * * * *'&cd  eaP;pnp2;(<p2p);<<0
 1 readInts p2p
 
-
-
 ticketlist =. ' (1, None, (b''iGd220525.csv'',))'
 ticketListPtr=. writeString ticketlist
 len =. # ticketlist
@@ -42,7 +40,7 @@ NB. =========================================================
 
 
 
-ppath=. '~/movies_201k.parquet'
+ppath=. jpath '~/movies_201k.parquet'
 t1path =. ppath
 
 tp1 =. readParquet t1path

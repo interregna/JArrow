@@ -49,7 +49,7 @@ cbind =: 4 : 0"1 1
 init =: {{
   libload''
   r=. 1
-  r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
+  r =. r <. <./ libArrow cbind gLibBindings
   r =. r <. <./ libArrow cbind tableBindings, recordBatchBindings, chunkedArrayBindings
   r =. r <. <./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
   r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
@@ -57,6 +57,7 @@ init =: {{
   r =. r <. <./ libArrow cbind bufferBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
+  r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
   r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
   r
 }}
@@ -1032,6 +1033,25 @@ garrow_decimal128_get_raw(GArrowDecimal128 *decimal128); std::shared_ptr<arrow::
 garrow_decimal256_new_raw(std::shared_ptr<arrow::Decimal256> *arrow_decimal256); GArrowDecimal256 *
 garrow_decimal256_get_raw(GArrowDecimal256 *decimal256); std::shared_ptr<arrow::Decimal256>
 )
+NB. =========================================================
+NB. GObject handling
+NB. 
+NB. =========================================================
+
+gLibBindings =: lib 0 : 0 
+* * i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
+* *	g_bytes_get_size	(GBytes* bytes)	gsize
+* * *	g_bytes_get_data	(GBytes* bytes, gsize* size) gconstpointer
+n * * * *	g_object_get	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
+n * * * *	g_object_set	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
+* *	g_list_length	(GList* list);	guint
+* * i	g_list_nth_data	(GList* list, guint n);	gpointer
+* *	g_type_name	(GType type);	gchar *
+* *	g_type_class_peek	( GType type);	GObjectTypeClass*
+* *	g_param_spec_get_name	(GParamSpec* pspec)	const gchar*
+* * *	g_object_class_find_property	( GObjectClass* oclass,  const gchar* property_name)	GParamSpec*
+* *	g_type_create_instance	(GType type)	GTypeInstance*
+)
 NB. IO
 
 NB. Input
@@ -1445,26 +1465,26 @@ getSchemaFields=:{{
   names,:types
 }}
 
-readSchemaString=:{{
+readTableSchemaString=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
-readSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readSchemaString
+readTableSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readTableSchemaString
 
-readSchemaBoxed=:{{
+readTableSchemaData=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaFields schemaPt
 }}
 
-readSchemaColumnName=:{{
+readTableSchemaCol=:{{
   'tablePt index'=.y
   getSchemaName (getSchemaPt tablePt);<index
 }}
 
-readSchemaNames=:{{
+readTableSchema=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaNames schemaPt
@@ -1525,7 +1545,7 @@ NB. =========================================================
 readParquet=:{{
   'filepath'=.y
   e=. << mema 4
-  r=. gparquet_arrow_file_reader_new_path filepath;e
+  r=. gparquet_arrow_file_reader_new_path (jpath filepath);e
   t=. gparquet_arrow_file_reader_read_table (ptr r);e
   memf >> e
   ptr t
@@ -1533,37 +1553,37 @@ readParquet=:{{
 
 readParquetSchema=:{{
   'filepath'=.y
-  readSchema@readParquet filepath
+  readSchema@readParquet (jpath filepath)
 }}
 
 readParquetData=:{{
   'filepath'=.y
-  readData@readParquet filepath
+  readData@readParquet (jpath filepath)
 }}
 
 readParquetDataInverted=:{{
   'filepath'=.y
-  readDataInverted@readParquet filepath
+  readDataInverted@readParquet (jpath filepath)
 }}
 
 readParquetTable=:{{
   'filepath'=.y
-  readTable@readParquet filepath
+  readTable@readParquet (jpath filepath)
 }}
 
 readsParquetTable=:{{
   'filepath'=.y
-  readsTable@readParquet filepath
+  readsTable@readParquet (jpath filepath)
 }}
 
 readParquetDataframe=:{{
   'filepath'=.y
-  readDataframe@readParquet filepath
+  readDataframe@readParquet (jpath filepath)
 }}
 
 readParquetColumn =: {{
   'filepath index' =. y
-  readColumn (readParquet filepath);<index
+  readColumn (readParquet (jpath filepath));<index
 }}
 
 writeParquet=: {{

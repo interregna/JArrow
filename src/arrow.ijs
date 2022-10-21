@@ -144,26 +144,26 @@ getSchemaFields=:{{
   names,:types
 }}
 
-readSchemaString=:{{
+readTableSchemaString=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
-readSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readSchemaString
+readTableSchema=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readTableSchemaString
 
-readSchemaBoxed=:{{
+readTableSchemaData=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaFields schemaPt
 }}
 
-readSchemaColumnName=:{{
+readTableSchemaCol=:{{
   'tablePt index'=.y
   getSchemaName (getSchemaPt tablePt);<index
 }}
 
-readSchemaNames=:{{
+readTableSchema=:{{
   tablePt =. y
   schemaPt =. getSchemaPt tablePt
   getSchemaNames schemaPt
@@ -224,7 +224,7 @@ NB. =========================================================
 readParquet=:{{
   'filepath'=.y
   e=. << mema 4
-  r=. gparquet_arrow_file_reader_new_path filepath;e
+  r=. gparquet_arrow_file_reader_new_path (jpath filepath);e
   t=. gparquet_arrow_file_reader_read_table (ptr r);e
   memf >> e
   ptr t
@@ -232,37 +232,37 @@ readParquet=:{{
 
 readParquetSchema=:{{
   'filepath'=.y
-  readSchema@readParquet filepath
+  readSchema@readParquet (jpath filepath)
 }}
 
 readParquetData=:{{
   'filepath'=.y
-  readData@readParquet filepath
+  readData@readParquet (jpath filepath)
 }}
 
 readParquetDataInverted=:{{
   'filepath'=.y
-  readDataInverted@readParquet filepath
+  readDataInverted@readParquet (jpath filepath)
 }}
 
 readParquetTable=:{{
   'filepath'=.y
-  readTable@readParquet filepath
+  readTable@readParquet (jpath filepath)
 }}
 
 readsParquetTable=:{{
   'filepath'=.y
-  readsTable@readParquet filepath
+  readsTable@readParquet (jpath filepath)
 }}
 
 readParquetDataframe=:{{
   'filepath'=.y
-  readDataframe@readParquet filepath
+  readDataframe@readParquet (jpath filepath)
 }}
 
 readParquetColumn =: {{
   'filepath index' =. y
-  readColumn (readParquet filepath);<index
+  readColumn (readParquet (jpath filepath));<index
 }}
 
 writeParquet=: {{

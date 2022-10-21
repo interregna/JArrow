@@ -49,7 +49,7 @@ cbind =: 4 : 0"1 1
 init =: {{
   libload''
   r=. 1
-  r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
+  r =. r <. <./ libArrow cbind gLibBindings
   r =. r <. <./ libArrow cbind tableBindings, recordBatchBindings, chunkedArrayBindings
   r =. r <. <./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
   r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
@@ -57,6 +57,7 @@ init =: {{
   r =. r <. <./ libArrow cbind bufferBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
+  r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
   r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
   r
 }}
