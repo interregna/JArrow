@@ -6,6 +6,21 @@ NB. garrow_string_array_get_stringSHIM =: <@getString@>@{.@garrow_string_array_g
 garrow_string_array_get_stringSHIM =: <@<@getStringFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
+NB. Read variable length strings directly from buffer.
+garrow_string_array_get_stringsSHIM =: {{
+'arrayPt' =. y
+bufferPtr =. ptr garrow_primitive_array_get_data_buffer < arrayPt
+NB. nullBufferPtr =. ptr garrow_array_get_null_bitmap <arrayPt NB. Need to handle nulls
+val =. ret garrow_buffer_get_size <bufferPtr
+dataOff =. (+(8&|)) val
+gbPtr =. ptr garrow_buffer_get_data <bufferPtr
+dataPtr =. ptr g_bytes_get_data gbPtr; < setInts val
+locLen =. (4&*)@>: ret garrow_array_get_length < arrayPt
+loc =. _2&(3!:4) memr (>dataPtr),0,locLen,2
+dat =. memr (>dataPtr),dataOff,_1,2
+((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+}}
+
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
 GARROW_TYPE_NA	null	__&[	NA	NA	0	A degenerate NULL type represented as 0 bytes/bits.
@@ -21,7 +36,7 @@ GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_valu
 GARROW_TYPE_HALF_FLOAT	NA	NA	NA	float	8	2-byte floating point value.
 GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_values	float	8	4-byte floating point value.
 GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	float	8	8-byte floating point value.
-GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	NA	char	2	UTF-8 variable-length string.
+GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	garrow_string_array_get_stringsSHIM	char	2	UTF-8 variable-length string.
 GARROW_TYPE_BINARY	NA	garrow_binary_array_get_value	NA	byte	2	Variable-length bytes (no guarantee of UTF-8-ness).
 GARROW_TYPE_FIXED_SIZE_BINARY	NA	garrow_fixed_size_binary_array_get_value	NA	byte	2	Fixed-size binary. Each value occupies the same number of bytes.
 GARROW_TYPE_DATE32	int32	garrow_date32_array_get_value	garrow_date32_array_get_values	int	4	int32 days since the UNIX epoch.

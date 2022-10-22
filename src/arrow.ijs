@@ -28,6 +28,7 @@ readArrayLength=:{{ret garrow_array_get_length < y}}
 writeArrayWidth=:{{<lengthPt [ length memw (] lengthPt =. mema width),0,1,4 [ 'length width' =. y}}
 
 readArray=:{{
+  NB. Use this only for reading parts of arrays.
   'arrayPt' =. y
   indexType =. readArrayTypeIndex arrayPt
   arrayType =. readArrayType arrayPt
@@ -44,6 +45,18 @@ readArray=:{{
   NB. memf > lengthPt
   results
 }}
+
+readsArray=:{{
+  NB. Read the whole array at once instead of one call for each.
+  'arrayPt' =. y
+  indexType =. readArrayTypeIndex arrayPt
+  arrayType =. readArrayType arrayPt
+  fRun =. typeGetValues&typeIndexLookup indexType NB. lookup functions
+  results =. fRun~ arrayPt
+  results
+}}
+
+
 
 NB. =========================================================
 NB. chunkedArray
