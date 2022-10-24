@@ -903,24 +903,40 @@ NB. garrow_string_array_get_stringSHIM =: <@getString@>@{.@garrow_string_array_g
 garrow_string_array_get_stringSHIM =: <@<@getStringFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
+getBuffer =: {{
+bufferPtr =. y
+NB. cap =. ret garrow_buffer_get_capacity < bufferPtr
+NB. val =. ret garrow_buffer_get_size < bufferPtr
+gbPtr =. ptr garrow_buffer_get_data < bufferPtr
+gbsize =. ret g_bytes_get_size < gbPtr
+dataPtr =. ptr g_bytes_get_data gbPtr; < pt =. setInts gbsize
+memf > pt
+dataPtr
+}}
+
 NB. Read variable length strings directly from buffer.
 garrow_string_array_get_stringsSHIM =: {{
-'arrayPt' =. y
-bufferPtr =. ptr garrow_primitive_array_get_data_buffer < arrayPt
-NB. nullBufferPtr =. ptr garrow_array_get_null_bitmap <arrayPt NB. Need to handle nulls
-val =. ret garrow_buffer_get_size <bufferPtr
-dataOff =. (+(8&|)) val
-gbPtr =. ptr garrow_buffer_get_data <bufferPtr
-dataPtr =. ptr g_bytes_get_data gbPtr; < setInts val
+'arrayPt' =. > {. y
+dataPtr =. getBuffer ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
+offsetPtr =. getBuffer ptr garrow_binary_array_get_offsets_buffer < arrayPt
+NB. nullIndexPtr =. getBuffer ptr garrow_array_get_null_bitmap <arrayPt
+NB. nNulls =. ret garrow_array_get_n_nulls <arrayPt
 locLen =. (4&*)@>: ret garrow_array_get_length < arrayPt
-loc =. _2&(3!:4) memr (>dataPtr),0,locLen,2
-dat =. memr (>dataPtr),dataOff,_1,2
-((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+loc =. _2&(3!:4) memr (>offsetPtr),0,locLen,2
+dat =. getString dataPtr
+res =. ((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+res
 }}
+
+NULL =: __
+
+garrow_na_array_get_valueSHIM =: NULL&[
+
+garrow_na_array_get_valuesSHIM =: {{(1 getInts > {: y) # NULL}}
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
-GARROW_TYPE_NA	null	__&[	NA	NA	0	A degenerate NULL type represented as 0 bytes/bits.
+GARROW_TYPE_NA	null	garrow_na_array_get_valueSHIM	garrow_na_array_get_valuesSHIM	null	0	A degenerate NULL type represented as 0 bytes/bits.
 GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	bool	1	A boolean value represented as 1-bit.
 GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	int	4	Little-endian 8-bit unsigned integer.
 GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	int	4	Little-endian 8-bit signed integer.
@@ -1055,8 +1071,10 @@ NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
 * * i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
-* *	g_bytes_get_size	(GBytes* bytes)	gsize
+i *	g_bytes_get_size	(GBytes* bytes)	gsize
 * * *	g_bytes_get_data	(GBytes* bytes, gsize* size) gconstpointer
+* * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size) gpointer
+* *	g_bytes_unref_to_array	(GBytes* bytes) GByteArray*
 n * * * *	g_object_get	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 n * * * *	g_object_set	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 * *	g_list_length	(GList* list);	guint
@@ -1361,19 +1379,18 @@ readArrayBitWidth=:{{
 
 readArrayLength=:{{ret garrow_array_get_length < y}}
 
-writeArrayWidth=:{{<lengthPt [ length memw (] lengthPt =. mema width),0,1,4 [ 'length width' =. y}}
-
-readArray=:{{
+readArrayRows=:{{
   NB. Use this only for reading parts of arrays.
-  'arrayPt' =. y
+  'arrayPt rowIndices' =. y
   indexType =. readArrayTypeIndex arrayPt
   arrayType =. readArrayType arrayPt
   length =. readArrayLength arrayPt
   getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
   fRun =. getValueFunc,', arrayPt;<'
+  ('Max row index must be  less than row count of ',": length) assert (>./ rowIndices)  <: length
   results =. ; ret@". each (fRun&,)@": each <"0 i.length
   NB. width =. readArrayBitWidth arrayPt
-  NB. lengthPt =. writeArrayWidth length;width
+  NB. lengthPt =. setInts length
   NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
   NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
   NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
@@ -1382,17 +1399,28 @@ readArray=:{{
   results
 }}
 
-readsArray=:{{
+readArray=:{{
   NB. Read the whole array at once instead of one call for each.
   'arrayPt' =. y
   indexType =. readArrayTypeIndex arrayPt
   arrayType =. readArrayType arrayPt
   fRun =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  results =. fRun~ arrayPt
-  results
+  Jtype =.  ". typeJMemr&typeIndexLookup indexType
+  lengthPtr =. setInts ] length =. readArrayLength arrayPt
+  if. Jtype e. (0,2) do.  NB. Shims for getValues read directly instead of to pointers.
+   result =. (fRun)~ arrayPt;<lengthPtr
+  else.
+   resPtr =. ptr (fRun)~ arrayPt;<lengthPtr
+   result =. memr (>resPtr),0,length,Jtype
+  end. 
+  nullCount =. ret garrow_array_get_n_nulls <arrayPt NB.
+NB.   if. (* nullCount) do. <arrayPt
+NB.    nullBufferPtr =. ptr garrow_array_get_null_bitmap <arrayPt
+NB.    echo 'null buffer ptr'; nullCount; nullBufferPtr;(>. length % 8)
+NB.    echo nullBitMap =. _8 ic memr (> ptr getBuffer nullBufferPtr),0,(>. length),2
+NB.   end.
+  result
 }}
-
-
 
 NB. =========================================================
 NB. chunkedArray
@@ -1406,7 +1434,8 @@ readChunks=:{{
   'chunkedArrayPt' =. y
   nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
   arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-  readArray each arrayPts
+  NB. readArray each arrayPts NB. Slow, incremental.
+  readArray each arrayPts NB. Fast, all at once.
 }}
 
 readChunkedArray=:{{

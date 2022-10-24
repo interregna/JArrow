@@ -1,6 +1,6 @@
 NB. =========================================================
 NB. Example of gettting a property:
-NB. Should also work with set
+NB. Also works with set
 NB. =========================================================
 pnp1=. writeString 'approx'
 '"/usr/local/lib/libarrow-glib.dylib" g_object_set * * * b *'&cd  eaP;pnp1;1;<<0

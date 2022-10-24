@@ -105,29 +105,28 @@ NB. =========================================================
 NB. Demo:
 flightInfo infoPtr
 getEndpoints infoPtr
-readRecordBatchString 
+NB. readRecordBatchString 
 tblPtr =. fsReadAllTable getEndPointReader clientPtr;(getTicket > {.  getEndpoints infoPtr);<callOptPtr
-readTableSchema tblPtr
+$ each readsTable tblPtr
+
 
 NB. =========================================================
 NB. Testing and examples.
 
 readTableSchema tblPtr
 readTableSchemaTypes tblPtr
-readTable tblPtr
+6!:2 'readTable tblPtr'
 readColumn tblPtr;86
+$ each readsTable tblPtr
+
 readsTable tblPtr
-
-
-
 
 
 NB. =========================================================
 
-
+0 : 0
 healthcheck
 reader.read
-
 
 gaflight_descriptor_to_string
 gaflight_call_options_add_header
@@ -171,7 +170,7 @@ GArrowRecordBatchReader
 gaflight_data_stream_get_type
 gaflight_servable_get_type
 gaflight_record_batch_stream_get_type
-
+)
 
 
 

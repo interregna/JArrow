@@ -5,8 +5,10 @@ NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
 * * i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
-* *	g_bytes_get_size	(GBytes* bytes)	gsize
+i *	g_bytes_get_size	(GBytes* bytes)	gsize
 * * *	g_bytes_get_data	(GBytes* bytes, gsize* size) gconstpointer
+* * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size) gpointer
+* *	g_bytes_unref_to_array	(GBytes* bytes) GByteArray*
 n * * * *	g_object_get	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 n * * * *	g_object_set	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 * *	g_list_length	(GList* list);	guint

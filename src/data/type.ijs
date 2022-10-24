@@ -6,24 +6,40 @@ NB. garrow_string_array_get_stringSHIM =: <@getString@>@{.@garrow_string_array_g
 garrow_string_array_get_stringSHIM =: <@<@getStringFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM =: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
+getBuffer =: {{
+bufferPtr =. y
+NB. cap =. ret garrow_buffer_get_capacity < bufferPtr
+NB. val =. ret garrow_buffer_get_size < bufferPtr
+gbPtr =. ptr garrow_buffer_get_data < bufferPtr
+gbsize =. ret g_bytes_get_size < gbPtr
+dataPtr =. ptr g_bytes_get_data gbPtr; < pt =. setInts gbsize
+memf > pt
+dataPtr
+}}
+
 NB. Read variable length strings directly from buffer.
 garrow_string_array_get_stringsSHIM =: {{
-'arrayPt' =. y
-bufferPtr =. ptr garrow_primitive_array_get_data_buffer < arrayPt
-NB. nullBufferPtr =. ptr garrow_array_get_null_bitmap <arrayPt NB. Need to handle nulls
-val =. ret garrow_buffer_get_size <bufferPtr
-dataOff =. (+(8&|)) val
-gbPtr =. ptr garrow_buffer_get_data <bufferPtr
-dataPtr =. ptr g_bytes_get_data gbPtr; < setInts val
+'arrayPt' =. > {. y
+dataPtr =. getBuffer ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
+offsetPtr =. getBuffer ptr garrow_binary_array_get_offsets_buffer < arrayPt
+NB. nullIndexPtr =. getBuffer ptr garrow_array_get_null_bitmap <arrayPt
+NB. nNulls =. ret garrow_array_get_n_nulls <arrayPt
 locLen =. (4&*)@>: ret garrow_array_get_length < arrayPt
-loc =. _2&(3!:4) memr (>dataPtr),0,locLen,2
-dat =. memr (>dataPtr),dataOff,_1,2
-((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+loc =. _2&(3!:4) memr (>offsetPtr),0,locLen,2
+dat =. getString dataPtr
+res =. ((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+res
 }}
+
+NULL =: __
+
+garrow_na_array_get_valueSHIM =: NULL&[
+
+garrow_na_array_get_valuesSHIM =: {{(1 getInts > {: y) # NULL}}
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
-GARROW_TYPE_NA	null	__&[	NA	NA	0	A degenerate NULL type represented as 0 bytes/bits.
+GARROW_TYPE_NA	null	garrow_na_array_get_valueSHIM	garrow_na_array_get_valuesSHIM	null	0	A degenerate NULL type represented as 0 bytes/bits.
 GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	bool	1	A boolean value represented as 1-bit.
 GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	int	4	Little-endian 8-bit unsigned integer.
 GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	int	4	Little-endian 8-bit signed integer.

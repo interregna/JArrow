@@ -85,18 +85,19 @@ Examples:
 see `test/test1.ijs`
 
 ##### TODO
-* [ ] Shim variable length binary arrays
 * [ ] NULL handling
-* [ ] Switch to readsArray (50x read speedup)
 * [ ] Tensors
 * [ ] Document functions: Print a manual / help dialog.
 * [ ] Error catch missing files (empty pointers)
 * [ ] IPC fixed length
 * [ ] IPC streaming
-* [x] CSV reader demo
-* [ ] JSONL reader demo
-* [x] Flight client demo
 * [ ] Flight server
+* [ ] JSONL reader demo
+* [x] readArray full length (50x read speedup)
+* [x] Shim variable length binary arrays
+* [x] CSV reader demo
+* [x] Flight client demo
+
 
 
 ##### Notes
