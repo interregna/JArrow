@@ -34,7 +34,7 @@ readArrayRows=:{{
   getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
   fRun =. getValueFunc,', arrayPt;<'
   ('Max row index must be  less than row count of ',": length) assert (>./ rowIndices)  <: length
-  results =. ; ret@". each (fRun&,)@": each <"0 i.length
+  results =. ; ret@". each (fRun&,)@": each <"0 (rowIndices)
   NB. width =. readArrayBitWidth arrayPt
   NB. lengthPt =. setInts length
   NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
@@ -68,6 +68,26 @@ NB.   end.
   result
 }}
 
+readArray2=:{{
+  NB. Use this only for reading parts of arrays.
+  'arrayPt' =. y
+  indexType =. readArrayTypeIndex arrayPt
+  arrayType =. readArrayType arrayPt
+  length =. readArrayLength arrayPt
+  getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
+  fRun =. getValueFunc,', arrayPt;<'
+  results =. ; ret@". each (fRun&,)@": each <"0 i.length
+  NB. width =. readArrayBitWidth arrayPt
+  NB. lengthPt =. setInts length
+  NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
+  NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
+  NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
+  NB. results =. memr (ret arrayValuesPt),0,length,Jtype
+  NB. memf > lengthPt
+  results
+}}
+
+
 NB. =========================================================
 NB. chunkedArray
 NB. =========================================================
@@ -81,7 +101,7 @@ readChunks=:{{
   nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
   arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
   NB. readArray each arrayPts NB. Slow, incremental.
-  readArray each arrayPts NB. Fast, all at once.
+  readArray2 each arrayPts NB. Replace once readArray works with smaller byte numbers.
 }}
 
 readChunkedArray=:{{
