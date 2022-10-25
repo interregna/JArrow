@@ -15,11 +15,11 @@ src/data/schema.ijs
 src/data/table.ijs
 src/data/tableBuilder.ijs
 src/data/tensor.ijs
-src/data/type.ijs
 src/data/value.ijs
 src/glib/glib.ijs
 src/io/io.ijs
 src/ipc/ipc.ijs
 src/flight/flight.ijs
+src/type.ijs
 src/arrow.ijs
 src/public.ijs

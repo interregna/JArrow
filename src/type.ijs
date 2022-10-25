@@ -50,6 +50,8 @@ garrow_int16_array_get_valuesSHIM=: (_1&ic byteSHIM garrow_int16_array_get_value
 garrow_uint32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_uint32_array_get_values)
 garrow_int32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_int32_array_get_values)
 garrow_float_array_get_valuesSHIM=: (_1&fc byteSHIM garrow_float_array_get_values)
+garrow_date32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_date32_array_get_values)
+garrow_time32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_time32_array_get_values)
 
 'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription'=: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
@@ -69,10 +71,10 @@ GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_
 GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	garrow_string_array_get_stringsSHIM	char	2	UTF-8 variable-length string.
 GARROW_TYPE_BINARY	bin	garrow_binary_array_get_value	NA	byte	2	Variable-length bytes (no guarantee of UTF-8-ness).
 GARROW_TYPE_FIXED_SIZE_BINARY	fbin	garrow_fixed_size_binary_array_get_value	garrow_fixed_size_binary_array_get_values_bytes	byte	2	Fixed-size binary. Each value occupies the same number of bytes.
-GARROW_TYPE_DATE32	date32	garrow_date32_array_get_value	garrow_date32_array_get_values	int	4	int32 days since the UNIX epoch.
+GARROW_TYPE_DATE32	date32	garrow_date32_array_get_value	garrow_date32_array_get_valuesSHIM	int	4	int32 days since the UNIX epoch.
 GARROW_TYPE_DATE64	date64	garrow_date64_array_get_value	garrow_date64_array_get_values	int	4	int64 milliseconds since the UNIX epoch.
 GARROW_TYPE_TIMESTAMP	NA	garrow_timestamp_array_get_value	garrow_timestamp_array_get_values	int	4	Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.
-GARROW_TYPE_TIME32	time32	garrow_time32_array_get_value	garrow_time32_array_get_values	int	4	Exact time encoded with int32, supporting seconds or milliseconds
+GARROW_TYPE_TIME32	time32	garrow_time32_array_get_value	garrow_time32_array_get_valuesSHIM	int	4	Exact time encoded with int32, supporting seconds or milliseconds
 GARROW_TYPE_TIME64	time64	garrow_time64_array_get_value	garrow_time64_array_get_values	int	4	Exact time encoded with int64, supporting micro- or nanoseconds
 GARROW_TYPE_INTERVAL_MONTHS	NA	NA	NA	char	4	YEAR_MONTH interval in SQL style.
 GARROW_TYPE_INTERVAL_DAY_TIME	NA	NA	NA	char	4	DAY_TIME interval in SQL style.
@@ -104,3 +106,17 @@ NB. typeNameIndex 'utf8'
 NB. typeDescription typeNameLookup 'utf8'
 NB. typeGetValue&typeNameLookup 'utf8'
 
+
+NB. Date from Unix epoch 1970-01-01
+NB. fromdate32 0, 18262
+fromdate32 =. {{
+a=. 719468.75 + , y
+c=. <. 36524.25 %~ a
+d=. <. a - 36524.25 * c
+db=. <. 365.25 %~ ( d+0.75) 
+da=. <. 1.75 + d - 365.25 * db
+mm =. <. 30.6 %~ (da - 0.59)
+((c*100)+db+mm >: 10),.(1+12 | mm+2),.<. 0.41 + da - 30.6 * mm
+}}
+
+fromdatetime64 =. (6!:16)

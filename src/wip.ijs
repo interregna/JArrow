@@ -38,8 +38,6 @@ dataPtr2 =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_data * * *'&cd
 memr (memr (>dataPtr2),0,1,4),0,_1,2
 NB. =========================================================
 
-
-
 ppath=. jpath '~/movies_201k.parquet'
 t1path =. ppath
 
@@ -154,85 +152,6 @@ GArrowDataType *data_type,
 
 
 
-NB. =========================================================
-NB. Fast read numbers (e.g. batch read values)
-
-readArrayLength=:{{ret garrow_array_get_length < y}}
-writeArrayLength=.{{<lengthPt [ (3 (3!:4) length) memw (] lengthPt =. mema 2),0,8,2 [ length =. y}}
-
-readArray=:{{
-  'arrayPt' =. y
-  indexType =. readArrayTypeIndex arrayPt
-  arrayType =. readArrayType arrayPt
-  length =. readArrayLength arrayPt
-  getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
-  fRun =. getValueFunc,', arrayPt;<'
-  results =. ; ret@". each (fRun&,)@": each <"0 i.length
-
-  NB. width =. readArrayBitWidth arrayPt
-  NB. lengthPt =. writeArrayLength length
-  NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
-  NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
-  NB. results =. memr (ret arrayValuesPt),0,length,Jtype
-  NB. memf > lengthPt
-  results
-}}
-
-
-vs =. {{
-'tablePointer colIndex' =. tp2;y
-ncols =. tableNCols tablePointer
-'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
-chunkedArrayPointers =. <"0 ptr"1 garrow_table_get_column_data (< tablePointer), < colIndex
-NB. > readChunks each chunkedArrayPointers
-
-chunkedArrayPointer =. 0{:: chunkedArrayPointers
-nChunks =. 0&{::@garrow_chunked_array_get_n_chunks < chunkedArrayPointer
-arrayPointers =. readChunk each <"1 (<chunkedArrayPointer),.(<"0 i. nChunks)
-
-arrayPointer =. 0{::arrayPointers
-indexType =. readArrayTypeIndex arrayPointer
-arrayType =. readArrayType arrayPointer
-length =. readArrayLength arrayPointer
-
-getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
-fRun =. getValueFunc,', arrayPointer;<'
-results =. ; 0&{::@". each (fRun&,)@": each <"0 i.length
-
-indexType =. readArrayTypeIndex arrayPointer
-arrayType =. readArrayType arrayPointer
-length =. readArrayLength arrayPointer
-NB. if. -. arrayType = 'string' do.
-
-width =. readArrayBitWidth arrayPointer
-writeArrayLength=.{{<lengthPt [ length memw (] lengthPt =. mema 1),0,1,4 [ length =. y}}
-lengthPointer =. writeArrayLength length
-
-getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-arrayValuesPointer =.  ptr ". getValuesFunc,', arrayPointer;<lengthPointer'
-
-if. width ~: 64 do.
- type =. typeJ&typeIndexLookup indexType NB. lookup type functions  
- f =. (3!:4)`(3!:4)`(3!:5)@. ((('bool';'int';'float')&I.) < type)
- fs=.'bool';'uint16';'int16';'int32';'float';'float32'
- memxarg =. ((_2,_1,_1,_2,_1,_1)&({~))@:(('bool';'uint16';'int16';'int32';'float';'float32')&i.) < arrayType
- memsize=. ((4,2,4,1)&({~))@:((1,16,32,64)&I.) width
- results2 =. memxarg f memr (0{::arrayValuesPointer),0,(length * memsize),2
-else.
- xarg =. 'non-converted'
- Jtype =.  ". typeJMemr&typeIndexLookup indexType
- results2 =. memr (0{::arrayValuesPointer),0,length,Jtype
-end.
-NB. _1 (3!:4) memr (0{::arrayValuesPointer),0,length,2
-(results -: results2); arrayType;width;length;results2; results
-}}
-
-(,~({"0)@:i.@#@{.) readsParquetTable t2path
-vs 2
-(vs"0) (i.16),17,18 NB. Do not read strings or booleans yet.
-16 NB. Strings ignore for now.
-
 
 NB. =========================================================
 NB. Parquet columns direct to nouns
@@ -315,9 +234,9 @@ NB. Example for reading CSV9
 NB. cmd + F9, F9
 
 NB. fnPtr =. setString '/test.csv'
-filenamePtr =. setString TempPath , 'test.csv'
-e=. << mema 4
-fInputStreamPtr =. garrow_file_input_stream_new (<filenamePtr);e
+filenamePtr =. setString TempPath,'test.csv'
+e=. < mema 4
+fInputStreamPtr =. garrow_file_input_stream_new filenamePtr;<e
 'Check file exists and is permissioned.' assert * > ptr fInputStreamPtr
 
 NB. Example adding column names:
@@ -352,6 +271,17 @@ garrow_csv_reader_read
 readCSV =: {{
 'USE_THREADS';'BLOCK_SIZE';'N_SKIP_ROWS';'DELIMITER';'IS_QUOTED';'QUOTE_CHARACTER';' IS_DOUBLE_QUOTED';'IS_ESCAPED';'ESCAPE_CHARACTER';'ALLOW_NEWLINES_IN_VALUES';'IGNORE_EMPTY_LINES';'CHECK_UTF8';'ALLOW_NULL_STRINGS';'GENERATE_COLUMN_NAMES'
 }}
+
+
+NB. =========================================================
+NB. Arrow 'IPC format' test
+load'web/gethttp'
+fp=. (jpath '~temp/scrabble.arrow')
+fp fwrite~ gethttp 'https://gist.githubusercontent.com/TheNeuralBit/64d8cc13050c9b5743281dcf66059de5/raw/c146baf28a8e78cfe982c6ab5015207c4cbd84e3/scrabble.arrow'
+fp
+
+
+
 
 
 NB. =========================================================

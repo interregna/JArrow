@@ -100,26 +100,14 @@ e=. mema 4
 getString  ptr garrow_record_batch_to_string recordBatchPtr;<<e
 }}
 
-
 NB. =========================================================
 NB. Demo:
 flightInfo infoPtr
 getEndpoints infoPtr
 NB. readRecordBatchString 
 tblPtr =. fsReadAllTable getEndPointReader clientPtr;(getTicket > {.  getEndpoints infoPtr);<callOptPtr
-$ each readsTable tblPtr
-(10) 6!:2 'readsTable tblPtr'
-
-NB. =========================================================
-NB. Testing and examples.
-
-readTableSchema tblPtr
-readTableSchemaTypes tblPtr
-6!:2 'readTable tblPtr'
-readColumn tblPtr;86
-$ each readsTable tblPtr
-
 readsTable tblPtr
+readColumn tblPtr;4
 
 
 NB. =========================================================

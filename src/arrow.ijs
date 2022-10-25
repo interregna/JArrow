@@ -53,8 +53,8 @@ readArray=:{{
   fRun =. typeGetValues&typeIndexLookup indexType NB. lookup functions
   Jtype =.  ". typeJMemr&typeIndexLookup indexType
   lengthPtr =. setInts ] length =. readArrayLength arrayPt
-  if. indexType e. (0,4,5,6,7,11,13) do.  NB. Shims for getValues return values directly instead of pointers.
-   result =. (fRun)~ arrayPt;<lengthPtr
+  if. indexType e. (0,4,5,6,7,11,13,16,19) do.  NB. Shims for getValues return values directly instead of pointers.
+   result =. > (fRun)~ arrayPt;<lengthPtr
   else.
    resPtr =. ptr (fRun)~ arrayPt;<lengthPtr
    result =. memr (>resPtr),0,length,Jtype
@@ -100,8 +100,8 @@ readChunks=:{{
   'chunkedArrayPt' =. y
   nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
   arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-  readArray each arrayPts
-}}
+  < ; readArray each arrayPts
+}}"0
 
 readChunkedArray=:{{
   'chunkedArrayPt' =. y
@@ -112,7 +112,7 @@ readChunkedArray=:{{
   NB. valuedatatype =. ptr@garrow_chunked_array_get_value_data_type < chunkedArrayPt
   NB. length;nrows;nnulls;valuetype;<valuedatatype
   readChunks chunkedArrayPt
-}}
+}}"0
 
 NB. =========================================================
 NB. Field
@@ -223,15 +223,10 @@ readData=:{{
   'tablePt' =. y
   ncols =. tableNCols tablePt
   chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
-  ,. > readChunkedArray each chunkedArrayPts
+  ,. >  readChunkedArray each chunkedArrayPts
 }}
 
-readDataInverted=:{{
-  'tablePt' =. y
-  ncols =. tableNCols tablePt
-  chunkedArrayPts =. {."1 garrow_table_get_column_data tablePt ;"0 i. ncols
-  , readChunkedArray"0 chunkedArrayPts
-}}
+readDataInverted =. ,@:(,each)@readData
 
 readDataColumn=:{{
   'tablePt colIndex' =. y
@@ -248,17 +243,17 @@ readColumn=:{{
 
 readTable=:{{
   'tablePt' =. y
-  (readTableSchema,.readData) tablePt
+  (readTableSchema ,. ,@readData) tablePt
 }}
 
 readsTable=:{{
   'tablePt' =. y
-  ((,@readTableSchema),:(,@:(,.&.>)@:readData)) tablePt
+  (,@readTableSchema ,: ,@((,.&.>)@:readData)) tablePt
 }}
 
 readDataframe=:{{
   'tablePt' =. y
-  (readTableSchema,:readDataInverted) tablePt
+  ((,@readTableSchema),: ,@readData) tablePt
 }}
 
 
@@ -282,11 +277,6 @@ readParquetSchema=:{{
 readParquetData=:{{
   'filepath'=.y
   readData@readParquet (jpath filepath)
-}}
-
-readParquetDataInverted=:{{
-  'filepath'=.y
-  readDataInverted@readParquet (jpath filepath)
 }}
 
 readParquetTable=:{{

@@ -3,6 +3,8 @@ Read (and eventually write) Apache Arrow and Parquet files to and from J.
 Uses C API.
 ## Usage
 ```j
+   install 'github:interregna/JArrow@main'
+
    load 'data/arrow'
    readParquetTable jpath '~addons/data/arrow/test/test1.parquet'
 ┌─┬───────────────┐
@@ -53,9 +55,9 @@ Uses C API.
 │datetime64Col│946684800000000 946771200000000 946857600000000 946944000000000 947030400000000 947116800000000 947203200000000 947289600000000│
 └─────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-Note `datetime64Col` is compatible with `(6!:16)` and `(6!:17)` to convert to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
-
 ```
+`datetime64` is compatible with `(6!:16)` and `(6!:17)` to convert to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
+`date32` is compatible with `fromdate32` to convert from 
 
 ## Installation
 Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
@@ -98,8 +100,10 @@ see `test/test1.ijs`
 * [x] CSV reader demo
 * [ ] Flight server
 * [x] Flight client demo
-* [ ] Read web-based parquet, arrow, and IPC files
+* [ ] Read web-based reader for parquet, arrow, and IPC
 
 
 ##### Notes
 
+`readsTable` minimizes display time in the UI but uses more space
+`readTable`  minimizes space but can take more time to display
