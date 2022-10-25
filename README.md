@@ -93,6 +93,7 @@ see `test/test1.ijs`
 * [ ] IPC streaming
 * [ ] Flight server
 * [ ] JSONL reader demo
+* [ ] garrow_binary_array_get_valueSHIM
 * [x] readArray full length (50x read speedup)
 * [x] Shim variable length binary arrays
 * [x] CSV reader demo

@@ -102,6 +102,38 @@ i *	garrow_fixed_size_binary_array_get_byte_width	(GArrowFixedSizeBinaryArray *a
 * * x	garrow_decimal128_array_get_value	(GArrowDecimal128Array *array, gint64 i); GArrowDecimal128 *
 *c * x	garrow_decimal256_array_format_value	(GArrowDecimal256Array *array, gint64 i); gchar *
 * * x	garrow_decimal256_array_get_value	(GArrowDecimal256Array *array, gint64 i); GArrowDecimal256 *
+*	garrow_data_type_get_type	(void); int
+*	garrow_fixed_width_data_type_get_type	(void); *
+*	garrow_boolean_data_type_get_type	(void); *
+*	garrow_numeric_data_type_get_type	(void); *
+*	garrow_integer_data_type_get_type	(void); *
+*	garrow_int8_data_type_get_type	(void); *
+*	garrow_uint8_data_type_get_type	(void); *
+*	garrow_int16_data_type_get_type	(void); *
+*	garrow_uint16_data_type_get_type	(void); *
+*	garrow_int32_data_type_get_type	(void); *
+*	garrow_uint32_data_type_get_type	(void); *
+*	garrow_int64_data_type_get_type	(void); *
+*	garrow_uint64_data_type_get_type	(void); *
+*	garrow_float_data_type_get_type	(void); *
+*	garrow_double_data_type_get_type	(void); *
+*	garrow_binary_data_type_get_type	(void); *
+*	garrow_fixed_size_binary_data_type_get_type	(void); *
+*	garrow_large_binary_data_type_get_type	(void); *
+*	garrow_string_data_type_get_type	(void); *
+*	garrow_large_string_data_type_get_type	(void); *
+*	garrow_temporal_data_type_get_type	(void); *
+*	garrow_date32_data_type_get_type	(void); *
+*	garrow_date64_data_type_get_type	(void); *
+*	garrow_timestamp_data_type_get_type	(void); *
+*	garrow_time_data_type_get_type	(void); *
+*	garrow_time32_data_type_get_type	(void); *
+*	garrow_time64_data_type_get_type	(void); *
+*	garrow_interval_data_type_get_type	(void); *
+*	garrow_decimal_data_type_get_type	(void); *
+*	garrow_decimal128_data_type_get_type	(void); *
+*	garrow_decimal256_data_type_get_type	(void); *
+*	garrow_extension_data_type_get_type	(void); *
 )
 
 NB. =========================================================

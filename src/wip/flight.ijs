@@ -108,7 +108,7 @@ getEndpoints infoPtr
 NB. readRecordBatchString 
 tblPtr =. fsReadAllTable getEndPointReader clientPtr;(getTicket > {.  getEndpoints infoPtr);<callOptPtr
 $ each readsTable tblPtr
-
+(10) 6!:2 'readsTable tblPtr'
 
 NB. =========================================================
 NB. Testing and examples.

@@ -56,7 +56,6 @@ n * * *	gaflight_call_options_foreach_header	(GAFlightCallOptions *options, GAFl
 * * * *	gaflight_client_new	(GAFlightLocation *location, GAFlightClientOptions *options, GError **error); GAFlightClient *
 * * * * *	gaflight_client_list_flights	(GAFlightClient *client, GAFlightCriteria *criteria, GAFlightCallOptions *options, GError **error); GList *
 b * *	gaflight_client_close	(GAFlightClient *client, GError **error); gboolean
-i	gaflight_client_get_type	(); int
 * * * * *	gaflight_client_get_flight_info	(GAFlightClient *client, GAFlightDescriptor *descriptor, GAFlightCallOptions *options, GError **error); GAFlightInfo *
 * * * * *	gaflight_client_do_get	(GAFlightClient *client, GAFlightTicket *ticket, GAFlightCallOptions *options, GError **error); GAFlightStreamReader *
 *	gaflight_client_get_type

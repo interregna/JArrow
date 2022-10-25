@@ -53,7 +53,7 @@ readArray=:{{
   fRun =. typeGetValues&typeIndexLookup indexType NB. lookup functions
   Jtype =.  ". typeJMemr&typeIndexLookup indexType
   lengthPtr =. setInts ] length =. readArrayLength arrayPt
-  if. Jtype e. (0,2) do.  NB. Shims for getValues read directly instead of to pointers.
+  if. indexType e. (0,4,5,6,7,11,13) do.  NB. Shims for getValues return values directly instead of pointers.
    result =. (fRun)~ arrayPt;<lengthPtr
   else.
    resPtr =. ptr (fRun)~ arrayPt;<lengthPtr
@@ -100,8 +100,7 @@ readChunks=:{{
   'chunkedArrayPt' =. y
   nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
   arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-  NB. readArray each arrayPts NB. Slow, incremental.
-  readArray2 each arrayPts NB. Replace once readArray works with smaller byte numbers.
+  readArray each arrayPts
 }}
 
 readChunkedArray=:{{
