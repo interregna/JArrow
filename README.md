@@ -1,5 +1,6 @@
-# J language wrapper for Apache Arrow (C api)
+# J language addon for Apache Arrow
 Read (and eventually write) Apache Arrow and Parquet files to and from J.
+Uses C API.
 ## Usage
 ```j
    load 'data/arrow'
@@ -85,20 +86,19 @@ Examples:
 see `test/test1.ijs`
 
 ##### TODO
-* [ ] NULL handling
+* [ ] NULL handling for null values within arrays
 * [ ] Tensors
-* [ ] Document functions: Print a manual / help dialog.
+* [ ] Document functions (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
 * [ ] Error catch missing files (empty pointers)
 * [ ] IPC fixed length
 * [ ] IPC streaming
-* [ ] Flight server
 * [ ] JSONL reader demo
-* [ ] garrow_binary_array_get_valueSHIM
 * [x] readArray full length (50x read speedup)
-* [x] Shim variable length binary arrays
+* [x] Finish shims for array reading
 * [x] CSV reader demo
+* [ ] Flight server
 * [x] Flight client demo
-
+* [ ] Read web-based parquet, arrow, and IPC files
 
 
 ##### Notes
