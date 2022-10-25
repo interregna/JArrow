@@ -27,8 +27,8 @@ Uses C API.
 └────────┴──────────┴────────┴─────────┴───────┴────────┴───────┴───────┴────────┴────────┴────────┴──────────┴──────────┴───────────┴────────────┴─────────┴─────────┴───────┴───────────────┘
    
 ```
-`datetime64` is compatible with `(6!:16)` and `(6!:17)` to convert to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
-`date32` is compatible with `fromdate32` to convert from 
+`(6!:16)` and `(6!:17)` can be used to Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
+`fromdate32` can be used to convert Arrow date32 types to YYYY M D tuples.
 
 ## Installation
 Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
