@@ -137,37 +137,11 @@ readCSV =: {{
 
 NB. =========================================================
 NB. Arrow 'IPC format' test
-
-f1 =. jpath '~temp/test1.jsonl'
-f2 =. jpath '~temp/test2.jsonl'
-f3 =. jpath '~temp/test3.jsonl'
-
-". each 'readJsonlSchema f'&,@": each <"0 >: i.3
-readJsonlSchema f0
-printJsonlSchema f0
-
-
-readArrow=: {{
-NB. Properties
-NB. gint	max-recursion-depth	Read / Write
-NB. gboolean	use-threads	Read / Write
-NB. gint	alignment	Read / Write
-NB. gboolean	allow-64bit	Read / Write
-NB. GArrowCodec *	codec	Read / Write
-NB. gint	max-recursion-depth	Read / Write
-NB. gboolean	use-threads	Read / Write
-NB. gboolean	write-legacy-ipc-format	Read / Write
-'filepath'=. y
-'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
-filenamePtr=. setString (jpath filepath)
-e=. < mema 4
-fInputStreamPtr=. ptr garrow_file_input_stream_new filenamePtr;<e
-'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
-arrowReaderPtr=. ptr garrow_feather_file_reader_new fInputStreamPtr;<e
-'Null pointer error' assert > arrowReaderPtr
-tablePtr=. ptr garrow_feather_file_reader_read arrowReaderPtr;<e
-tablePtr
-}}
+NB. Need to read list types
+readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test1.jsonl' NB. Need to add lists.
+readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test2.jsonl'
+readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test3.jsonl' NB. Need to add lists.
+readsTable readFeather '~temp/test1.feather'
 
 load'web/gethttp'
 fp =. jpath '~/Downloads/scrabble.arrow'
@@ -178,15 +152,49 @@ readArrow
 
 
 NB. =========================================================
-NB. Writing 
+NB. Reading and writing IPC
+
+filesytem -> inputstream
+inputstream -> read
+recordbatch -> 
+<----->
+recordbatch
+outputstream
+filesystem
+
+NB. Create inputstream (source) for recordbatch:
+NB. Create these via filesystem -OR-
+NB. directly from file 
+garrow_buffer_input_stream_new
+garrow_file_input_stream_new
+garrow_memory_mapped_input_stream_new
+garrow_gio_input_stream_new
+garrow_compressed_input_stream_new
+NB. Create recordbatch from inputstream source
+garrow_input_stream_read_record_batch
+
+NB. Read the recordbatches
+garrow_record_batch_reader_read_all (returns a table)
+garrow_record_batch_reader_new
+garrow_record_batch_reader_read_next
+garrow_record_batch_stream_reader_new
+garrow_record_batch_file_reader_new
+
+NB. Create file output streams (sinks):
+garrow_file_output_stream_new NB. write to a file
+garrow_buffer_output_stream_new	NB. Write to a buffer (in-memory)
+garrow_compressed_output_stream_new	NB. Compress the stream before writing onward.
+
+NB. Write the recordbatch into the  sink for recordbatch
+garrow_output_stream_write_record_batch
+
+
 writeRecordBatch=: {{
 'tablePtr filepath'=. y
 e=. < mema 4
 fnPtr=. setString filepath
 fileOutputStreamrPtr=. ptr garrow_file_output_stream_new fnPtr;0;<e
 garrow_output_stream_align fileOutputStreamrPtr;64;;<e
-
-garrow_output_stream_write_record_batch
 ...
 }}
 
@@ -221,11 +229,6 @@ NB. https://code.jsoftware.com/wiki/Guides/DLLs/Error_Messages
 cder''
 cderx''
 
-NB. Work:
-'filereader';
- 'tensor';
-
-[+] Apache Parquet file format
 [+] Apache Arrow IPC record batch file format
 [+] Apache Arrow IPC record batch stream format
 

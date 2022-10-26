@@ -250,8 +250,7 @@ readCol (u filepath);<index
 
 NB. =========================================================
 NB. CSV format
-NB. Add CSV options.
-NB. Is it necessary to close reader?
+NB. Add CSV options. Is it necessary to close reader?
 NB. =========================================================
 readCSV=: {{
 'filepath'=. y
@@ -304,6 +303,7 @@ readsJsonlTable=: (readJsonl readsFileTable)
 readJsonlDataframe=: (readJsonl readFileDataframe)
 readJsonlCol=: (readJsonl readFileCol)
 
+
 NB. =========================================================
 NB. Parquet format
 NB. =========================================================
@@ -318,7 +318,6 @@ memf > e1
 memf > e2
 tablePtr
 }}
-
 
 readParquetSchema=: (readParquet readFileSchema)
 printParquetSchema=: (readParquet printFileSchema)
@@ -345,3 +344,37 @@ gparquet_arrow_file_writer_close pqtFileWriterPtr;<e3
 memf"0 > (fnPtr),e1,e2,e3
 success
 }}
+
+
+NB. =========================================================
+NB. Feather format ('Version 1')
+NB. =========================================================
+readFeather=: {{
+NB. Properties
+NB. gint	max-recursion-depth	Read / Write
+NB. gboolean	use-threads	Read / Write
+NB. gint	alignment	Read / Write
+NB. gboolean	allow-64bit	Read / Write
+NB. GArrowCodec *	codec	Read / Write
+NB. gint	max-recursion-depth	Read / Write
+NB. gboolean	use-threads	Read / Write
+NB. gboolean	write-legacy-ipc-format	Read / Write
+'filepath'=. y
+'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
+filenamePtr=. setString (jpath filepath)
+e=. < mema 4
+fInputStreamPtr=. ptr garrow_file_input_stream_new filenamePtr;<e
+'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
+arrowReaderPtr=. ptr garrow_feather_file_reader_new fInputStreamPtr;<e
+'Null pointer error' assert > arrowReaderPtr
+tablePtr=. ptr garrow_feather_file_reader_read arrowReaderPtr;<e
+tablePtr
+}}
+
+readFeatherSchema=: (readFeather readFileSchema)
+printFeatherSchema=: (readFeather printFileSchema)
+readFeatherData=: (readFeather readFileData)
+readFeatherTable=: (readFeather readFileTable)
+readsFeatherTable=: (readFeather readsFileTable)
+readFeatherDataframe=: (readFeather readFileDataframe)
+readFeatherCol=: (readFeather readFileCol)

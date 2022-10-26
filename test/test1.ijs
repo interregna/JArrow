@@ -10,7 +10,7 @@ copytestfiles =. {{
   end.
 }}
 
-copytestfiles each 'parquet';'csv';'jsonl';'arrow'
+copytestfiles each 'parquet';'csv';'jsonl';'arrow';'json'
 
 load ProjPath,'/arrow.ijs'
 coinsert 'parrow'
@@ -50,7 +50,7 @@ echo readParquetDataframe t2path
 echo readParquetCol t2path;14
 
 NB. =========================================================
-t3path =. TempPath,'test.csv'
+t3path =. TempPath,'test1.csv'
 tp3 =. readCSV t3path
 echo readTableSchema tp3
 echo readData tp3
