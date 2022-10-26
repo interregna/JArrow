@@ -3,12 +3,14 @@ ProjPath=: fpath_j_^:2 loc ''                   NB. path of grand-parent folder 
 TempPath=: jpath '~temp/'
 
 NB. copy test parquet files to ~temp if they're not already there
-{{
-  tstpqs=: <;._2 , 0 dir ProjPath,'/test/test*.parquet'
+copytestfiles =. {{
+  tstpqs=: <;._2 , 0 dir ProjPath,'/test/test*.',y
   if. -. fexist TempPath&,&.> tstpqs do.
       (TempPath&,&.> tstpqs) fcopynew&> (ProjPath,'/test/')&,&.> tstpqs
   end.
-}}''
+}}
+
+copytestfiles each 'parquet';'csv'
 
 load ProjPath,'/arrow.ijs'
 coinsert 'parrow'
@@ -28,10 +30,10 @@ echo readParquetSchema t1path
 echo readParquetTable t1path
 echo readsParquetTable t1path
 echo readParquetDataframe t1path
-echo readParquetColumn t1path;1
+echo readParquetCol t1path;1
 
 NB. =========================================================
-t2path =. TempPath,'/test2.parquet'
+t2path =. TempPath,'test2.parquet'
 tp2 =. readParquet t2path
 echo readTableSchema tp2
 echo readData tp2
@@ -45,4 +47,21 @@ echo readParquetData t2path
 echo readParquetTable t2path
 echo readsParquetTable t2path
 echo readParquetDataframe t2path
-echo readParquetColumn t2path;14
+echo readParquetCol t2path;14
+
+NB. =========================================================
+t3path =. TempPath,'test.csv'
+tp3 =. readCSV t3path
+echo readTableSchema tp3
+echo readData tp3
+echo readDataInverted tp3
+echo readTable tp3
+echo readsTable tp3
+echo readDataframe tp3
+
+echo readCSVSchema t3path
+echo readCSVData t3path
+echo readCSVTable t3path
+echo readsCSVTable t3path
+echo readCSVDataframe t3path
+echo readCSVCol t3path;0

@@ -36,4 +36,4 @@ pd.DataFrame(
 )
 
 echo 'Create parquet file with:'
-echo 'python ',ppath
+echo 'python3 ',ppath

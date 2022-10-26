@@ -1411,306 +1411,309 @@ init ''
 NB. =========================================================
 NB. Array
 NB. =========================================================
-readArrayType=:{{
-  'arrayPt' =. y
-  dataTypePt =. ptr garrow_array_get_value_data_type < arrayPt
-  getString (ret ptr garrow_data_type_get_name < dataTypePt)
+readArrayType=: {{
+'arrayPt'=. y
+dataTypePt=. ptr garrow_array_get_value_data_type < arrayPt
+getString (ret ptr garrow_data_type_get_name < dataTypePt)
 }}
 
-readArrayTypeIndex=:{{
-  'arrayPt' =. y
-  datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
-  ret garrow_data_type_get_id < datatypePt
+readArrayTypeIndex=: {{
+'arrayPt'=. y
+datatypePt=. ptr garrow_array_get_value_data_type < arrayPt
+ret garrow_data_type_get_id < datatypePt
 }}
 
-readArrayBitWidth=:{{
-  'arrayPt' =. y
-  datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
-  ret garrow_fixed_width_data_type_get_bit_width < datatypePt
+readArrayBitWidth=: {{
+'arrayPt'=. y
+datatypePt=. ptr garrow_array_get_value_data_type < arrayPt
+ret garrow_fixed_width_data_type_get_bit_width < datatypePt
 }}
 
-readArrayLength=:{{ret garrow_array_get_length < y}}
+readArrayLength=: {{ret garrow_array_get_length < y}}
 
-readArrayRows=:{{
-  NB. Use this only for reading parts of arrays.
-  'arrayPt rowIndices' =. y
-  indexType =. readArrayTypeIndex arrayPt
-  arrayType =. readArrayType arrayPt
-  length =. readArrayLength arrayPt
-  getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
-  fRun =. getValueFunc,', arrayPt;<'
-  ('Max row index must be  less than row count of ',": length) assert (>./ rowIndices)  <: length
-  results =. ; ret@". each (fRun&,)@": each <"0 (rowIndices)
-  NB. width =. readArrayBitWidth arrayPt
-  NB. lengthPt =. setInts length
-  NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
-  NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
-  NB. results =. memr (ret arrayValuesPt),0,length,Jtype
-  NB. memf > lengthPt
-  results
+readArrayRows=: {{
+NB. Use this only for reading parts of arrays.
+'arrayPt rowIndices'=. y
+indexType=. readArrayTypeIndex arrayPt
+arrayType=. readArrayType arrayPt
+length=. readArrayLength arrayPt
+getValueFunc=. typeGetValue&typeIndexLookup indexType NB. lookup functions
+fRun=. getValueFunc,', arrayPt;<'
+('Max row index must be  less than row count of ',": length) assert (>./ rowIndices) <: length
+results=. ; ret@". each (fRun&,)@": each <"0 (rowIndices)
+NB. width =. readArrayBitWidth arrayPt
+NB. lengthPt =. setInts length
+NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
+NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
+NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
+NB. results =. memr (ret arrayValuesPt),0,length,Jtype
+NB. memf > lengthPt
+results
 }}
 
-readArray=:{{
-  NB. Read the whole array at once instead of one call for each.
-  'arrayPt' =. y
-  indexType =. readArrayTypeIndex arrayPt
-  arrayType =. readArrayType arrayPt
-  fRun =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  Jtype =.  ". typeJMemr&typeIndexLookup indexType
-  lengthPtr =. setInts ] length =. readArrayLength arrayPt
-  if. indexType e. (0,4,5,6,7,11,13,16,19) do.  NB. Shims for getValues return values directly instead of pointers.
-   result =. > (fRun)~ arrayPt;<lengthPtr
-  else.
-   resPtr =. ptr (fRun)~ arrayPt;<lengthPtr
-   result =. memr (>resPtr),0,length,Jtype
-  end. 
-  nullCount =. ret garrow_array_get_n_nulls <arrayPt NB.
+readArray=: {{
+NB. Read the whole array at once instead of one call for each.
+'arrayPt'=. y
+indexType=. readArrayTypeIndex arrayPt
+arrayType=. readArrayType arrayPt
+fRun=. typeGetValues&typeIndexLookup indexType NB. lookup functions
+Jtype=. ". typeJMemr&typeIndexLookup indexType
+lengthPtr=. setInts ] length=. readArrayLength arrayPt
+if. indexType e. (0,4,5,6,7,11,13,16,19) do.  NB. Shims for getValues return values directly instead of pointers.
+  result=. > (fRun)~ arrayPt;<lengthPtr
+else.
+  resPtr=. ptr (fRun)~ arrayPt;<lengthPtr
+  result=. memr (>resPtr),0,length,Jtype
+end.
+nullCount=. ret garrow_array_get_n_nulls <arrayPt NB.
 NB.   if. (* nullCount) do. <arrayPt
 NB.    nullBufferPtr =. ptr garrow_array_get_null_bitmap <arrayPt
 NB.    echo 'null buffer ptr'; nullCount; nullBufferPtr;(>. length % 8)
 NB.    echo nullBitMap =. _8 ic memr (> ptr getBuffer nullBufferPtr),0,(>. length),2
 NB.   end.
-  result
+result
 }}
 
-readArray2=:{{
-  NB. Use this only for reading parts of arrays.
-  'arrayPt' =. y
-  indexType =. readArrayTypeIndex arrayPt
-  arrayType =. readArrayType arrayPt
-  length =. readArrayLength arrayPt
-  getValueFunc =. typeGetValue&typeIndexLookup indexType NB. lookup functions
-  fRun =. getValueFunc,', arrayPt;<'
-  results =. ; ret@". each (fRun&,)@": each <"0 i.length
-  NB. width =. readArrayBitWidth arrayPt
-  NB. lengthPt =. setInts length
-  NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
-  NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
-  NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
-  NB. results =. memr (ret arrayValuesPt),0,length,Jtype
-  NB. memf > lengthPt
-  results
+readArray2=: {{
+NB. Use this only for reading parts of arrays.
+'arrayPt'=. y
+indexType=. readArrayTypeIndex arrayPt
+arrayType=. readArrayType arrayPt
+length=. readArrayLength arrayPt
+getValueFunc=. typeGetValue&typeIndexLookup indexType NB. lookup functions
+fRun=. getValueFunc,', arrayPt;<'
+results=. ; ret@". each (fRun&,)@": each <"0 i.length
+NB. width =. readArrayBitWidth arrayPt
+NB. lengthPt =. setInts length
+NB. getValuesFunc =. typeGetValues&typeIndexLookup indexType NB. lookup functions
+NB. arrayValuesPt =.  ptr ". getValuesFunc,', (arrayPt);<lengthPt'
+NB. Jtype =.  ". typeJMemr&typeIndexLookup indexType
+NB. results =. memr (ret arrayValuesPt),0,length,Jtype
+NB. memf > lengthPt
+results
 }}
 
 
 NB. =========================================================
 NB. chunkedArray
 NB. =========================================================
-readChunk=:{{
-  'chunkedArrayPt index' =. y
-  ptr@garrow_chunked_array_get_chunk chunkedArrayPt;index
+readChunk=: {{
+'chunkedArrayPt index'=. y
+ptr@garrow_chunked_array_get_chunk chunkedArrayPt;index
 }}
 
-readChunks=:{{
-  'chunkedArrayPt' =. y
-  nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
-  arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-  < ; readArray each arrayPts
+readChunks=: {{
+'chunkedArrayPt'=. y
+nChunks=. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
+arrayPts=. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
+< ; readArray each arrayPts
 }}"0
 
-readChunkedArray=:{{
-  'chunkedArrayPt' =. y
-  NB. length =. > ptr@garrow_chunked_array_get_length < chunkedArrayPt
-  NB. valuetype =. > ptr@garrow_chunked_array_get_value_type < chunkedArrayPt
-  NB. nrows  =. > ptr@garrow_chunked_array_get_n_rows < chunkedArrayPt
-  NB. nnulls =. > ptr@garrow_chunked_array_get_n_nulls < chunkedArrayPt
-  NB. valuedatatype =. ptr@garrow_chunked_array_get_value_data_type < chunkedArrayPt
-  NB. length;nrows;nnulls;valuetype;<valuedatatype
-  readChunks chunkedArrayPt
+readChunkedArray=: {{
+'chunkedArrayPt'=. y
+NB. length =. > ptr@garrow_chunked_array_get_length < chunkedArrayPt
+NB. valuetype =. > ptr@garrow_chunked_array_get_value_type < chunkedArrayPt
+NB. nrows  =. > ptr@garrow_chunked_array_get_n_rows < chunkedArrayPt
+NB. nnulls =. > ptr@garrow_chunked_array_get_n_nulls < chunkedArrayPt
+NB. valuedatatype =. ptr@garrow_chunked_array_get_value_data_type < chunkedArrayPt
+NB. length;nrows;nnulls;valuetype;<valuedatatype
+readChunks chunkedArrayPt
 }}"0
 
 NB. =========================================================
 NB. Field
 NB. =========================================================
-getFieldName=:{{
-  fieldPt =. y
-  getString ptr garrow_field_get_name fieldPt
+getFieldName=: {{
+'fieldPt'=. y
+getString ptr garrow_field_get_name fieldPt
 }}
 
-getFieldDataType=:{{
-  'fieldPt' =. y
-  dataTypePt =. ptr garrow_field_get_data_type fieldPt
-  getString ret garrow_data_type_get_name < dataTypePt
+getFieldDataType=: {{
+'fieldPt'=. y
+dataTypePt=. ptr garrow_field_get_data_type fieldPt
+getString ret garrow_data_type_get_name < dataTypePt
 }}
-
-NB. getFieldNullable=:{{
-NB. fieldPt=.y
-NB. garrow_field_is_nullable fieldPt
-NB. gboolean
-NB. }}
-NB. getFieldToString=:{{
-NB. 'fieldPt'=.y
-NB. garrow_field_to_string fieldPt
-NB. gchar *
-NB. gFree
-NB. }}
-NB. getFieldToStringMeta {{
-NB. 'fieldPt'=.y
-NB. garrow_field_to_string_metadata fieldPt;1
-NB. gchar *
-NB. gFree
-NB. }}
-NB. {{
-NB. 'fieldPt'=.y
-NB. garrow_field_has_metadata fieldPt
-NB. gboolean
-NB. }}
 
 NB. =========================================================
 NB. Schema
 NB. =========================================================
-getSchemaPt =: {{
-  tablePt =. y
-  ptr garrow_table_get_schema < tablePt
+getSchemaPt=: {{
+tablePt=. y
+ptr garrow_table_get_schema < tablePt
 }}
 
-getSchemaFieldPt =: {{
-  'schemaPt index'=.y
-  ptr garrow_schema_get_field schemaPt;index
+getSchemaFieldPt=: {{
+'schemaPt index'=. y
+ptr garrow_schema_get_field schemaPt;index
 }}
 
-getSchemaName=:{{
-  'schemaPt index'=.y
-  fieldPts =. getSchemaFieldPt (<schemaPt),< index
-  name =. getFieldName < fieldPts
-  name
+getSchemaName=: {{
+'schemaPt index'=. y
+fieldPts=. getSchemaFieldPt (<schemaPt),< index
+name=. getFieldName < fieldPts
+name
 }}
 
-getSchemaNames=:{{
-  schemaPt =. y
-  nFields =. ret garrow_schema_n_fields < schemaPt
-  names =. getSchemaName each <"1 (<schemaPt),.<"0 i. nFields
-  names
+getSchemaNames=: {{
+schemaPt=. y
+nFields=. ret garrow_schema_n_fields < schemaPt
+names=. getSchemaName each <"1 (<schemaPt),.<"0 i. nFields
+names
 }}
 
-getSchemaFields=:{{
-  schemaPt =. y
-  nFields =. ret garrow_schema_n_fields < schemaPt
-  fieldPts =. getSchemaFieldPt each <"1 (<schemaPt),.<"0 i. nFields
-  types =. getFieldDataType@< each fieldPts
-  names =. getFieldName@< each fieldPts
-  names,:types
+getSchemaFields=: {{
+schemaPt=. y
+nFields=. ret garrow_schema_n_fields < schemaPt
+fieldPts=. getSchemaFieldPt each <"1 (<schemaPt),.<"0 i. nFields
+types=. getFieldDataType@< each fieldPts
+names=. getFieldName@< each fieldPts
+names,:types
 }}
 
-readTableSchemaString=:{{
-  tablePt =. y
-  schemaPt =. getSchemaPt tablePt
-  getString ret ptr garrow_schema_to_string < schemaPt
+printSchema=: {{
+tablePt=. y
+schemaPt=. getSchemaPt tablePt
+getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
-readTableSchema=:{{
-  tablePt =. y
-  schemaPt =. getSchemaPt tablePt
-  getSchemaNames schemaPt
+readTableSchema=: {{
+tablePt=. y
+schemaPt=. getSchemaPt tablePt
+getSchemaNames schemaPt
 }}
 
-readTableSchemaTypes=:{{
-  tablePt =. y
-  schemaPt =. getSchemaPt tablePt
-  getSchemaFields schemaPt
+readTableSchemaTypes=: {{
+tablePt=. y
+schemaPt=. getSchemaPt tablePt
+getSchemaFields schemaPt
 }}
 
-readTableSchemaCol=:{{
-  'tablePt index'=.y
-  getSchemaName (getSchemaPt tablePt);<index
+readTableSchemaCol=: {{
+'tablePt index'=. y
+getSchemaName (getSchemaPt tablePt);<index
 }}
 
-readTableSchemaList=:(,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@readTableSchemaString
+schema=: (,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@printSchema
 
 
 NB. =========================================================
 NB. Table
 NB. =========================================================
-tableNRows=:{{ret garrow_table_get_n_rows (< y)}}
-tableNCols=:{{ret garrow_table_get_n_columns (< y)}}
+tableNRows=: {{ret garrow_table_get_n_rows (< y)}}
+tableNCols=: {{ret garrow_table_get_n_columns (< y)}}
 
-readData=:{{
-  'tablePt' =. y
-  ncols =. tableNCols tablePt
-  chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
-  ,. >  readChunkedArray each chunkedArrayPts
+readData=: {{
+'tablePt'=. y
+ncols=. tableNCols tablePt
+chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
+,. > readChunkedArray each chunkedArrayPts
 }}
 
-readDataInverted =. ,@:(,each)@readData
+readDataInverted=: ,@:(,each)@readData
 
-readDataColumn=:{{
-  'tablePt colIndex' =. y
-  ncols =. tableNCols tablePt
-  'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
-  chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-  ,. ; each readChunkedArray each chunkedArrayPts
+readDataCol=: {{
+'tablePt colIndex'=. y
+ncols=. tableNCols tablePt
+'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
+chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
+,. ; each readChunkedArray each chunkedArrayPts
 }}
 
-readColumn=:{{
-  'tablePt colIndex' =. y
-  ((<@readTableSchemaCol),.readDataColumn) (< tablePt),< colIndex
+readCol=: {{
+'tablePt colIndex'=. y
+((<@readTableSchemaCol),.readDataCol) (< tablePt),< colIndex
 }}
 
-readTable=:{{
-  'tablePt' =. y
-  (readTableSchema ,. ,@readData) tablePt
+readTable=: {{
+'tablePt'=. y
+(readTableSchema ,. ,@readData) tablePt
 }}
 
-readsTable=:{{
-  'tablePt' =. y
-  (,@readTableSchema ,: ,@((,.&.>)@:readData)) tablePt
+readsTable=: {{
+'tablePt'=. y
+(,@readTableSchema ,: ,@((,.&.>)@:readData)) tablePt
 }}
 
-readDataframe=:{{
-  'tablePt' =. y
-  ((,@readTableSchema),: ,@readData) tablePt
+readDataframe=: {{
+'tablePt'=. y
+((,@readTableSchema),: ,@readData) tablePt
 }}
 
 
 NB. =========================================================
-NB. Parquet
+NB. CSV format
+NB. Add CSV options.
 NB. =========================================================
-readParquet=:{{
-  'filepath'=.y
-  e=. << mema 4
-  r=. gparquet_arrow_file_reader_new_path (jpath filepath);e
-  t=. gparquet_arrow_file_reader_read_table (ptr r);e
-  memf >> e
-  ptr t
+readCSV=: {{
+'filepath'=. y
+'File does not exist or is not permissioned.' assert fexist jpath filepath
+filenamePtr=. setString (jpath filepath)
+e=. < mema 4
+fInputStreamPtr=. garrow_file_input_stream_new filenamePtr;<e
+'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
+NB. Example adding column names:
+readOptionPt=. garrow_csv_read_options_new ''
+NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
+NB. ptr i32 =. '"/usr/local/lib/libarrow-glib.dylib" garrow_int32_data_type_get_type *'&cd ''
+NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setString 'col1');(< ptr i32)
+csvReaderPtr=. ptr garrow_csv_reader_new (ptr fInputStreamPtr);(ptr readOptionPt);<e
+tablePtr=. ptr garrow_csv_reader_read csvReaderPtr;<e
+tablePtr
 }}
 
-readParquetSchema=:{{
-  'filepath'=.y
-  readTableSchema@readParquet (jpath filepath)
+readCSVSchema=: {{ readTableSchema@readCSV ] filepath=. y }}
+CSVSchema=: {{ schema@readCSV ] filepath=. y }}
+readCSVData=: {{ readData@readCSV ] filepath=. y }}
+readCSVTable=: {{ readTable@readCSV ] filepath=. y }}
+readsCSVTable=: {{ readsTable@readCSV ] filepath=. y }}
+readCSVDataframe=: {{ readDataframe@readCSV ] filepath=. y }}
+readCSVCol=: {{
+'filepath index'=. y
+readCol (readCSV filepath);<index
 }}
 
-readParquetData=:{{
-  'filepath'=.y
-  readData@readParquet (jpath filepath)
+
+NB. =========================================================
+NB. Parquet format
+NB. =========================================================
+readParquet=: {{
+'filepath'=. y
+'File does not exist or is not permissioned.' assert fexist (jpath filepath)
+e1=. < mema 4
+e2=. < mema 4
+readerPathPtr=. ptr gparquet_arrow_file_reader_new_path (jpath filepath);<e1
+tablePtr=. ptr gparquet_arrow_file_reader_read_table readerPathPtr;<e2
+memf > e1
+memf > e2
+tablePtr
 }}
 
-readParquetTable=:{{
-  'filepath'=.y
-  readTable@readParquet (jpath filepath)
+readParquetSchema=: {{ readTableSchema@readParquet ] filepath=. y }}
+ParquetSchema=: {{ schema@readParquet ] filepath=. y }}
+readParquetData=: {{ readData@readParquet ] filepath=. y }}
+readParquetTable=: {{ readTable@readParquet ] filepath=. y }}
+readsParquetTable=: {{ readsTable@readParquet ] filepath=. y }}
+readParquetDataframe=: {{ readDataframe@readParquet ] filepath=. y }}
+readParquetCol=: {{
+'filepath index'=. y
+readCol (readParquet filepath);<index
 }}
 
-readsParquetTable=:{{
-  'filepath'=.y
-  readsTable@readParquet (jpath filepath)
-}}
-
-readParquetDataframe=:{{
-  'filepath'=.y
-  readDataframe@readParquet (jpath filepath)
-}}
-
-readParquetColumn =: {{
-  'filepath index' =. y
-  readColumn (readParquet (jpath filepath));<index
-}}
-
+NB. writeParquet tablePointer;'~out1.parquet'
+NB. Add write options
 writeParquet=: {{
-  'filepath'=.y
-}}
-
-writeParquetFromTable=: {{
-  'table writeOptions' =. y
+'tablePtr filepath'=. y
+e1=. < mema 4
+e2=. < mema 4
+pqtWtrPtr=. ptr gparquet_writer_properties_new ''
+schemaPtr=. ptr getSchemaPt tablePtr
+fnPtr=. setString filepath
+pqtFileWriterPtr=. ptr gparquet_arrow_file_writer_new_path schemaPtr;fnPtr;pqtWtrPtr;<e1
+chunksize=. 5000
+success=. ret gparquet_arrow_file_writer_write_table pqtFileWriterPtr;tablePtr;chunksize;<e2
+gparquet_arrow_file_writer_close pqtFileWriterPtr;<e
+memf"0 > (fnPtr),e1,e2
+success
 }}
 NB. ====================
 NB. Expose public interface in z locale

@@ -38,123 +38,16 @@ dataPtr2 =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_data * * *'&cd
 memr (memr (>dataPtr2),0,1,4),0,_1,2
 NB. =========================================================
 
-ppath=. jpath '~/movies_201k.parquet'
-t1path =. ppath
-
-tp1 =. readParquet t1path
-echo readSchemaString tp1
-NB. echo readSchema tp1
-NB. echo readData tp1
-NB. echo readDataInverted tp1
-NB. echo readTable tp1
-NB. echo readsTable tp1
-NB. echo readDataframe tp1
-
-echo readParquetColumn t1path;1
-NB. readColumn
- 'tablePt colIndex' =. y =. t1path;1
-'tablePt colIndex' =. tp1 ;1
-readDataColumn (< tablePt),< colIndex
-
-
-'tablePt colIndex' =. y =. tp1;0
-ncols =. tableNCols tablePt
-ncols 
-'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
-chunkedArrayPts =. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-,. ; each readChunkedArray each chunkedArrayPts
-
-NB. readChunks each chunkedArrayPts 
-'chunkedArrayPt' =. y =. > {. chunkedArrayPts 
-nChunks =. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
-arrayPts =. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-readArray each arrayPts
-ap =.  > {. arrayPts
-
-
-ret garrow_array_is_valid ap;<0 NB. Is null?
-dtp =. ptr garrow_array_get_value_data_type <ap
-	getString (ret ptr garrow_data_type_get_name < dtp)
-len =. ret garrow_array_get_length <ap
-
-ret garrow_array_get_offset <ap
-
-valueOffsetsPt=. < mema len * 2^2+IF64
- (len # 0) memw (>valueOffsetsPt),0,len,4
- memr (>valueOffsetsPt),0,len,4
-
-
-nNulls =. ret garrow_array_get_n_nulls <ap
-nbp =. ptr garrow_array_get_null_bitmap <ap NB. GArrowBuffer *
-ret garrow_array_get_n_nulls <ap
-
-e=. << mema 4
-stringptr =. ptr garrow_array_to_string ap;e NB. GArrowBuffer *
-memr (>stringptr),0,_1,2
-
-ret garrow_array_is_null ap;<0
-ret garrow_array_get_value_type <ap
-
-NB. The bitmap that shows null elements. The N-th element is null when the N-th bit is 0, not null otherwise. 
-NB. If the array has no null elements, the bitmap must be NULL and n_nulls is 0.
-valueOffsetsPt=. < mema len * 2^2+IF64
-(len # 0) memw (>valueOffsetsPt),0,len,4
-+/ memr (>valueOffsetsPt),0,len,4
-valueOffsetsbufferPt=. ptr garrow_buffer_new valueOffsetsPt; len
-
-ret garrow_buffer_get_capacity < valueOffsetsbufferPt
-ret garrow_buffer_get_size  < valueOffsetsbufferPt
-bp =. ptr garrow_buffer_get_data < valueOffsetsbufferPt
-bpp =. memr (> bp),0,1,4
-+/ memr bpp,0,len,4
-
-nullarrayptr =. ptr garrow_null_array_new len
-
-offsetArrayPtr =. garrow_int8_array_new len;valueOffsetsbufferPt;nullarrayptr;0
-
-
-
-ret garrow_buffer_get_capacity < valueOffsetsbufferBytesPt 
-ret garrow_buffer_get_size  < valueOffsetsbufferBytesPt 
-ret garrow_buffer_is_mutable < valueOffsetsbufferPt
-
-valueOffsetsPt2=. < mema len * 2^2+IF64
-(len # 1) memw (>valueOffsetsPt2),0,len,4
-+/ memr (>valueOffsetsPt2),0,len,4
-valueOffsetsbufferPt2=. ptr garrow_buffer_new valueOffsetsPt; len
-
-ret garrow_buffer_equal valueOffsetsbufferPt;<valueOffsetsbufferPt2 NB. if unederlying pointers are equal, return 1
-
-garrow_buffer_equal_n_bytes valueOffsetsbufferPt;valueOffsetsbufferPt2;len
-
-'"/usr/local/lib/libarrow-glib.dylib"  garrow_list_array_new * * i * * * i'&cd dtp;len;valueOffsetsbufferPt;ap;nbp;nNulls 
-
-'"/usr/local/lib/libarrow-glib.dylib"  garrow_list_array_new * * i * * * i'&cd dtp;len;offsetArrayPtr;ap;nbp;nNulls 
-
-
-
-garrow_primitive_array_get_data_buffer
-
-databufferpptr =. ptr garrow_primitive_array_get_data_buffer <ap
-
-
-# (' ';'') rplc~ ''
-
-
-GArrowDataType *data_type,
-                       gint64 length,
-                       GArrowBuffer *value_offsets,
-                       GArrowArray *values,
-                       GArrowBuffer *null_bitmap,
-                       gint64 n_nulls
-
-
-
-
-
+pqf =. '~/movies_201k.parquet'
+fexist pqf
+fsize pqf
+7!:2 'movies =. readParquet pqf'
+schema movies
+7!:2 'readTable movies'
 
 NB. =========================================================
 NB. Parquet columns direct to nouns
+NB. This 
 
 load'jmf'
 require'jmf'
@@ -210,6 +103,7 @@ arrayValuesPointer =.  ptr ". getValuesFunc,', arrayPointer;<lengthPointer'
 Jtype =.  ". typeJMemr&typeIndexLookup indexType
 results2 =. memr (d2=. 0{::arrayValuesPointer),0,length,Jtype
 
+NB. Should write into mutable buffers only, this won't work and will crash.
 h2=: allochdr_jmf_ 40
 memsize =. 4 NB. unsure why
 shape =. length
@@ -221,38 +115,24 @@ results3
 
 viewnoun 'results3'
 
-NB. Future considerations:
-NB. chunked arrays may/not be contiguous? Can we unify them?
-NB. How to reference strings
-
 
 NB. =========================================================
 NB. IPC
 
 
-NB. Example for reading CSV9
+NB. Example for reading CSV
 NB. cmd + F9, F9
 
 NB. fnPtr =. setString '/test.csv'
-filenamePtr =. setString TempPath,'test.csv'
-e=. < mema 4
-fInputStreamPtr =. garrow_file_input_stream_new filenamePtr;<e
-'Check file exists and is permissioned.' assert * > ptr fInputStreamPtr
 
-NB. Example adding column names:
-readOptionPt =. garrow_csv_read_options_new ''
-NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
 
-NB. ptr i32 =. '"/usr/local/lib/libarrow-glib.dylib" garrow_int32_data_type_get_type *'&cd ''
-NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setString 'col1');(< ptr i32)
 
-csvReaderPtr =. garrow_csv_reader_new (ptr fInputStreamPtr);(ptr readOptionPt);e
-gaTablePtr =. garrow_csv_reader_read (ptr csvReaderPtr);e
-readTable (ptr gaTablePtr)
-readSchemaString ptr gaTablePtr
-readSchema ptr gaTablePtr
-readColumn (ptr gaTablePtr);0
-readDataColumn (ptr gaTablePtr);1
+
+readsTable readCSV '/Volumes/flotta/scapa/data/JPM/csv/iGd220812.csv'
+readSchemaString gaTablePtr
+readSchema gaTablePtr
+readColumn gaTablePtr;<0
+readDataColumn gaTablePtr;<1
 
 NB. Is it necessary to close file?
 memf >>e
@@ -285,25 +165,18 @@ fp
 
 
 NB. =========================================================
-NB. Test for write parquet
-t1path =. TempPath,'test1.parquet'
-tablePtr =. readParquet t1path
-readSchemaString tablePtr
+NB. Example for reqading and writing parquet
+inpath =. TempPath,'test1.parquet'
+outpath =. TempPath,'out3.parquet'
+schema tablePtr =. readParquet inpath
+writeParquet tablePtr;outpath
+readsTable readParquet outpath
 
-e=. << mema 4
-pqtWtrPtr =. gparquet_writer_properties_new ''
-schemaPtr =. getSchemaPt tablePtr
-fnPtr =. setString TempPath,'out1.parquet'
-pqtFileWriterPtr =. gparquet_arrow_file_writer_new_path (ptr schemaPtr);(ptr fnPtr);(ptr pqtWtrPtr); e
-
-gparquet_arrow_file_writer_write_table (ptr pqtFileWriterPtr);(ptr tablePtr); 1000; e
-gparquet_arrow_file_writer_close (ptr pqtFileWriterPtr); e
-readTable readParquet TempPath,'out1.parquet'
 
 NB. =========================================================
-NB. Test for memory mapping ("feather")
+NB. Test for memory mapping
 e=. << mema 4
-fnPtr =. setString TempPath,'test.feather'
+fnPtr =. setString TempPath,'test.arrow'
 fosPtr =. garrow_file_output_stream_new (<fnPtr);1;e
 ptr fosPtr
 NB. Align on metadata prefix:
@@ -314,36 +187,13 @@ garrow_output_stream_write_record_batch (ptr fosPtr);(ptr rbPtr);(ptr woPtr);e
 
 
 NB. =========================================================
-NB. Trying to identify version, but doesn't work.
-
-NB. cder''
-NB. cderx''
 NB. https://code.jsoftware.com/wiki/Guides/DLLs/Error_Messages
-
-'"/usr/local/lib/libarrow-glib.dylib" GARROW_VERSION_CHECK i i i i'&cd 6;0;0
-cder''
-cderx''
-
-'"/usr/local/lib/libarrow-glib.dylib" GARROW_VERSION_MAJOR > i'&cd ''
 cder''
 cderx''
 
 NB. Work:
 'filereader';
- 'tensor'; [ ]
- 'array'; [x]
- 'schema'; [x]
- 'value'; [x]
- 'table'; [x]
-  'schema'; [x]
-  'chunkedarray'; [x]
-    'n chunks';   [x]
-    'arrayindex';    
-    'array'; [x]
-     'arraytype'; [x] 
-      'datatype';[x]
-       'datatypename'; [x]
-      'arraylength'; [x]
+ 'tensor';
 
 [+] Apache Parquet file format
 [+] Apache Arrow IPC record batch file format
@@ -387,12 +237,6 @@ writeFeather =. {{}}
 writeFeatherFromTable =. {{}}
 
 
-e=. mema 4 NB. pointer to int32 for error codes
-r=. (libParquet, gpafr) cd '/test.parquet'; <<e NB. New GParquetArrowFileReader
-
-NB. 0{r is a pointer to the reader
-NB. TODO do we need to free the reader manually?
-
 t=.(libParquet,gpafrrt) cd (0{r) ; <<e
 NB. 0{t is a pointer to the table
 
@@ -415,110 +259,6 @@ arraylength memw l,0,1,4
 NB. memr l,0,1,4 NB. read back array length
 ap =. (libParquet,gai64agvs) cd (0{array);<<l NB. pointer to array
 memr (0{::ap),0,arraylength,4 
-
-
-NB. =========================================================
-NB. =========================================================
-
-garrow_data_type_get_type
-
-a0 =. '"/usr/local/Cellar/apache-arrow-glib/4.0.1/lib/libparquet-glib.dylib"  garrow_data_type_get_type *'&cd ''
-
-namePt =. writeChar 'colname'
-fieldPt =. garrow_field_new namePt;<a0
-
-
-
-'"/usr/local/Cellar/apache-arrow-glib/4.0.1/lib/libparquet-glib.dylib"  garrow_field_new * * *'&cd (0{::namePt);<a0
-
-writeChar =. {{(<charPt);(#y) [ y memw (]charPt =. mema (# y)),0,(# y),2}}
-readChar =. {{memr (>y),0,_1}}
-freePt =. memf@>
-writeInt =. {{<valPt [ y memw (]valPt =. mema 1),0,1,4}}
-
-intPt =. writeInt 0
-bufferPt =. garrow_buffer_new_bytes < intPt
-
-dataPt=. writeInt 2
-bufferPt garrow_buffer_new dataPt;<1
-
-garrow_buffer_new dataPt;<1
-garrow_buffer_new (const guint8 *data, gint64 size)
-
-
-
-garrow_int16_array_new (gint64 length,
-                        GArrowBuffer *data,
-                        GArrowBuffer *null_bitmap,
-                        gint64 n_nulls);
-
-
-datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
-
-
-garrow_boolean_array_builder_new
-a1=. (garrow_int8_data_type_new '')
-a2=. (garrow_int16_data_type_new '')
-a3=. (garrow_string_data_type_new '')
-
-readChar writeChar
-
-
-'type' =. y
-typePt =. ". fun
-
-
-typeGetValues&typeIndexLookup 3
-
-'"/usr/local/Cellar/apache-arrow-glib/4.0.1/lib/libparquet-glib.dylib"  garrow_field_new * * *'&cd intPt;<a2
-
-
-a1=. (garrow_int8_data_type_new '')
-intPt =. writeInt 3
-valPt =. garrow_field_new intPt;<a2
-freePt 
-
-
-writeChar 'colname'
-writeName=: writeChar
-
-namePt =. writeChar 'colname'
-fieldPt =. garrow_field_new namePt;<a3
-
-garrow_field_new namePt;<a3
-
-writeParquet
-schema;array_data;parquet_write_options]
-
-
-'tablePointer colIndex' =. (tp2);13
-ncols =. tableNCols tablePointer
-'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
-chunkedArrayPointers =. <"0 ptr"1 garrow_table_get_column_data (< tablePointer), < colIndex
-> readChunks each chunkedArrayPointers
-
-chunkedArrayPointer =. 0{:: chunkedArrayPointers
-nChunks =. 0&{::@garrow_chunked_array_get_n_chunks < chunkedArrayPointer
-arrayPointers =. readChunk each <"1 (<chunkedArrayPointer),.(<"0 i. nChunks)
-
-arrayPt =. arrayPointer =. 0{::arrayPointers
-
-
-
-readArrayType=:{{
-'arrayPt' =. y
-dataTypePt =. ptr garrow_array_get_value_data_type < arrayPtgetString (ret ptr garrow_data_type_get_name < dataTypePt)
-}}
-readArrayTypeIndex=:{{
-'arrayPt' =. y
-datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
-ret garrow_data_type_get_id < datatypePt
-}}
-readArrayBitWidth=:{{
-'arrayPt' =. y
-datatypePt =. ptr garrow_array_get_value_data_type < arrayPt
-ret garrow_fixed_width_data_type_get_bit_width < datatypePt
-}}
 
 
 
