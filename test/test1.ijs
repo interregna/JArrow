@@ -10,7 +10,7 @@ copytestfiles =. {{
   end.
 }}
 
-copytestfiles each 'parquet';'csv'
+copytestfiles each 'parquet';'csv';'jsonl';'arrow'
 
 load ProjPath,'/arrow.ijs'
 coinsert 'parrow'

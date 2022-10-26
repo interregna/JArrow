@@ -237,6 +237,7 @@ readDataframe=: {{
 NB. =========================================================
 NB. CSV format
 NB. Add CSV options.
+NB. Is it necessary to close reader?
 NB. =========================================================
 readCSV=: {{
 'filepath'=. y
@@ -299,13 +300,14 @@ writeParquet=: {{
 'tablePtr filepath'=. y
 e1=. < mema 4
 e2=. < mema 4
+e3=. < mema 4
 pqtWtrPtr=. ptr gparquet_writer_properties_new ''
 schemaPtr=. ptr getSchemaPt tablePtr
 fnPtr=. setString filepath
 pqtFileWriterPtr=. ptr gparquet_arrow_file_writer_new_path schemaPtr;fnPtr;pqtWtrPtr;<e1
 chunksize=. 5000
 success=. ret gparquet_arrow_file_writer_write_table pqtFileWriterPtr;tablePtr;chunksize;<e2
-gparquet_arrow_file_writer_close pqtFileWriterPtr;<e
-memf"0 > (fnPtr),e1,e2
+gparquet_arrow_file_writer_close pqtFileWriterPtr;<e3
+memf"0 > (fnPtr),e1,e2,e3
 success
 }}

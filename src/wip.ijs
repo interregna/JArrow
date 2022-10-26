@@ -119,22 +119,6 @@ viewnoun 'results3'
 NB. =========================================================
 NB. IPC
 
-
-NB. Example for reading CSV
-NB. cmd + F9, F9
-
-NB. fnPtr =. setString '/test.csv'
-
-
-
-
-readsTable readCSV '/Volumes/flotta/scapa/data/JPM/csv/iGd220812.csv'
-readSchemaString gaTablePtr
-readSchema gaTablePtr
-readColumn gaTablePtr;<0
-readDataColumn gaTablePtr;<1
-
-NB. Is it necessary to close file?
 memf >>e
 
 NB. CSV options ...
@@ -186,7 +170,6 @@ woPtr =. garrow_write_options_new '' NB. properties https://arrow.apache.org/doc
 garrow_output_stream_write_record_batch (ptr fosPtr);(ptr rbPtr);(ptr woPtr);e
 
 
-NB. =========================================================
 NB. https://code.jsoftware.com/wiki/Guides/DLLs/Error_Messages
 cder''
 cderx''
@@ -228,13 +211,6 @@ fptr =. garrow_schema_get_field_by_name sptr;''
 garrow_schema_get_field_index sptr;''
 
 
-NB. Arrow files ("Feather")
-readFeatherSchema =. {{}}
-readFeatherData =. {{}}
-readFeatherTable =. {{}}
-schemaFields =. {{}}
-writeFeather =. {{}}
-writeFeatherFromTable =. {{}}
 
 
 t=.(libParquet,gpafrrt) cd (0{r) ; <<e
@@ -261,7 +237,6 @@ ap =. (libParquet,gai64agvs) cd (0{array);<<l NB. pointer to array
 memr (0{::ap),0,arraylength,4 
 
 
-
 NB. =========================================================
 NB. more CSV properties testing
 NB. =========================================================
@@ -280,19 +255,13 @@ garrow_csv_read_options_get_column_names rdOptPt
 
 '"/usr/local/lib/libparquet-glib.dylib"  garrow_csv_read_options_add_column_type n * * *'&cd
 
-
-(GArrowCSVReadOptions *options, const gchar *column_name); void
-
-
+(GArrowCSVReadOptions *options, const gchar *column_name)
 garrow_csv_read_options_get_column_names
 garrow_csv_read_options_init rdOptPt
 garrow_csv_reader_dispose '"/usr/local/lib/libparquet-glib.dylib" garrow_csv_read_options_new *'&cd ''
 
 garrow_csv_read_options_set_column_names (<rdOptPt)
-garrow_csv_read_options_set_property 
-
-columnNames =. 
-
+garrow_csv_read_options_set_property NB. See above discussion on property settting.
 (rdOptPt);1
 
 garrow_csv_reader_new
@@ -308,35 +277,14 @@ garrow_csv_read_options_get_instance_private
 
 paramspec =. '"/usr/local/lib/libparquet-glib.dylib" g_param_spec_uint * *c *c *c i i i i'&cd
 
+
+NB. Test various destructuring options.
 a =. 'n-skip-rows'
 b =. 'N skip rows'
 c =. 'The number of header rows to skip'
 d =. '(not including the row of column names, if any)'
-
 AA =. setString each a;b;c;d
 
 paramspec AA,0;1;0;1
 
-'"/usr/local/lib/libparquet-glib.dylib" g_param_spec_uint i i'&cd 1
-'"/usr/local/lib/libarrow-glib.dylib" g_param_spec_internal i i'&cd 1
-
-'"/usr/local/lib/libparquet-glib.dylib" G_PARAM_READABLE n i'&cd 1
-
-'"/usr/local/lib/libglib-2.0.dylib" g_param_spec_internal * n'&cd ''
-'"/usr/local/lib/libgio-2.0.dylib" g_param_spec_internal * n'&cd ''
-'"/usr/local/lib/libparquet-glib.dylib" g_param_spec_internal * n'&cd ''
-
-G_PARAM_READWRITE
-G_MAXUINT
 read_options.skip_rows,
-static_cast<GParamFlags>(G_PARAM_READWRITE));
-
-
-NB. consider GObject Introspection
-NB. to automatically generate bindings
-
-'/usr/local/lib/girepository-1.0/ArrowFlight-1.0.typelib'
-'/usr/local/lib/libgirepository-1.0.dylib'
-'/usr/local/opt/glib/lib/libgobject-2.0.0.dylib'
-
-'"/usr/local/lib/libgirepository-1.0.dylib" gi_get_major_version i'&cd ''
