@@ -1137,7 +1137,7 @@ readerBindings =: lib 0 : 0
 * * *	garrow_record_batch_reader_read_next	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
 * *	garrow_table_batch_reader_new	(GArrowTable *table); GArrowTableBatchReader *
 * * *	garrow_record_batch_stream_reader_new	(GArrowInputStream *stream, GError **error); GArrowRecordBatchStreamReader *
-* *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
+* * *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
 * *	garrow_record_batch_file_reader_get_schema	(GArrowRecordBatchFileReader *reader); GArrowSchema *
 i *	garrow_record_batch_file_reader_get_n_record_batches	(GArrowRecordBatchFileReader *reader); guint
 i *	garrow_record_batch_file_reader_get_version	(GArrowRecordBatchFileReader *reader); GArrowMetadataVersion
@@ -1168,7 +1168,7 @@ n * *	garrow_csv_read_options_add_column_name	(GArrowCSVReadOptions *options, co
 * * *	garrow_csv_reader_read	(GArrowCSVReader *reader, GError **error); GArrowTable *
 *	garrow_json_read_options_new	(void); GArrowJSONReadOptions *
 * * * *	garrow_json_reader_new	(GArrowInputStream *input, GArrowJSONReadOptions *options, GError **error); GArrowJSONReader *
-* *	garrow_json_reader_read	(GArrowJSONReader *reader, GError **error); GArrowTable *
+* * *	garrow_json_reader_read	(GArrowJSONReader *reader, GError **error); GArrowTable *
 )
 
 NB. ORC reader
@@ -1576,6 +1576,8 @@ schemaPt=. getSchemaPt tablePt
 getString ret ptr garrow_schema_to_string < schemaPt
 }}
 
+neatPrintSchema=: (,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@printSchema
+
 readTableSchema=: {{
 tablePt=. y
 schemaPt=. getSchemaPt tablePt
@@ -1592,8 +1594,6 @@ readTableSchemaCol=: {{
 'tablePt index'=. y
 getSchemaName (getSchemaPt tablePt);<index
 }}
-
-schema=: (,.~(,.&' ')@(":@,.@:i.@#))@:>@:(LF&cut)@printSchema
 
 
 NB. =========================================================
@@ -1639,6 +1639,20 @@ readDataframe=: {{
 ((,@readTableSchema),: ,@readData) tablePt
 }}
 
+NB. =========================================================
+NB. Format readers
+NB. =========================================================
+readFileSchema=: {{ readTableSchemaTypes@u ] filepath=. y }}
+printFileSchema=: {{ neatPrintSchema@u ] filepath=. y }}
+readFileData=: {{ readData@u ] filepath=. y }}
+readFileTable=: {{ readTable@u ] filepath=. y }}
+readsFileTable=: {{ readsTable@u ] filepath=. y }}
+readFileDataframe=: {{ readDataframe@u ] filepath=. y }}
+readFileCol=: {{
+'filepath index'=. y
+readCol (u filepath);<index
+}}
+
 
 NB. =========================================================
 NB. CSV format
@@ -1647,11 +1661,11 @@ NB. Is it necessary to close reader?
 NB. =========================================================
 readCSV=: {{
 'filepath'=. y
-'File does not exist or is not permissioned.' assert fexist jpath filepath
+'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
 filenamePtr=. setString (jpath filepath)
 e=. < mema 4
 fInputStreamPtr=. garrow_file_input_stream_new filenamePtr;<e
-'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
+'Check file exists and permissions.' assert * > ptr fInputStreamPtr
 NB. Example adding column names:
 readOptionPt=. garrow_csv_read_options_new ''
 NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
@@ -1662,24 +1676,46 @@ tablePtr=. ptr garrow_csv_reader_read csvReaderPtr;<e
 tablePtr
 }}
 
-readCSVSchema=: {{ readTableSchema@readCSV ] filepath=. y }}
-CSVSchema=: {{ schema@readCSV ] filepath=. y }}
-readCSVData=: {{ readData@readCSV ] filepath=. y }}
-readCSVTable=: {{ readTable@readCSV ] filepath=. y }}
-readsCSVTable=: {{ readsTable@readCSV ] filepath=. y }}
-readCSVDataframe=: {{ readDataframe@readCSV ] filepath=. y }}
-readCSVCol=: {{
-'filepath index'=. y
-readCol (readCSV filepath);<index
+readCSVSchema=: (readCSV readFileSchema)
+printCSVSchema=: (readCSV printFileSchema)
+readCSVData=: (readCSV readFileData)
+readCSVTable=: (readCSV readFileTable)
+readsCSVTable=: (readCSV readsFileTable)
+readCSVDataframe=: (readCSV readFileDataframe)
+readCSVCol=: (readCSV readFileCol)
+
+
+NB. =========================================================
+NB. JSON lines format
+NB. =========================================================
+readJsonl=: {{
+'filepath'=. y
+'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
+filenamePtr=. setString (jpath filepath)
+e=. < mema 4
+fInputStreamPtr=. ptr garrow_file_input_stream_new filenamePtr;<e
+'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
+readOptionPt=. ptr garrow_json_read_options_new ''
+csvReaderPtr=. ptr garrow_json_reader_new fInputStreamPtr;readOptionPt;<e
+tablePtr=. ptr garrow_json_reader_read csvReaderPtr;<e
+'Invalid JSON-format.' assert > tablePtr
+tablePtr
 }}
 
+readJsonlSchema=: (readJsonl readFileSchema)
+printJsonlSchema=: (readJsonl printFileSchema)
+readJsonlData=: (readJsonl readFileData)
+readJsonlTable=: (readJsonl readFileTable)
+readsJsonlTable=: (readJsonl readsFileTable)
+readJsonlDataframe=: (readJsonl readFileDataframe)
+readJsonlCol=: (readJsonl readFileCol)
 
 NB. =========================================================
 NB. Parquet format
 NB. =========================================================
 readParquet=: {{
 'filepath'=. y
-'File does not exist or is not permissioned.' assert fexist (jpath filepath)
+'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
 e1=. < mema 4
 e2=. < mema 4
 readerPathPtr=. ptr gparquet_arrow_file_reader_new_path (jpath filepath);<e1
@@ -1689,16 +1725,14 @@ memf > e2
 tablePtr
 }}
 
-readParquetSchema=: {{ readTableSchema@readParquet ] filepath=. y }}
-ParquetSchema=: {{ schema@readParquet ] filepath=. y }}
-readParquetData=: {{ readData@readParquet ] filepath=. y }}
-readParquetTable=: {{ readTable@readParquet ] filepath=. y }}
-readsParquetTable=: {{ readsTable@readParquet ] filepath=. y }}
-readParquetDataframe=: {{ readDataframe@readParquet ] filepath=. y }}
-readParquetCol=: {{
-'filepath index'=. y
-readCol (readParquet filepath);<index
-}}
+
+readParquetSchema=: (readParquet readFileSchema)
+printParquetSchema=: (readParquet printFileSchema)
+readParquetData=: (readParquet readFileData)
+readParquetTable=: (readParquet readFileTable)
+readsParquetTable=: (readParquet readsFileTable)
+readParquetDataframe=: (readParquet readFileDataframe)
+readParquetCol=: (readParquet readFileCol)
 
 NB. writeParquet tablePointer;'~out1.parquet'
 NB. Add write options

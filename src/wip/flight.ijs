@@ -39,7 +39,6 @@ byteCount =.  ret gaflight_info_get_total_bytes < infoPtr
 }}
 
 
-
 getEndpoints =: {{
 NB. Args an info pointer.
 NB. Return a list of 'endpoints', each a ticket and list of locations

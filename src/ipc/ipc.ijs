@@ -28,7 +28,7 @@ readerBindings =: lib 0 : 0
 * * *	garrow_record_batch_reader_read_next	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
 * *	garrow_table_batch_reader_new	(GArrowTable *table); GArrowTableBatchReader *
 * * *	garrow_record_batch_stream_reader_new	(GArrowInputStream *stream, GError **error); GArrowRecordBatchStreamReader *
-* *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
+* * *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
 * *	garrow_record_batch_file_reader_get_schema	(GArrowRecordBatchFileReader *reader); GArrowSchema *
 i *	garrow_record_batch_file_reader_get_n_record_batches	(GArrowRecordBatchFileReader *reader); guint
 i *	garrow_record_batch_file_reader_get_version	(GArrowRecordBatchFileReader *reader); GArrowMetadataVersion
@@ -59,7 +59,7 @@ n * *	garrow_csv_read_options_add_column_name	(GArrowCSVReadOptions *options, co
 * * *	garrow_csv_reader_read	(GArrowCSVReader *reader, GError **error); GArrowTable *
 *	garrow_json_read_options_new	(void); GArrowJSONReadOptions *
 * * * *	garrow_json_reader_new	(GArrowInputStream *input, GArrowJSONReadOptions *options, GError **error); GArrowJSONReader *
-* *	garrow_json_reader_read	(GArrowJSONReader *reader, GError **error); GArrowTable *
+* * *	garrow_json_reader_read	(GArrowJSONReader *reader, GError **error); GArrowTable *
 )
 
 NB. ORC reader

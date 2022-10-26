@@ -41,13 +41,12 @@ NB. =========================================================
 pqf =. '~/movies_201k.parquet'
 fexist pqf
 fsize pqf
-7!:2 'movies =. readParquet pqf'
-schema movies
-7!:2 'readTable movies'
+schema readParquet pqf
+readsTable readParquet pqf
 
 NB. =========================================================
 NB. Parquet columns direct to nouns
-NB. This 
+NB. This should write into mutable buffers only, this will crash, won't work currently.
 
 load'jmf'
 require'jmf'
@@ -65,7 +64,6 @@ assert (h+offset) = 15!:14 <y  NB. J 9.04
 data=. memr (h+offset),0,len,type
 sys;fheader;shape;data
 }}
-
 
 t2path =. TempPath,'/test2.parquet'
 tp2 =. readParquet t2path
@@ -103,7 +101,7 @@ arrayValuesPointer =.  ptr ". getValuesFunc,', arrayPointer;<lengthPointer'
 Jtype =.  ". typeJMemr&typeIndexLookup indexType
 results2 =. memr (d2=. 0{::arrayValuesPointer),0,length,Jtype
 
-NB. Should write into mutable buffers only, this won't work and will crash.
+
 h2=: allochdr_jmf_ 40
 memsize =. 4 NB. unsure why
 shape =. length
@@ -139,13 +137,62 @@ readCSV =: {{
 
 NB. =========================================================
 NB. Arrow 'IPC format' test
+
+f1 =. jpath '~temp/test1.jsonl'
+f2 =. jpath '~temp/test2.jsonl'
+f3 =. jpath '~temp/test3.jsonl'
+
+". each 'readJsonlSchema f'&,@": each <"0 >: i.3
+readJsonlSchema f0
+printJsonlSchema f0
+
+
+readArrow=: {{
+NB. Properties
+NB. gint	max-recursion-depth	Read / Write
+NB. gboolean	use-threads	Read / Write
+NB. gint	alignment	Read / Write
+NB. gboolean	allow-64bit	Read / Write
+NB. GArrowCodec *	codec	Read / Write
+NB. gint	max-recursion-depth	Read / Write
+NB. gboolean	use-threads	Read / Write
+NB. gboolean	write-legacy-ipc-format	Read / Write
+'filepath'=. y
+'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
+filenamePtr=. setString (jpath filepath)
+e=. < mema 4
+fInputStreamPtr=. ptr garrow_file_input_stream_new filenamePtr;<e
+'Check file exists and available will permissions.' assert * > ptr fInputStreamPtr
+arrowReaderPtr=. ptr garrow_feather_file_reader_new fInputStreamPtr;<e
+'Null pointer error' assert > arrowReaderPtr
+tablePtr=. ptr garrow_feather_file_reader_read arrowReaderPtr;<e
+tablePtr
+}}
+
 load'web/gethttp'
-fp=. (jpath '~temp/scrabble.arrow')
+fp =. jpath '~/Downloads/scrabble.arrow'
 fp fwrite~ gethttp 'https://gist.githubusercontent.com/TheNeuralBit/64d8cc13050c9b5743281dcf66059de5/raw/c146baf28a8e78cfe982c6ab5015207c4cbd84e3/scrabble.arrow'
-fp
+fexist fp
+y =. fp
+readArrow 
+
+
+NB. =========================================================
+NB. Writing 
+writeRecordBatch=: {{
+'tablePtr filepath'=. y
+e=. < mema 4
+fnPtr=. setString filepath
+fileOutputStreamrPtr=. ptr garrow_file_output_stream_new fnPtr;0;<e
+garrow_output_stream_align fileOutputStreamrPtr;64;;<e
+
+garrow_output_stream_write_record_batch
+...
+}}
 
 
 
+jpath '~JPackageDev/jarrow/test'
 
 
 NB. =========================================================
