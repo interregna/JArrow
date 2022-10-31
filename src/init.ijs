@@ -32,9 +32,9 @@ libload =: {{
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
     libFlight   =: '"','" ',~  '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-900.dll'
-    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-900.dll'
-    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-900.dll'
+    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
+    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
+    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
   end.
   1
 }}

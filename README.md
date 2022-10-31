@@ -34,7 +34,7 @@ Uses C API.
 └──┴───────────────────────────...
 
 ```
-`(6!:16)` and `(6!:17)` can be used to Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
+`(6!:16)` and `(6!:17)` can be used to convert Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
 `fromdate32` can be used to convert Arrow date32 types to YYYY M D tuples.
 
 ## Installation
@@ -66,19 +66,20 @@ Examples:
 see `test/test1.ijs`
 
 ##### TODO
-* [ ] NULL handling for null values within arrays
+* [ ] NULL and list handling
 * [ ] Tensors
-* [ ] Document functions (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
-* [ ] Error catch missing files (empty pointers)
+* [ ] Error catching for empty pointers, missing files, and general errors.
 * [ ] IPC fixed length
 * [ ] IPC streaming
-* [ ] JSONL reader demo
+* [ ] Read web-based parquet, arrow, and IPC
+* [ ] Dictionary-encoded arrays
+* [ ] Document functions (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
+* [x] JSONL reader demo
 * [x] readArray full length (50x read speedup)
 * [x] Finish shims for array reading
 * [x] CSV reader demo
+* [x] Flight client
 * [ ] Flight server
-* [x] Flight client demo
-* [ ] Read web-based reader for parquet, arrow, and IPC
 
 
 ##### Notes

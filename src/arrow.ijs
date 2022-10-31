@@ -117,14 +117,24 @@ readChunks chunkedArrayPt
 NB. =========================================================
 NB. Field
 NB. =========================================================
+newField=:{{
+'name dataType nullableBoolean'=. 3 {. y
+typeArgs =. 3 }. y
+namePtr =. setString name
+dtFn =. typeNew&typeNameLookup dataType 
+datatypePtr =. ptr (dtFn)~ ''
+fieldPtr =. ptr garrow_field_new_full namePtr;datatypePtr;nullableBoolean
+fieldPtr
+}}
+
 getFieldName=: {{
 'fieldPt'=. y
-getString ptr garrow_field_get_name fieldPt
+getString ptr garrow_field_get_name < fieldPt
 }}
 
 getFieldDataType=: {{
 'fieldPt'=. y
-dataTypePt=. ptr garrow_field_get_data_type fieldPt
+dataTypePt=. ptr garrow_field_get_data_type < fieldPt
 getString ret garrow_data_type_get_name < dataTypePt
 }}
 
@@ -144,7 +154,7 @@ ptr garrow_schema_get_field schemaPt;index
 getSchemaName=: {{
 'schemaPt index'=. y
 fieldPts=. getSchemaFieldPt (<schemaPt),< index
-name=. getFieldName < fieldPts
+name=. getFieldName fieldPts
 name
 }}
 
@@ -159,8 +169,8 @@ getSchemaFields=: {{
 schemaPt=. y
 nFields=. ret garrow_schema_n_fields < schemaPt
 fieldPts=. getSchemaFieldPt each <"1 (<schemaPt),.<"0 i. nFields
-types=. getFieldDataType@< each fieldPts
-names=. getFieldName@< each fieldPts
+types=. getFieldDataType each fieldPts
+names=. getFieldName each fieldPts
 names,:types
 }}
 

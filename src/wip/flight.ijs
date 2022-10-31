@@ -72,21 +72,23 @@ FSReaderPtr =. ptr gaflight_client_do_get clientPtr;ticketPtr;callOptPtr;<<e
 FSReaderPtr
 }}
 
-fsReadAllTable =:{{
+flightStreamReadAllTable =:{{
 'FSReaderPtr' =. y
 e=. mema 4
 tblPtr =. ptr gaflight_record_batch_reader_read_all FSReaderPtr;<<e
 tblPtr
 }}
 
-fsChunkRecordBatch =: {{
+flightStreamRecordBatch =: {{
 NB. Watch filestream reader is stateful, and this function changes the state.
+NB. Swap out for garrow_record_batch_iterator_new
 'FSReaderPtr' =. y
 e=. mema 4
 fsChunkPtr =. ptr gaflight_record_batch_reader_read_next FSReaderPtr;<<e
+rbPtr=. > a:
 if. > fsChunkPtr do.  NB. fsChunkPtr is a null pointer (<0) when there are no more batches.
  NB. ptr gaflight_stream_chunk_get_metadata	< fsChunkPtr  NB. (GAFlightStreamChunk *chunk); GArrowBuffer *
- rbPtr =. ptr gaflight_stream_chunk_get_data < fsChunkPtr NB. GArrowRecordBatch *
+ rbPtr =. rbPtr, ptr gaflight_stream_chunk_get_data < fsChunkPtr NB. GArrowRecordBatch *
 else.
  rbPtr =. < 0
 end.
@@ -104,9 +106,9 @@ NB. Demo:
 flightInfo infoPtr
 getEndpoints infoPtr
 NB. readRecordBatchString 
-tblPtr =. fsReadAllTable getEndPointReader clientPtr;(getTicket > {.  getEndpoints infoPtr);<callOptPtr
+tblPtr =. flightStreamReadAllTable getEndPointReader clientPtr;(getTicket > {.  getEndpoints infoPtr);<callOptPtr
 readsTable tblPtr
-readColumn tblPtr;4
+readCol tblPtr;4
 
 
 NB. =========================================================

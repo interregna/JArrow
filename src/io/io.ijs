@@ -21,7 +21,7 @@ i * l *	garrow_input_stream_advance	(GArrowInputStream *input_stream, gint64 n_b
 i * i *	garrow_input_stream_align	(GArrowInputStream *input_stream, gint32 alignment, GError **error); gboolean
 * * *	garrow_input_stream_read_tensor	(GArrowInputStream *input_stream, GError **error); GArrowTensor *
 * * * * *	garrow_input_stream_read_record_batch	(GArrowInputStream *input_stream, GArrowSchema *schema, GArrowReadOptions *options, GError **error); GArrowRecordBatch *
-l *	garrow_seekable_input_stream_get_size	(GArrowSeekableInputStream *input_stream, GError **error); guint64
+i * *	garrow_seekable_input_stream_get_size	(GArrowSeekableInputStream *input_stream, GError **error); guint64
 i *	garrow_seekable_input_stream_get_support_zero_copy	(GArrowSeekableInputStream *input_stream); gboolean
 * * l l *	garrow_seekable_input_stream_read_at	(GArrowSeekableInputStream *input_stream, gint64 position, gint64 n_bytes, GError **error); GArrowBuffer *
 * * l l *	garrow_seekable_input_stream_read_at_bytes	(GArrowSeekableInputStream *input_stream, gint64 position, gint64 n_bytes, GError **error); GBytes *

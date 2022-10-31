@@ -23,9 +23,8 @@ readerBindings =: lib 0 : 0
 * * * *	garrow_record_batch_reader_new	(GList *record_batches, GArrowSchema *schema, GError **error);GArrowRecordBatchReader *);GArrowRecordBatchReader *
 * * *	garrow_record_batch_reader_export	(GArrowRecordBatchReader *reader, GError **error);gpointer
 * *	garrow_record_batch_reader_get_schema	(GArrowRecordBatchReader *reader); GArrowSchema *
-* * *	garrow_record_batch_reader_get_next_record_batch	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
-* * *	garrow_record_batch_reader_read_next_record_batch	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
 * * *	garrow_record_batch_reader_read_next	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
+* * *	garrow_record_batch_reader_read_all	(GArrowRecordBatchReader *reader, GError **error); GArrowTable *
 * *	garrow_table_batch_reader_new	(GArrowTable *table); GArrowTableBatchReader *
 * * *	garrow_record_batch_stream_reader_new	(GArrowInputStream *stream, GError **error); GArrowRecordBatchStreamReader *
 * * *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
@@ -89,7 +88,7 @@ NB. =========================================================
 writerBindings =: lib 0 : 0
 i * * *	garrow_record_batch_writer_write_record_batch	(GArrowRecordBatchWriter *writer, GArrowRecordBatch *record_batch, GError **error); gboolean
 i * * *	garrow_record_batch_writer_write_table	(GArrowRecordBatchWriter *writer, GArrowTable *table, GError **error); gboolean
-i * * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
+i * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
 * * * *	garrow_record_batch_stream_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchStreamWriter *
 * * * *	garrow_record_batch_file_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchFileWriter *
 )

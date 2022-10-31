@@ -13,7 +13,7 @@ NB. garrow_string_array_get_stringSHIM =: <@getString@>@{.@garrow_string_array_g
 garrow_string_array_get_stringSHIM=: <@<@getStringFree@{.@garrow_string_array_get_string
 garrow_boolean_array_get_valueSHIM=: (3&u:)@(7&u:)@>@{.@garrow_boolean_array_get_value
 
-getBuffer=: {{
+getBufferData=: {{
 bufferPtr=. y
 NB. cap =. ret garrow_buffer_get_capacity < bufferPtr
 NB. val =. ret garrow_buffer_get_size < bufferPtr
@@ -24,11 +24,17 @@ memf > pt
 dataPtr
 }}
 
+setBufferData=: {{
+dataPtr =. y
+ptr garrow_buffer_new_bytes < dataPtr
+}}
+
+
 NB. Read variable length strings directly from buffer.
 garrow_string_array_get_stringsSHIM=: {{
 'arrayPt'=. > {. y
-dataPtr=. getBuffer ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
-offsetPtr=. getBuffer ptr garrow_binary_array_get_offsets_buffer < arrayPt
+dataPtr=. getBufferData ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
+offsetPtr=. getBufferData ptr garrow_binary_array_get_offsets_buffer < arrayPt
 locLen=. (4&*)@>: ret garrow_array_get_length < arrayPt
 loc=. _2&(3!:4) memr (>offsetPtr),0,locLen,2
 dat=. getString dataPtr
@@ -53,44 +59,44 @@ garrow_float_array_get_valuesSHIM=: (_1&fc byteSHIM garrow_float_array_get_value
 garrow_date32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_date32_array_get_values)
 garrow_time32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_time32_array_get_values)
 
-'typeGArrowName typeName typeGetValue typeGetValues typeJ typeJMemr typeDescription'=: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
+'typeGArrowName typeName typeGetValue typeGetValues typeNew typeJ typeJMemr typeDescription'=:  (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
 GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
-GARROW_TYPE_NA	null	garrow_na_array_get_valueSHIM	garrow_na_array_get_valuesSHIM	null	0	A degenerate NULL type represented as 0 bytes/bits.
-GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	bool	1	A boolean value represented as 1-bit.
-GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	int	4	Little-endian 8-bit unsigned integer.
-GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	int	4	Little-endian 8-bit signed integer.
-GARROW_TYPE_UINT16	uint16	garrow_uint16_array_get_value	garrow_uint16_array_get_valuesSHIM	int	4	Little-endian 16-bit unsigned integer.
-GARROW_TYPE_INT16	int16	garrow_int16_array_get_value	garrow_int16_array_get_valuesSHIM	int	4	Little-endian 16-bit signed integer.
-GARROW_TYPE_UINT32	uint32	garrow_uint32_array_get_value	garrow_uint32_array_get_valuesSHIM	int	4	Little-endian 32-bit unsigned integer.
-GARROW_TYPE_INT32	int32	garrow_int32_array_get_value	garrow_int32_array_get_valuesSHIM	int	4	Little-endian 32-bit signed integer.
-GARROW_TYPE_UINT64	uint64	garrow_uint64_array_get_value	garrow_uint64_array_get_values	int	4	Little-endian 64-bit unsigned integer.
-GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_values	int	4	Little-endian 64-bit signed integer.
-GARROW_TYPE_HALF_FLOAT	float16	NA	NA	float	8	2-byte floating point value.
-GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_valuesSHIM	float	8	4-byte floating point value.
-GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	float	8	8-byte floating point value.
-GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	garrow_string_array_get_stringsSHIM	char	2	UTF-8 variable-length string.
-GARROW_TYPE_BINARY	binary	garrow_binary_array_get_value	NA	byte	2	Variable-length bytes (no guarantee of UTF-8-ness).
-GARROW_TYPE_FIXED_SIZE_BINARY	w:[n]	garrow_fixed_size_binary_array_get_value	garrow_fixed_size_binary_array_get_values_bytes	byte	2	Fixed-size binary. Each value occupies the same number of bytes.
-GARROW_TYPE_DATE32	date32	garrow_date32_array_get_value	garrow_date32_array_get_valuesSHIM	int	4	int32 days since the UNIX epoch.
-GARROW_TYPE_DATE64	date64	garrow_date64_array_get_value	garrow_date64_array_get_values	int	4	int64 milliseconds since the UNIX epoch.
-GARROW_TYPE_TIMESTAMP	timestamp	garrow_timestamp_array_get_value	garrow_timestamp_array_get_values	int	4	Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.
-GARROW_TYPE_TIME32	time32	garrow_time32_array_get_value	garrow_time32_array_get_valuesSHIM	int	4	Exact time encoded with int32, supporting seconds or milliseconds
-GARROW_TYPE_TIME64	time64	garrow_time64_array_get_value	garrow_time64_array_get_values	int	4	Exact time encoded with int64, supporting micro- or nanoseconds
-GARROW_TYPE_INTERVAL_MONTHS	intervalmonths	NA	NA	char	4	YEAR_MONTH interval in SQL style.
-GARROW_TYPE_INTERVAL_DAY_TIME	intervaldaystime	NA	NA	char	4	DAY_TIME interval in SQL style.
-GARROW_TYPE_DECIMAL128	int128	garrow_decimal128_array_get_value	NA	float	8	Precision- and scale-based decimal type with 128-bit. Storage type depends on the parameters.
-GARROW_TYPE_DECIMAL256	int256	garrow_decimal256_array_get_value	NA	float	8	Precision- and scale-based decimal type with 256-bit. Storage type depends on the parameters.
-GARROW_TYPE_LIST	list	NA	NA	NA	0	A list of some logical data type.
-GARROW_TYPE_STRUCT	struct	NA	NA	NA	0	Struct of logical types.
-GARROW_TYPE_SPARSE_UNION	sparseunion	NA	NA	NA	0	Sparse unions of logical types.
-GARROW_TYPE_DENSE_UNION	denseunion	NA	NA	NA	0	Dense unions of logical types.
-GARROW_TYPE_DICTIONARY	dictionary	NA	NA	NA	0	Dictionary aka Category type.
-GARROW_TYPE_MAP	map	NA	NA	NA	0	A repeated struct logical type.
-GARROW_TYPE_EXTENSION	extension	NA	NA	NA	0	Custom data type, implemented by user.
-GARROW_TYPE_FIXED_SIZE_LIST	flist	NA	NA	NA	0	Fixed size list of some logical type.
-GARROW_TYPE_DURATION	duration	NA	NA	NA	0	Measure of elapsed time in either seconds, milliseconds, microseconds or nanoseconds.
-GARROW_TYPE_LARGE_STRING	lutf8	garrow_large_string_array_get_string	NA	char	2	64bit offsets UTF-8 variable-length string.
-GARROW_TYPE_LARGE_BINARY	lbin	garrow_large_binary_array_get_value	NA	char	2	64bit offsets Variable-length bytes (no guarantee of UTF-8-ness).
+GARROW_TYPE_NA	null	garrow_na_array_get_valueSHIM	garrow_na_array_get_valuesSHIM	garrow_null_data_type_new	null	0	A degenerate NULL type represented as 0 bytes/bits.
+GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	garrow_boolean_data_type_new	bool	1	A boolean value represented as 1-bit.
+GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	garrow_uint8_data_type_new	int	4	Little-endian 8-bit unsigned integer.
+GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	garrow_int8_data_type_new	int	4	Little-endian 8-bit signed integer.
+GARROW_TYPE_UINT16	uint16	garrow_uint16_array_get_value	garrow_uint16_array_get_valuesSHIM	garrow_uint16_data_type_new	int	4	Little-endian 16-bit unsigned integer.
+GARROW_TYPE_INT16	int16	garrow_int16_array_get_value	garrow_int16_array_get_valuesSHIM	garrow_int16_data_type_new	int	4	Little-endian 16-bit signed integer.
+GARROW_TYPE_UINT32	uint32	garrow_uint32_array_get_value	garrow_uint32_array_get_valuesSHIM	garrow_uint32_data_type_new	int	4	Little-endian 32-bit unsigned integer.
+GARROW_TYPE_INT32	int32	garrow_int32_array_get_value	garrow_int32_array_get_valuesSHIM	garrow_int32_data_type_new	int	4	Little-endian 32-bit signed integer.
+GARROW_TYPE_UINT64	uint64	garrow_uint64_array_get_value	garrow_uint64_array_get_values	garrow_uint64_data_type_new	int	4	Little-endian 64-bit unsigned integer.
+GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_values	garrow_int64_data_type_new	int	4	Little-endian 64-bit signed integer.
+GARROW_TYPE_HALF_FLOAT	float16	NA	NA	NA	float	8	2-byte floating point value.
+GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_valuesSHIM	garrow_float_data_type_new	float	8	4-byte floating point value.
+GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	garrow_double_data_type_new	float	8	8-byte floating point value.
+GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	garrow_string_array_get_stringsSHIM	garrow_string_data_type_new	char	2	UTF-8 variable-length string.
+GARROW_TYPE_BINARY	binary	garrow_binary_array_get_value	NA	garrow_binary_data_type_new	byte	2	Variable-length bytes (no guarantee of UTF-8-ness).
+GARROW_TYPE_FIXED_SIZE_BINARY	w:[n]	garrow_fixed_size_binary_array_get_value	garrow_fixed_size_binary_array_get_values_bytes	garrow_fixed_size_binary_data_type_new	byte	2	Fixed-size binary. Each value occupies the same number of bytes.
+GARROW_TYPE_DATE32	date32	garrow_date32_array_get_value	garrow_date32_array_get_valuesSHIM	garrow_date32_data_type_new	int	4	int32 days since the UNIX epoch.
+GARROW_TYPE_DATE64	date64	garrow_date64_array_get_value	garrow_date64_array_get_values	garrow_date64_data_type_new	int	4	int64 milliseconds since the UNIX epoch.
+GARROW_TYPE_TIMESTAMP	timestamp	garrow_timestamp_array_get_value	garrow_timestamp_array_get_values	garrow_timestamp_data_type_new	int	4	Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.
+GARROW_TYPE_TIME32	time32	garrow_time32_array_get_value	garrow_time32_array_get_valuesSHIM	garrow_time32_data_type_new	int	4	Exact time encoded with int32, supporting seconds or milliseconds
+GARROW_TYPE_TIME64	time64	garrow_time64_array_get_value	garrow_time64_array_get_values	garrow_time64_data_type_new	int	4	Exact time encoded with int64, supporting micro- or nanoseconds
+GARROW_TYPE_INTERVAL_MONTHS	intervalmonths	NA	NA	NA	char	4	YEAR_MONTH interval in SQL style.
+GARROW_TYPE_INTERVAL_DAY_TIME	intervaldaystime	NA	NA	NA	char	4	DAY_TIME interval in SQL style.
+GARROW_TYPE_DECIMAL128	int128	garrow_decimal128_array_get_value	NA	garrow_decimal128_data_type_new	float	8	Precision- and scale-based decimal type with 128-bit. Storage type depends on the parameters.
+GARROW_TYPE_DECIMAL256	int256	garrow_decimal256_array_get_value	NA	garrow_decimal256_data_type_new	float	8	Precision- and scale-based decimal type with 256-bit. Storage type depends on the parameters.
+GARROW_TYPE_LIST	list	NA	NA	NA	NA	0	A list of some logical data type.
+GARROW_TYPE_STRUCT	struct	NA	NA	NA	NA	0	Struct of logical types.
+GARROW_TYPE_SPARSE_UNION	sparseunion	NA	NA	NA	NA	0	Sparse unions of logical types.
+GARROW_TYPE_DENSE_UNION	denseunion	NA	NA	NA	NA	0	Dense unions of logical types.
+GARROW_TYPE_DICTIONARY	dictionary	NA	NA	NA	NA	0	Dictionary aka Category type.
+GARROW_TYPE_MAP	map	NA	NA	NA	NA	0	A repeated struct logical type.
+GARROW_TYPE_EXTENSION	extension	NA	NA	NA	NA	0	Custom data type, implemented by user.
+GARROW_TYPE_FIXED_SIZE_LIST	flist	NA	NA	NA	NA	0	Fixed size list of some logical type.
+GARROW_TYPE_DURATION	duration	NA	NA	NA	NA	0	Measure of elapsed time in either seconds, milliseconds, microseconds or nanoseconds.
+GARROW_TYPE_LARGE_STRING	large_utf8	garrow_large_string_array_get_string	NA	garrow_large_string_data_type_new	char	2	64bit offsets UTF-8 variable-length string.
+GARROW_TYPE_LARGE_BINARY	large_binary	garrow_large_binary_array_get_value	NA	garrow_large_binary_data_type_new	char	2	64bit offsets Variable-length bytes (no guarantee of UTF-8-ness).
 GARROW_TYPE_LARGE_LIST	llist	NA	NA	NA	0	A list of some logical data type with 64-bit offsets.
 )
 
@@ -105,7 +111,7 @@ NB. typeGetValue&typeNameLookup 'float'
 NB. typeNameIndex 'utf8'
 NB. typeDescription typeNameLookup 'utf8'
 NB. typeGetValue&typeNameLookup 'utf8'
-
+NB. typeNew&typeNameLookup 'float'
 
 NB. Date from Unix epoch 1970-01-01
 NB. fromdate32 0, 18262

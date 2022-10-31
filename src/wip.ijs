@@ -141,6 +141,8 @@ NB. Need to read list types
 readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test1.jsonl' NB. Need to add lists.
 readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test2.jsonl'
 readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test3.jsonl' NB. Need to add lists.
+
+
 readsTable readFeather '~temp/test1.feather'
 
 load'web/gethttp'
@@ -151,69 +153,10 @@ y =. fp
 readArrow 
 
 
-NB. =========================================================
-NB. Reading and writing IPC
-
-filesytem -> inputstream
-inputstream -> read
-recordbatch -> 
-<----->
-recordbatch
-outputstream
-filesystem
-
-NB. Create inputstream (source) for recordbatch:
-NB. Create these via filesystem -OR-
-NB. directly from file 
-garrow_buffer_input_stream_new
-garrow_file_input_stream_new
-garrow_memory_mapped_input_stream_new
-garrow_gio_input_stream_new
-garrow_compressed_input_stream_new
-NB. Create recordbatch from inputstream source
-garrow_input_stream_read_record_batch
-
-NB. Read the recordbatches
-garrow_record_batch_reader_read_all (returns a table)
-garrow_record_batch_reader_new
-garrow_record_batch_reader_read_next
-garrow_record_batch_stream_reader_new
-garrow_record_batch_file_reader_new
-
-NB. Create file output streams (sinks):
-garrow_file_output_stream_new NB. write to a file
-garrow_buffer_output_stream_new	NB. Write to a buffer (in-memory)
-garrow_compressed_output_stream_new	NB. Compress the stream before writing onward.
-
-NB. Write the recordbatch into the  sink for recordbatch
-garrow_output_stream_write_record_batch
-
-
-writeRecordBatch=: {{
-'tablePtr filepath'=. y
-e=. < mema 4
-fnPtr=. setString filepath
-fileOutputStreamrPtr=. ptr garrow_file_output_stream_new fnPtr;0;<e
-garrow_output_stream_align fileOutputStreamrPtr;64;;<e
-...
-}}
-
-
-
-jpath '~JPackageDev/jarrow/test'
-
-
-NB. =========================================================
-NB. Example for reqading and writing parquet
-inpath =. TempPath,'test1.parquet'
-outpath =. TempPath,'out3.parquet'
-schema tablePtr =. readParquet inpath
-writeParquet tablePtr;outpath
-readsTable readParquet outpath
-
 
 NB. =========================================================
 NB. Test for memory mapping
+NB. =========================================================
 e=. << mema 4
 fnPtr =. setString TempPath,'test.arrow'
 fosPtr =. garrow_file_output_stream_new (<fnPtr);1;e
