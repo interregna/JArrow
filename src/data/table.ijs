@@ -7,7 +7,7 @@ tableBindings =: lib 0 : 0
 * * * *	garrow_table_new_values	(GArrowSchema *schema, GList *values, GError **error); GArrowTable *
 * * * * i * 	garrow_table_new_chunked_arrays	(GArrowSchema *schema, GArrowChunkedArray **chunked_arrays, gsize n_chunked_arrays, GError **error); GArrowTable * 
 * * * i *	garrow_table_new_arrays	(GArrowSchema *schema, GArrowArray **arrays, gsize n_arrays, GError **error); GArrowTable *
-* * * o *	garrow_table_new_record_batches	(GArrowSchema *schema, GArrowRecordBatch **record_batches, gsize n_record_batches, GError **error); GArrowTable *
+* * * i *	garrow_table_new_record_batches	(GArrowSchema *schema, GArrowRecordBatch **record_batches, gsize n_record_batches, GError **error); GArrowTable *
 i * *	garrow_table_equal	(GArrowTable *table, GArrowTable *other_table); gboolean
 i * * i	garrow_table_equal_metadata	(GArrowTable *table, GArrowTable *other_table, gboolean check_metadata); gboolean
 * *	garrow_table_get_schema	(GArrowTable *table); GArrowSchema *

@@ -24,17 +24,17 @@ getInts=:{{memr (> y),0,x,4}}
 
 libload =: {{
   if.     UNAME-:'Linux' do.
-    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
     libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
+    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
     libFlight   =: '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
   elseif. UNAME-:'Darwin' do.
-    libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
+    libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libFlight   =: '"','" ',~  '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-900.dll'
-    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-900.dll'
-    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-900.dll'
+    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
+    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
+    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
   end.
   1
 }}
@@ -55,7 +55,9 @@ init =: {{
   r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
   r =. r <. <./ libArrow cbind schemaBindings, fieldBindings
   r =. r <. <./ libArrow cbind bufferBindings
+  r =. r <. <./ libArrow cbind memoryBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
+  r =. r <. <./ libArrow cbind fileSystemBindings, localFileSystemBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
   r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
   r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
@@ -807,7 +809,7 @@ tableBindings =: lib 0 : 0
 * * * *	garrow_table_new_values	(GArrowSchema *schema, GList *values, GError **error); GArrowTable *
 * * * * i * 	garrow_table_new_chunked_arrays	(GArrowSchema *schema, GArrowChunkedArray **chunked_arrays, gsize n_chunked_arrays, GError **error); GArrowTable * 
 * * * i *	garrow_table_new_arrays	(GArrowSchema *schema, GArrowArray **arrays, gsize n_arrays, GError **error); GArrowTable *
-* * * o *	garrow_table_new_record_batches	(GArrowSchema *schema, GArrowRecordBatch **record_batches, gsize n_record_batches, GError **error); GArrowTable *
+* * * i *	garrow_table_new_record_batches	(GArrowSchema *schema, GArrowRecordBatch **record_batches, gsize n_record_batches, GError **error); GArrowTable *
 i * *	garrow_table_equal	(GArrowTable *table, GArrowTable *other_table); gboolean
 i * * i	garrow_table_equal_metadata	(GArrowTable *table, GArrowTable *other_table, gboolean check_metadata); gboolean
 * *	garrow_table_get_schema	(GArrowTable *table); GArrowSchema *
@@ -1031,13 +1033,15 @@ NB.
 NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
-* * i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
-i *	g_bytes_get_size	(GBytes* bytes)	gsize
-* * *	g_bytes_get_data	(GBytes* bytes, gsize* size) gconstpointer
-* * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size) gpointer
-* *	g_bytes_unref_to_array	(GBytes* bytes) GByteArray*
+* & i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
+i *	g_bytes_get_size	(GBytes* bytes);	gsize
+* * *	g_bytes_get_data	(GBytes* bytes, gsize* size); gconstpointer
+* * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size); gpointer
+* *	g_bytes_unref_to_array	(GBytes* bytes); GByteArray*
+n *	g_bytes_unref 	(GBytes* bytes); 	void
 n * * * *	g_object_get	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 n * * * *	g_object_set	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
+n * 	g_object_unref	(GObject* object); void
 *	g_list_alloc	(void) GList*
 * * *	g_list_append	(GList* list, gpointer data) GList*
 n * 	g_list_free	(GList* list) void
@@ -1048,6 +1052,7 @@ n * 	g_list_free	(GList* list) void
 * *	g_param_spec_get_name	(GParamSpec* pspec)	const gchar*
 * * *	g_object_class_find_property	( GObjectClass* oclass,  const gchar* property_name)	GParamSpec*
 * *	g_type_create_instance	(GType type)	GTypeInstance*
+* * * *	g_filename_to_uri	(const gchar* filename,  const gchar* hostname,  GError** error) gchar*
 )
 
 
@@ -1098,8 +1103,8 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowWritable.html
 NB. =========================================================
 writeableBindings =: lib 0 : 0
 n *	garrow_writable_default_init	(GArrowWritableInterface *iface); static void
-i * * l *	garrow_writable_write	(GArrowWritable *writable, const guint8 *data, gint64 n_bytes, GError **error); gboolean
-i * *	garrow_writable_flush	(GArrowWritable *writable, GError **error); gboolean
+b * * l *	garrow_writable_write	(GArrowWritable *writable, const guint8 *data, gint64 n_bytes, GError **error); gboolean
+b *	garrow_writable_flush	(GArrowWritable *writable, GError **error); gboolean
 * *	garrow_writable_get_raw	(GArrowWritable *writable); std::shared_ptr<arrow::io::Writable>
 )
 
@@ -1235,6 +1240,60 @@ i * * *	garrow_record_batch_writer_write_table	(GArrowRecordBatchWriter *writer,
 i * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
 * * * *	garrow_record_batch_stream_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchStreamWriter *
 * * * *	garrow_record_batch_file_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchFileWriter *
+)
+NB. =========================================================
+NB. File System
+NB. https://arrow.apache.org/docs/c_glib/arrow-glib/file-system-classes.html
+NB. =========================================================
+
+fileSystemBindings =: lib 0 : 0
+*	garrow_file_info_new	(void); GArrowFileInfo *
+b * *	garrow_file_info_equal	(GArrowFileInfo *file_info, GArrowFileInfo *other_file_info); gboolean
+b *	garrow_file_info_is_file	(GArrowFileInfo *file_info); gboolean
+b *	garrow_file_info_is_dir	(GArrowFileInfo *file_info); gboolean
+* *	garrow_file_info_to_string	(GArrowFileInfo *file_info); gchar *
+* * *	garrow_file_system_create	(const gchar *uri, GError **error); GArrowFileSystem *
+* *	garrow_file_system_get_type_name	(GArrowFileSystem *file_system); gchar *
+* * * *	garrow_file_system_get_file_info	(GArrowFileSystem *file_system , const gchar *path , GError **error); GArrowFileInfo *
+* * * i *	garrow_file_system_get_file_infos_paths	(GArrowFileSystem *file_system, const gchar **paths, gsize n_paths, GError **error); GList *
+* * * *	garrow_file_system_get_file_infos_selector	(GArrowFileSystem *file_system, GArrowFileSelector *file_selector, GError **error); GList *
+b * * b *	garrow_file_system_create_dir	(GArrowFileSystem *file_system, const gchar *path, gboolean recursive, GError **error); gboolean
+b * * *	garrow_file_system_delete_dir	(GArrowFileSystem *file_system, const gchar *path, GError **error); gboolean
+b * * *	garrow_file_system_delete_dir_contents	(GArrowFileSystem *file_system, const gchar *path, GError **error); gboolean
+b * * *	garrow_file_system_delete_file	(GArrowFileSystem *file_system, const gchar *path, GError **error); gboolean
+b * * i *	garrow_file_system_delete_files	(GArrowFileSystem *file_system, const gchar **paths, gsize n_paths, GError **error); gboolean
+b * * * *	garrow_file_system_move	(GArrowFileSystem *file_system, const gchar *src, const gchar *dest, GError **error); gboolean
+b * * * *	garrow_file_system_copy_file	(GArrowFileSystem *file_system, const gchar *src, const gchar *dest, GError **error); gboolean
+* * * *	garrow_file_system_open_input_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowInputStream *
+* * * *	garrow_file_system_open_input_file	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowSeekableInputStream *
+* * * *	garrow_file_system_open_output_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
+* * * *	garrow_file_system_open_append_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
+n *	garrow_sub_tree_file_system_dispose	(GObject *object); static void
+* * *	garrow_sub_tree_file_system_new	(const gchar *base_path, GArrowFileSystem *base_file_system); GArrowSubTreeFileSystem *
+* * l	garrow_slow_file_system_new_average_latency	(GArrowFileSystem *base_file_system, gdouble average_latency); GArrowSlowFileSystem *
+* * l i	garrow_slow_file_system_new_average_latency_and_seed	(GArrowFileSystem *base_file_system, gdouble average_latency, gint32 seed); GArrowSlowFileSystem *
+)
+
+NB. =========================================================
+NB. Local File System	
+NB. https://arrow.apache.org/docs/c_glib/arrow-glib/local-file-system-classes.html
+NB. =========================================================
+
+localFileSystemBindings =: lib 0 : 0
+*	garrow_local_file_system_options_new	(void); GArrowLocalFileSystemOptions *	
+n *	garrow_local_file_system_init	(GArrowLocalFileSystem *file_system); static void
+* *	garrow_local_file_system_new	(GArrowLocalFileSystemOptions *options); GArrowLocalFileSystem *
+)
+NB. Memory
+NB. =========================================================
+NB. https://arrow.apache.org/docs/c_glib/arrow-glib/memory-pool-classes.html#garrow-memory-pool-default
+NB. =========================================================
+
+memoryBindings =: lib 0 : 0
+*	garrow_memory_pool_default	(); GArrowMemoryPool *
+l *	garrow_memory_pool_get_bytes_allocated	(GArrowMemoryPool *memory_pool); gint64
+l *	garrow_memory_pool_get_max_memory 	(GArrowMemoryPool *memory_pool); gint64
+*c *	garrow_memory_pool_get_backend_name 	(GArrowMemoryPool *memory_pool); gchar *
 )
 NB. =========================================================
 NB. Commmon
@@ -1377,45 +1436,49 @@ garrow_float_array_get_valuesSHIM=: (_1&fc byteSHIM garrow_float_array_get_value
 garrow_date32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_date32_array_get_values)
 garrow_time32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_time32_array_get_values)
 
-'typeGArrowName typeName typeGetValue typeGetValues typeNew typeJ typeJMemr typeDescription'=:  (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut)) 0 : 0
-GARROW_TYPE	name	getValue	getValues	Jtype	Jmemr	description
-GARROW_TYPE_NA	null	garrow_na_array_get_valueSHIM	garrow_na_array_get_valuesSHIM	garrow_null_data_type_new	null	0	A degenerate NULL type represented as 0 bytes/bits.
-GARROW_TYPE_BOOLEAN	bool	garrow_boolean_array_get_valueSHIM	garrow_boolean_array_get_values	garrow_boolean_data_type_new	bool	1	A boolean value represented as 1-bit.
-GARROW_TYPE_UINT8	uint8	garrow_uint8_array_get_value	garrow_uint8_array_get_values	garrow_uint8_data_type_new	int	4	Little-endian 8-bit unsigned integer.
-GARROW_TYPE_INT8	int8	garrow_int8_array_get_value	garrow_int8_array_get_values	garrow_int8_data_type_new	int	4	Little-endian 8-bit signed integer.
-GARROW_TYPE_UINT16	uint16	garrow_uint16_array_get_value	garrow_uint16_array_get_valuesSHIM	garrow_uint16_data_type_new	int	4	Little-endian 16-bit unsigned integer.
-GARROW_TYPE_INT16	int16	garrow_int16_array_get_value	garrow_int16_array_get_valuesSHIM	garrow_int16_data_type_new	int	4	Little-endian 16-bit signed integer.
-GARROW_TYPE_UINT32	uint32	garrow_uint32_array_get_value	garrow_uint32_array_get_valuesSHIM	garrow_uint32_data_type_new	int	4	Little-endian 32-bit unsigned integer.
-GARROW_TYPE_INT32	int32	garrow_int32_array_get_value	garrow_int32_array_get_valuesSHIM	garrow_int32_data_type_new	int	4	Little-endian 32-bit signed integer.
-GARROW_TYPE_UINT64	uint64	garrow_uint64_array_get_value	garrow_uint64_array_get_values	garrow_uint64_data_type_new	int	4	Little-endian 64-bit unsigned integer.
-GARROW_TYPE_INT64	int64	garrow_int64_array_get_value	garrow_int64_array_get_values	garrow_int64_data_type_new	int	4	Little-endian 64-bit signed integer.
-GARROW_TYPE_HALF_FLOAT	float16	NA	NA	NA	float	8	2-byte floating point value.
-GARROW_TYPE_FLOAT	float	garrow_float_array_get_value	garrow_float_array_get_valuesSHIM	garrow_float_data_type_new	float	8	4-byte floating point value.
-GARROW_TYPE_DOUBLE	double	garrow_double_array_get_value	garrow_double_array_get_values	garrow_double_data_type_new	float	8	8-byte floating point value.
-GARROW_TYPE_STRING	utf8	garrow_string_array_get_stringSHIM	garrow_string_array_get_stringsSHIM	garrow_string_data_type_new	char	2	UTF-8 variable-length string.
-GARROW_TYPE_BINARY	binary	garrow_binary_array_get_value	NA	garrow_binary_data_type_new	byte	2	Variable-length bytes (no guarantee of UTF-8-ness).
-GARROW_TYPE_FIXED_SIZE_BINARY	w:[n]	garrow_fixed_size_binary_array_get_value	garrow_fixed_size_binary_array_get_values_bytes	garrow_fixed_size_binary_data_type_new	byte	2	Fixed-size binary. Each value occupies the same number of bytes.
-GARROW_TYPE_DATE32	date32	garrow_date32_array_get_value	garrow_date32_array_get_valuesSHIM	garrow_date32_data_type_new	int	4	int32 days since the UNIX epoch.
-GARROW_TYPE_DATE64	date64	garrow_date64_array_get_value	garrow_date64_array_get_values	garrow_date64_data_type_new	int	4	int64 milliseconds since the UNIX epoch.
-GARROW_TYPE_TIMESTAMP	timestamp	garrow_timestamp_array_get_value	garrow_timestamp_array_get_values	garrow_timestamp_data_type_new	int	4	Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.
-GARROW_TYPE_TIME32	time32	garrow_time32_array_get_value	garrow_time32_array_get_valuesSHIM	garrow_time32_data_type_new	int	4	Exact time encoded with int32, supporting seconds or milliseconds
-GARROW_TYPE_TIME64	time64	garrow_time64_array_get_value	garrow_time64_array_get_values	garrow_time64_data_type_new	int	4	Exact time encoded with int64, supporting micro- or nanoseconds
-GARROW_TYPE_INTERVAL_MONTHS	intervalmonths	NA	NA	NA	char	4	YEAR_MONTH interval in SQL style.
-GARROW_TYPE_INTERVAL_DAY_TIME	intervaldaystime	NA	NA	NA	char	4	DAY_TIME interval in SQL style.
-GARROW_TYPE_DECIMAL128	int128	garrow_decimal128_array_get_value	NA	garrow_decimal128_data_type_new	float	8	Precision- and scale-based decimal type with 128-bit. Storage type depends on the parameters.
-GARROW_TYPE_DECIMAL256	int256	garrow_decimal256_array_get_value	NA	garrow_decimal256_data_type_new	float	8	Precision- and scale-based decimal type with 256-bit. Storage type depends on the parameters.
-GARROW_TYPE_LIST	list	NA	NA	NA	NA	0	A list of some logical data type.
-GARROW_TYPE_STRUCT	struct	NA	NA	NA	NA	0	Struct of logical types.
-GARROW_TYPE_SPARSE_UNION	sparseunion	NA	NA	NA	NA	0	Sparse unions of logical types.
-GARROW_TYPE_DENSE_UNION	denseunion	NA	NA	NA	NA	0	Dense unions of logical types.
-GARROW_TYPE_DICTIONARY	dictionary	NA	NA	NA	NA	0	Dictionary aka Category type.
-GARROW_TYPE_MAP	map	NA	NA	NA	NA	0	A repeated struct logical type.
-GARROW_TYPE_EXTENSION	extension	NA	NA	NA	NA	0	Custom data type, implemented by user.
-GARROW_TYPE_FIXED_SIZE_LIST	flist	NA	NA	NA	NA	0	Fixed size list of some logical type.
-GARROW_TYPE_DURATION	duration	NA	NA	NA	NA	0	Measure of elapsed time in either seconds, milliseconds, microseconds or nanoseconds.
-GARROW_TYPE_LARGE_STRING	large_utf8	garrow_large_string_array_get_string	NA	garrow_large_string_data_type_new	char	2	64bit offsets UTF-8 variable-length string.
-GARROW_TYPE_LARGE_BINARY	large_binary	garrow_large_binary_array_get_value	NA	garrow_large_binary_data_type_new	char	2	64bit offsets Variable-length bytes (no guarantee of UTF-8-ness).
-GARROW_TYPE_LARGE_LIST	llist	NA	NA	NA	0	A list of some logical data type with 64-bit offsets.
+garrow_dictionary_array_get_indicesSHIM=: garrow_dictionary_array_get_indices@{.
+
+deTAB =. #~ ((+.) (1: |. (> </\)))@(TAB&~:)
+
+'typeGArrowName typeName typeGetValue typeGetValues typeNew typeJ typeJMemr typeDescription' =: (<"1)@|:@(>@(((9{a.)&cut)&.>)@}.@((10{a.)&cut))@deTAB 0 : 0
+GARROW_TYP			name		getValue				getValues				typeNew			typeJMemrJtype	Jmemr	description
+GARROW_TYPE_NA		null		garrow_na_array_get_valueSHIM		garrow_na_array_get_valuesSHIM		garrow_null_data_type_new		null		0	A degenerate NULL type represented as 0 bytes/bits.
+GARROW_TYPE_BOOLEAN		bool		garrow_boolean_array_get_valueSHIM		garrow_boolean_array_get_values		garrow_boolean_data_type_new	bool		1	A boolean value represented as 1-bit.
+GARROW_TYPE_UINT8		uint8		garrow_uint8_array_get_value		garrow_uint8_array_get_values		garrow_uint8_data_type_new		int		4	Little-endian 8-bit unsigned integer.
+GARROW_TYPE_INT8		int8		garrow_int8_array_get_value		garrow_int8_array_get_values		garrow_int8_data_type_new		int		4	Little-endian 8-bit signed integer.
+GARROW_TYPE_UINT16		uint16		garrow_uint16_array_get_value		garrow_uint16_array_get_valuesSHIM		garrow_uint16_data_type_new	int		4	Little-endian 16-bit unsigned integer.
+GARROW_TYPE_INT16		int16		garrow_int16_array_get_value		garrow_int16_array_get_valuesSHIM		garrow_int16_data_type_new		int		4	Little-endian 16-bit signed integer.
+GARROW_TYPE_UINT32		uint32		garrow_uint32_array_get_value		garrow_uint32_array_get_valuesSHIM		garrow_uint32_data_type_new	int		4	Little-endian 32-bit unsigned integer.
+GARROW_TYPE_INT32		int32		garrow_int32_array_get_value		garrow_int32_array_get_valuesSHIM		garrow_int32_data_type_new		int		4	Little-endian 32-bit signed integer.
+GARROW_TYPE_UINT64		uint64		garrow_uint64_array_get_value		garrow_uint64_array_get_values		garrow_uint64_data_type_new	int		4	Little-endian 64-bit unsigned integer.
+GARROW_TYPE_INT64		int64		garrow_int64_array_get_value		garrow_int64_array_get_values		garrow_int64_data_type_new		int		4	Little-endian 64-bit signed integer.
+GARROW_TYPE_HALF_FLOAT		float16		NA				NA				NA			float		8	2-byte floating point value.
+GARROW_TYPE_FLOAT		float		garrow_float_array_get_value		garrow_float_array_get_valuesSHIM		garrow_float_data_type_new		float		8	4-byte floating point value.
+GARROW_TYPE_DOUBLE		double		garrow_double_array_get_value		garrow_double_array_get_values		garrow_double_data_type_new	float		8	8-byte floating point value.
+GARROW_TYPE_STRING		utf8		garrow_string_array_get_stringSHIM		garrow_string_array_get_stringsSHIM		garrow_string_data_type_new	char		2	UTF-8 variable-length string.
+GARROW_TYPE_BINARY		binary		garrow_binary_array_get_value		NA				garrow_binary_data_type_new	byte		2	Variable-length bytes (no guarantee of UTF-8-ness).
+GARROW_TYPE_FIXED_SIZE_BINARY	w:[n]		garrow_fixed_size_binary_array_get_value	garrow_fixed_size_binary_array_get_values_bytes	garrow_fixed_size_binary_data_type_new	byte		2	Fixed-size binary. Each value occupies the same number of bytes.
+GARROW_TYPE_DATE32		date32		garrow_date32_array_get_value		garrow_date32_array_get_valuesSHIM		garrow_date32_data_type_new	int		4	int32 days since the UNIX epoch.
+GARROW_TYPE_DATE64		date64		garrow_date64_array_get_value		garrow_date64_array_get_values		garrow_date64_data_type_new	int		4	int64 milliseconds since the UNIX epoch.
+GARROW_TYPE_TIMESTAMP		timestamp		garrow_timestamp_array_get_value		garrow_timestamp_array_get_values		garrow_timestamp_data_type_new	int		4	Exact timestamp encoded with int64 since UNIX epoch. Default unit millisecond.
+GARROW_TYPE_TIME32		time32		garrow_time32_array_get_value		garrow_time32_array_get_valuesSHIM		garrow_time32_data_type_new	int		4	Exact time encoded with int32, supporting seconds or milliseconds
+GARROW_TYPE_TIME64		time64		garrow_time64_array_get_value		garrow_time64_array_get_values		garrow_time64_data_type_new	int		4	Exact time encoded with int64, supporting micro- or nanoseconds
+GARROW_TYPE_INTERVAL_MONTHS	intervalmonths	NA				NA				NA			char		4	YEAR_MONTH interval in SQL style.
+GARROW_TYPE_INTERVAL_DAY_TIME	intervaldaystime	NA				NA				NA			char		4	DAY_TIME interval in SQL style.
+GARROW_TYPE_DECIMAL128		int128		garrow_decimal128_array_get_value		NA				garrow_decimal128_data_type_new	float		8	Precision- and scale-based decimal type with 128-bit. Storage type depends on the parameters.
+GARROW_TYPE_DECIMAL256		int256		garrow_decimal256_array_get_value		NA				garrow_decimal256_data_type_new	float		8	Precision- and scale-based decimal type with 256-bit. Storage type depends on the parameters.
+GARROW_TYPE_LIST		list		garrow_list_array_get_value		garrow_list_array_get_values		NA			NA		0	A list of some logical data type.
+GARROW_TYPE_STRUCT		struct		garrow_struct_array_get_field		garrow_struct_array_get_fields		NA			NA		0	Struct of logical types.
+GARROW_TYPE_SPARSE_UNION		sparseunion		NA				NA				NA			NA		0	Sparse unions of logical types.
+GARROW_TYPE_DENSE_UNION		denseunion		NA				NA				NA			NA		0	Dense unions of logical types.
+GARROW_TYPE_DICTIONARY		dictionary		NA				garrow_dictionary_array_get_indicesSHIM		NA			int		4	Dictionary aka Category type.
+GARROW_TYPE_MAP		map		NA				NA				NA			NA		0	A repeated struct logical type.
+GARROW_TYPE_EXTENSION		extension		NA				NA				NA			NA		0	Custom data type, implemented by user.
+GARROW_TYPE_FIXED_SIZE_LIST	flist		NA				NA				NA			NA		0	Fixed size list of some logical type.
+GARROW_TYPE_DURATION		duration		NA				NA				NA			NA		0	Measure of elapsed time in either seconds, milliseconds, microseconds or nanoseconds.
+GARROW_TYPE_LARGE_STRING		large_utf8		garrow_large_string_array_get_string		NA				garrow_large_string_data_type_new	char		2	64bit offsets UTF-8 variable-length string.
+GARROW_TYPE_LARGE_BINARY		large_binary		garrow_large_binary_array_get_value		NA				garrow_large_binary_data_type_new	char		2	64bit offsets Variable-length bytes (no guarantee of UTF-8-ness).
+GARROW_TYPE_LARGE_LIST		large_list		garrow_large_list_array_get_value		garrow_large_list_array_get_values				NA			NA		0	A list of some logical data type with 64-bit offsets.
 )
 
 typeIndexLookup=: {{> x {~ y}}

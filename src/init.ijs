@@ -24,16 +24,16 @@ getInts=:{{memr (> y),0,x,4}}
 
 libload =: {{
   if.     UNAME-:'Linux' do.
-    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
     libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
+    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
     libFlight   =: '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
   elseif. UNAME-:'Darwin' do.
-    libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
+    libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
     libFlight   =: '"','" ',~  '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
     libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
+    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
     libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
   end.
   1
@@ -55,7 +55,9 @@ init =: {{
   r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
   r =. r <. <./ libArrow cbind schemaBindings, fieldBindings
   r =. r <. <./ libArrow cbind bufferBindings
+  r =. r <. <./ libArrow cbind memoryBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
+  r =. r <. <./ libArrow cbind fileSystemBindings, localFileSystemBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
   r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
   r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings

@@ -19,6 +19,8 @@ src/data/value.ijs
 src/glib/glib.ijs
 src/io/io.ijs
 src/ipc/ipc.ijs
+src/filesystem/filesystemapi.ijs
+src/memory/memory.ijs
 src/flight/flight.ijs
 src/type.ijs
 src/arrow.ijs

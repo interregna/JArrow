@@ -45,8 +45,8 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowWritable.html
 NB. =========================================================
 writeableBindings =: lib 0 : 0
 n *	garrow_writable_default_init	(GArrowWritableInterface *iface); static void
-i * * l *	garrow_writable_write	(GArrowWritable *writable, const guint8 *data, gint64 n_bytes, GError **error); gboolean
-i * *	garrow_writable_flush	(GArrowWritable *writable, GError **error); gboolean
+b * * l *	garrow_writable_write	(GArrowWritable *writable, const guint8 *data, gint64 n_bytes, GError **error); gboolean
+b *	garrow_writable_flush	(GArrowWritable *writable, GError **error); gboolean
 * *	garrow_writable_get_raw	(GArrowWritable *writable); std::shared_ptr<arrow::io::Writable>
 )
 
