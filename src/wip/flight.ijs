@@ -17,9 +17,10 @@ e=. < mema 4
 schema =. getString ret ptr garrow_schema_to_string <  ptr gaflight_info_get_schema infoPtr;readOptionsPtr;<e
 res =. >a:
 res=. res, '[+] Flight Info:',LF
-res=. res, '[+]  Desscription: ',description,LF,'[+] Record count: ',(": recordcount),LF
+res=. res, '[+]  Description: ',description,LF
+res=. res, '[+]  Record count: ',(": recordcount),LF
 res=. res, '[+]  Byte count: ',(": byteCount),LF
-res=. res, '[+]  Schema : ', schema, LF
+res=. res, '[+]  Schema: ', schema, LF
 res
 }}"0
 
