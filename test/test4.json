@@ -1,0 +1,6 @@
+{"log":"2018-12-20T08:53:57.879Z - info: [Main] The selected providers are digitalocean/nyc1\n","stream":"stdout","time":"2018-12-20T08:53:57.889924185Z"}
+{"log":"2018-12-20T08:53:58.037Z - debug: [Main] listen\n","stream":"stderr","time":"2018-12-20T08:53:58.038505968Z"}
+{"log":"2018-12-21T02:57:48.522Z - error: [Master] Error: request error from target (GET http://21.24.14.28/resources/images/banner5.png on instance 124726553@157.230.11.151:3128): Error: socket hang up\n","stream":"stderr","time":"2018-12-21T02:57:48.539460901Z"}
+{"log":"2018-12-21T02:57:53.021Z - debug: [Pinger] ping: hostname=142.93.199.42 / port=3128\n","stream":"stderr","time":"2018-12-21T02:57:53.339146838Z"}
+{"log":"2018-12-21T02:57:53.122Z - debug: [Manager] checkInstances\n","stream":"stderr","time":"2018-12-21T02:57:53.339161183Z"}
+{"log":"Killed\n","stream":"stderr","time":"2018-12-21T02:58:19.048581795Z"}
