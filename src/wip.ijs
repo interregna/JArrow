@@ -1,6 +1,5 @@
 NB. =========================================================
-NB. Example of gettting a property:
-NB. Also works with set
+NB. Example of settting and getting a gobject property:
 NB. =========================================================
 pnp1=. writeString 'approx'
 '"/usr/local/lib/libarrow-glib.dylib" g_object_set * * * b *'&cd  eaP;pnp1;1;<<0
@@ -36,13 +35,15 @@ tnp=. writeString 'data'
 bplen2 =. writeInts ret '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_size * *'&cd < bytePtr2
 dataPtr2 =. ptr '"/usr/local/lib/libarrow-glib.dylib" g_bytes_get_data * * *'&cd bytePtr2;<bplen2
 memr (memr (>dataPtr2),0,1,4),0,_1,2
+
 NB. =========================================================
 
 pqf =. '~/movies_201k.parquet'
 fexist pqf
 fsize pqf
-schema readParquet pqf
+printSchema readParquet pqf
 readsTable readParquet pqf
+
 
 NB. =========================================================
 NB. Parquet columns direct to nouns
@@ -115,10 +116,6 @@ viewnoun 'results3'
 
 
 NB. =========================================================
-NB. IPC
-
-memf >>e
-
 NB. CSV options ...
 '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_set_column_names n * * i'&cd 
 (< ptr rdOptPt),(<< setString 'col1'),< 1
@@ -136,21 +133,13 @@ readCSV =: {{
 
 
 NB. =========================================================
-NB. Arrow 'IPC format' test
-NB. Need to read list types
-readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test1.jsonl' NB. Need to add lists.
-readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test2.jsonl'
-readsTable readJsonl '/Applications/j904/addons/data/arrow/test/test3.jsonl' NB. Need to add lists.
 
+readsTable readJsonl '~addons/data/arrow/test/test1.jsonl'
+readsTable readJsonl '~addons/data/arrow/test/test2.jsonl'
+readsTable readJsonl '~addons/data/arrow/test/test3.jsonl'
 
 readsTable readFeather '~temp/test1.feather'
 
-load'web/gethttp'
-fp =. jpath '~/Downloads/scrabble.arrow'
-fp fwrite~ gethttp 'https://gist.githubusercontent.com/TheNeuralBit/64d8cc13050c9b5743281dcf66059de5/raw/c146baf28a8e78cfe982c6ab5015207c4cbd84e3/scrabble.arrow'
-fexist fp
-y =. fp
-readArrow 
 
 
 
@@ -171,9 +160,6 @@ garrow_output_stream_write_record_batch (ptr fosPtr);(ptr rbPtr);(ptr woPtr);e
 NB. https://code.jsoftware.com/wiki/Guides/DLLs/Error_Messages
 cder''
 cderx''
-
-[+] Apache Arrow IPC record batch file format
-[+] Apache Arrow IPC record batch stream format
 
 NB. Consider None mask.
 NB. Consider reading all values at once rather than reading each value individually.

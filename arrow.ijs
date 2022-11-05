@@ -54,7 +54,7 @@ init =: {{
   r =. r <. <./ libArrow cbind basicDatatypeBindings, compositeDataTypeBindings
   r =. r <. <./ libArrow cbind basicArrayBindings, compositeArrayBindings
   r =. r <. <./ libArrow cbind schemaBindings, fieldBindings
-  r =. r <. <./ libArrow cbind bufferBindings
+  r =. r <. <./ libArrow cbind bufferBindings, codecBindings
   r =. r <. <./ libArrow cbind memoryBindings
   r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
   r =. r <. <./ libArrow cbind fileSystemBindings, localFileSystemBindings
@@ -585,12 +585,10 @@ NB. Codec
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowCodec.html
 NB. =========================================================
 codecBindings =: lib 0 : 0
-*	garrow_codec_get_type{)
-* * *	garrow_codec_new (GArrowCompressionType type,GError **error); GArrowCodec *
-* *	garrow_codec_get_name(GArrowCodec *codec); const gchar *
-* *	garrow_codec_get_compression_type(GArrowCodec *codec); GArrowCompressionType
-i *	garrow_codec_get_compression_level(GArrowCodec *codec); gint
-
+* i *	garrow_codec_new	(GArrowCompressionType type,GError **error); GArrowCodec *
+* *	garrow_codec_get_name	(GArrowCodec *codec); const gchar *
+i *	garrow_codec_get_compression_type	(GArrowCodec *codec); GArrowCompressionType
+i *	garrow_codec_get_compression_level	(GArrowCodec *codec); gint
 )
 NB. =========================================================
 NB. Basic Data Type
@@ -1034,6 +1032,7 @@ NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
 * & i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
+* & i	g_bytes_new_static	(gconstpointer data, gsize size);	GBytes*
 i *	g_bytes_get_size	(GBytes* bytes);	gsize
 * * *	g_bytes_get_data	(GBytes* bytes, gsize* size); gconstpointer
 * * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size); gpointer

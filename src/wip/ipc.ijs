@@ -1,3 +1,40 @@
+NB. =========================================================
+NB. Reading and writing IPC
+NB. =========================================================
+
+NB. Tables are columnar store in 'arrays', each of which is a column. 
+NB.   Tables are are not a common format and are not serializable.
+NB.   Arrays can be batched into chunked arrawys, which may vary in length between columns.
+NB. IPC format files and streaming data are stored in rows.
+NB.   Batches of rows are called 'recordBatches', suitable for storing and streaming.
+NB.   IPC is a common format and is serializable.
+NB.   '.arrow' and '.feather' files are IPC format files with headers and footers, suitable for random access.
+NB.   '.arrows' files are streaming IPC format without footers.
+
+NB. https://arrow.apache.org/docs/cpp/tables.html#record-batches
+NB. Table: Logical table as sequence of chunked arrays.
+NB. RecordBatch: Collection of equal-length arrays matching a particular Schema.
+NB. A record batch is table-like data structure that is semantically a sequence of fields, each a contiguous Arrow array
+
+NB. ".arrow"  We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
+NB. ".arrows" We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
+NB. https://arrow.apache.org/docs/format/Columnar.html
+
+NB. IPC Format
+NB. The columnar IPC protocol utilizes a one-way stream of binary messages of these types:
+NB. 1) Schema 2) RecordBatch 3) DictionaryBatch
+NB. The message encapsulation format in flatbuffers
+NB. https://arrow.apache.org/docs/format/Columnar.html#encapsulated-message-format
+
+
+NB. Tbere are two concepts of streams in Arrow; the term is overloaded and this is a a source of confusion.
+NB. 1) Input and output streams, which reference interfaces to data stores.
+NB. 2) The writers for IPC-format files without footers, suitable for streaming.
+	NB. The difference between RecordBatchFileReader and RecordBatchStreaader 
+	NB. is that the input source must have a seek method for random access. 
+
+
+NB. Goal to formalize:
 NB. arrow::read_ipc_stream()
 NB. arrow::read_feather()
 NB. arrow::read_parquet()
@@ -8,100 +45,11 @@ NB. arrow::read_schema()
 NB. arrow::read_message()
 NB. arrow::read_tsv_arrow()
 
-NB. =========================================================
-NB. Reading and writing IPC
-NB. =========================================================
-
-NB. recordbatch is row store data
-NB. table is columnar store in arrays
-
-NB. filesytem -> inputstream
-NB. inputstream -> read
-NB. recordbatch -> array/table
-NB. <----->
-NB. recordbatch
-NB. outputstream
-NB. filesystem
-
-NB. IPC
-NB. The columnar IPC protocol utilizes a one-way stream of binary messages of these types:
-NB. Schema
-NB. RecordBatch
-NB. DictionaryBatch
-NB. The message encapsulation format in flatbuffers (https://arrow.apache.org/docs/format/Columnar.html#encapsulated-message-format)
-
-
-NB. https://arrow.apache.org/docs/cpp/tables.html#record-batches
-NB. RecordBatch:
-NB. Collection of equal-length arrays matching a particular Schema.
-NB. A record batch is table-like data structure that is semantically a sequence of fields, each a contiguous Arrow array
-NB. Table:
-NB. Logical table as sequence of chunked arrays.
-
-
-NB. https://arrow.apache.org/docs/cpp/examples/row_columnar_conversion.html
-NB. convert between: array of structs <and> table
-
-NB. These alternatives seem to inject the concept of 'writers', but conflict with the tensors vs tables.
-
-
-NB. NONSERIALIZED: table, SERIALIZED: record batch
-NB. The primitive unit of serialized data in the columnar format is the “record batch”. 
-NB. Semantically, a record batch is an ordered collection of arrays, known as its fields, each having the same length as one another but potentially different data types. A record batch’s field names and types collectively form the batch’s schema.
-NB. file <> stream       : file has a fixed length and terminating footer, stream does not 
-
-
-NB. https://arrow.apache.org/docs/format/Columnar.html
-NB. ".arrow"  We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
-NB. ".arrows" We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
-
-
-NB. NB. The difference between RecordBatchFileReader and RecordBatchStreamReader 
-NB. NB. is that the input source must have a seek method for random access. 
-NB.
-NB. NB. Create inputstream (source) for recordbatch:
-NB. NB. Create these via filesystem -OR-
-NB. NB. directly from file . filesystem path is seekable, whereas buffer or mmmap 
-NB.  garrow_file_input_stream_new
-NB.  garrow_buffer_input_stream_new
-NB.  garrow_memory_mapped_input_stream_new
-NB.  garrow_gio_input_stream_new
-NB.  garrow_compressed_input_stream_new
-NB. NB. Create recordbatch from inputstream source
-NB. garrow_input_stream_read_record_batch
-NB.
-NB.
-NB. garrow_record_batch_file_reader_new
-NB. garrow_record_batch_file_reader_get_schema
-NB.
-NB. NB. Read the recordbatches
-NB. garrow_record_batch_reader_read_all (returns a table)
-NB. garrow_record_batch_reader_new
-NB. garrow_record_batch_reader_read_next
-NB. garrow_record_batch_stream_reader_new
-NB.
-NB. garrow_record_batch_file_reader_new
-NB. garrow_record_batch_file_reader_get_schema
-NB. garrow_record_batch_file_reader_read_record_batch
-NB.
-NB. NB. Create file output streams (sinks):
-NB. garrow_file_output_stream_new NB. write to a file
-NB. garrow_buffer_output_stream_new	NB. Write to a buffer (in-memory)
-NB. garrow_compressed_output_stream_new	NB. Compress the stream before writing onward.
-NB.
-NB. NB. Write the recordbatch into the  sink for recordbatch
-NB. garrow_output_stream_write_record_batch
-NB.
-NB. garrow_record_batch_get_schema
-NB. NB. ;;<(makeReadOptions '')
-
-
-
 NB. Event-driven API
 NB. https://arrow.apache.org/docs/cpp/api/ipc.html#event-driven-api
 NB. listener StreamDecoder
 
-NB. =========================================================
+
 NB. =========================================================
 
 newList =. {{
@@ -113,6 +61,13 @@ end.
 listPtr
 }}
 
+setBytes =. {{
+bytePtr =. mema ] byteCount =. # y
+y memw bytePtr,0,byteCount,2
+gBtyesPtr =. ptr g_bytes_new_static (<bytePtr);byteCount
+gBtyesPtr
+}}
+
 newSchema=: {{
 NB. 'name dataType nullableBoolean'
 fields =. y
@@ -121,9 +76,6 @@ listPtr =. newList fieldPtrs
 schemaPtr =. ptr garrow_schema_new <listPtr
 schemaPtr
 }}
-
-NB. load'csv'
-NB. newSchema makenum _3 ]\;: 'delay int64 0 distance int64 0 time float 0'
 
 makeReadOptions=: {{
 readoptions =. y
@@ -153,19 +105,87 @@ writeOptionsPtr
 NB. =========================================================
 NB. Input streams
 NB. =========================================================
+
 fileInputStream =. {{
 filepath =. y
 filePtr =. setString  jpath filepath
 e=. < mema 4
 inputStreamPtr =. ptr garrow_file_input_stream_new filePtr;<e
+garrow_input_stream_align inputStreamPtr;64;<e
 memf > e
 inputStreamPtr
 }}
 
-NB.  garrow_buffer_input_stream_new
-NB.  garrow_memory_mapped_input_stream_new
-NB.  garrow_gio_input_stream_new
-NB.  garrow_compressed_input_stream_new
+bufferInputStream =. {{
+gBtyesPtr =. y
+bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
+bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr 
+e=. < mema 4
+garrow_input_stream_align bufferInputStreamPtr;64;<e
+ret g_object_unref <  bufferPtr
+memf > e
+bufferInputStreamPtr
+}}
+
+
+memmoryMappedFileInputStream =. {{
+filepath =. y
+filePtr =. setString  jpath filepath
+e=. < mema 4
+inputStreamPtr =. ptr garrow_memory_mapped_input_stream_new filePtr;<e
+garrow_input_stream_align inputStreamPtr;64;<e
+memf > e
+inputStreamPtr
+}}
+
+gioInputStream =. {{
+inputStream =. y
+inputStreamPtr =. ptr garrow_gio_input_stream_new inputStream
+e=. < mema 4
+garrow_input_stream_align inputStreamPtr;64;<e
+memf > e
+inputStreamPtr
+}}
+
+codec =. {{
+compressionTypes =. 'UNCOMPRESSED SNAPPY GZIP BROTLI ZSTD LZ4 LZO BZ2'
+NB. UNCOMPRESSED Not compressed.
+NB. SNAPPY Snappy compression.
+NB. GZIP gzip compression.
+NB. BROTLI Brotli compression.
+NB. ZSTD Zstandard compression.
+NB. LZ4 LZ4 compression.
+NB. LZO LZO compression.
+NB. BZ2 bzip2 compression.
+compression =. y 
+compressionEnum=. {. (< tolower compression) I.@E. ;: tolower compressionTypes
+e=. < mema 4
+codecPtr =. ptr garrow_codec_new  compressionEnum;<e
+if. -. * > codecPtr do. 
+echo 'Invalid compression type. Valid compression types are: ', > ;: 'UNCOMPRESSED SNAPPY GZIP BROTLI ZSTD LZ4 LZO BZ2'
+codecPtr  =. <0
+else. 
+NB. echo ret garrow_codec_get_compression_type  < codecPtr
+NB. codecNamePtr =. ptr garrow_codec_get_name < codecPtr
+end.
+codecPtr 
+}}
+
+compressedInputStream =. {{
+'codecName inputStreamPtr' =. y
+codePtr =. codec codecName
+e=. < mema 4
+inputStreamPtr =. ptr garrow_compressed_input_stream_new  codecPtr;inputStreamPtr;<e
+garrow_input_stream_align inputStreamPtr;64;<e
+memf > e
+inputStreamPtr
+}}
+
+
+
+NB. =========================================================
+NB. Output streams
+NB. =========================================================
 
 newResizableBuffer =: {{
 e=. < mema 4
@@ -175,10 +195,6 @@ ptr garrow_resizable_buffer_new 1;<e
 newBufferOutpuStream =:{{
 ptr garrow_buffer_output_stream_new < newResizableBuffer''
 }}
-
-NB. =========================================================
-NB. Output streams
-NB. =========================================================
 
 fileOutpuStream=:{{
 'filepath appendboolean' =. y
@@ -233,8 +249,8 @@ writeRecordBatchFile =. {{
 'filepath appendboolean recordBatchPtr' =. y
 NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
 fileOutputStreamPtr =. fileOutpuStream filepath;appendboolean
-e2=. < mema 4
-NB. ret garrow_output_stream_align fileOutputStreamPtr;64;<e2
+e=. < mema 4
+ret garrow_output_stream_align fileOutputStreamPtr;64;<e
 writeOptionsPtr =. (makeWriteOptions '')
 e1=. < mema 4
 schemaPtr =. ptr garrow_record_batch_get_schema <recordBatchPtr
@@ -275,7 +291,6 @@ ret garrow_output_stream_write_tensor outputStreamPtr;tensorPtr;<e
 NB. =========================================================
 NB. IPC READER CLASSES
 NB. =========================================================
-
 
 recordBatchFileReader =. {{
 filepath =. y
@@ -321,12 +336,11 @@ recordBatchPtr
 }}
 
 
-tableStreamReader =: {{
+fileInputStreamTable =: {{
 NB. read input stream directly from file.
 filepath =. y
 inputStreamPtr =. fileInputStream filepath
 e =. < mema 4
-ret garrow_input_stream_align inputStreamPtr;64;<e
 streamReaderPtr =. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
 tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
 memf > e
@@ -335,51 +349,36 @@ ret  g_object_unref < streamReaderPtr
 tablePtr
 }}
 
-tableStreamReader2 =.{{
-NB. Read file buffer then read stream from buffer.
-NB. This is 1.5-5 times slower than reading directly from the file, but it works as a buffer POC.
+byteInputStreamTable =.{{
+bytes =. y
+bufferInputStreamPtr =. bufferInputStream ] gBtyesPtr =. setBytes bytes
 e =. < mema 4
-size =. fsize jpath y
-dataPtr =. mema size
-(fread jpath y) memw  dataPtr,0,size,2
-gBtyesPtr =. ptr g_bytes_new (<dataPtr);size
-bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
-inputStreamPtr =. bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr 
-ret garrow_input_stream_align inputStreamPtr;64;<e
-streamReaderPtr =. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
-schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
+streamReaderPtr =. ptr garrow_record_batch_stream_reader_new bufferInputStreamPtr;<e
 tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
-g_bytes_unref <gBtyesPtr
-memf dataPtr
 memf > e
-ret g_object_unref <  schemaPtr 
-ret g_object_unref <  bufferPtr
-ret  g_object_unref < inputStreamPtr
+bufferPtr =. ptr garrow_buffer_input_stream_get_buffer < bufferInputStreamPtr
+ret g_object_unref < bufferPtr
+ret g_object_unref < streamReaderPtr
+ret g_object_unref < bufferInputStreamPtr
+bytePtr =. ptr g_bytes_get_data  gBtyesPtr;<<0
+g_bytes_unref < gBtyesPtr
+memf  > bytePtr 
 tablePtr
 }}
 
-NB. mpPtr =. ptr garrow_memory_pool_default ''
-NB. ret garrow_memory_pool_get_bytes_allocated <mpPtr 
-NB. ret garrow_memory_pool_get_max_memory <mpPtr 
 
-y =. '~/Downloads/flights-200k.arrows'
-g_object_unref < tableStreamReader y
-g_object_unref < tableStreamReader2 y
-(1e4) 6!:2  'g_object_unref < tableStreamReader y'
-(1e4) 6!:2  'g_object_unref < tableStreamReader2 y'
+recordBatchTable =:{{
+recordBatches =. y
+schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatches
+recordBatchArrayPointer  =. setInts > recordBatches
+countRecordBatches =. # recordBatches
+e=. < mema 4
+tablePtr =. ptr garrow_table_new_record_batches schemaPtr;recordBatchArrayPointer;countRecordBatches;<e
+memf > e
+tablePtr
+}}
 
-y =. '~/Downloads/scrabble_games.arrows'
-g_object_unref < tableStreamReader y
-g_object_unref < tableStreamReader2 y
-(1e4) 6!:2  'g_object_unref < tableStreamReader y'
-(1e4) 6!:2  'g_object_unref < tableStreamReader2 y'
 
-y =. '~/Downloads/example.arrows' 
-g_object_unref < tableStreamReader y
-g_object_unref <  tableStreamReader2 y
-NB. readTable  tableStreamReader2 y
-(1e4) 6!:2  'g_object_unref < tableStreamReader y'
-(1e4) 6!:2  'g_object_unref < tableStreamReader2 y'
 
 
 
@@ -390,58 +389,73 @@ NB. =========================================================
 load jpath '~JPackageDev/jarrow/src/wip/flight.ijs'
 
 clientPtr =. createClient@connectLocation 'grpc+tcp://localhost:5005'
-flightListPtr =. getClientFlights  clientPtr;''
-infoPtr =. flightInfoList flightListPtr
-endpointPtrs =. getEndpoints infoPtr NB. Each info pointer has multiple potential endpoints
+flightInfoPtrs =. getClientFlightInfo clientPtr; ''   NB. This could be filtered with search criteria.
+flightInfo flightInfoPtrs
+endpointPtrs =. <@getEndpoints flightInfoPtrs
+
+NB. Select  first info and first endpoint for that info.
+endpointPtr =. 0 { 0{:: endpointPtrs
+
 NB. Get table pointers:
-tblPtr =. {. each flightStreamReadAllTable@{. each endPointsFlightstreamReader@{.  each endpointPtrs
+tblPtr1 =. flightStreamReadAllTable endPointsFlightstreamReader clientPtr;<endpointPtr
 
 NB. Get recordbatch  pointers:
-rbPtrs =. flightStreamRecordBatch@{. each endPointsFlightstreamReader@{. each  endpointPtrs
+recordBatchPtrs =. flightStreamRecordBatch endPointsFlightstreamReader clientPtr;<endpointPtr
 
 NB. Write into an arrow file
 NB. Write with: garrow_record_batch_writer_write_table
 arrowFP =. '~/Downloads/example_table.arrow'
-writeTableFile  arrowFP;0;< > {. tblPtr
+writeTableFile  arrowFP;0;< tblPtr1
 
 NB. Write into an arrow file
 NB. Write with: garrow_record_batch_writer_write_record_batch
 arrowFP =. '~/Downloads/example_recordbatch.arrow'
-writeRecordBatchFile arrowFP;0;(< {. > {.rbPtrs) NB. Only writes the first recordbatch for now.
+writeRecordBatchFile arrowFP;0;(<  {.recordBatchPtrs) NB. Only writes the first recordbatch for now.
 
 NB. Write into an arrows stream
 NB. This should iterate over a list of recordbatches rather than a single recordbatch
 NB. Write with: garrow_output_stream_write_record_batch
 arrowFP =. '~/Downloads/example.arrows'
-writeRecordBatchStream arrowFP;0;(< {. > {.rbPtrs) NB. Only writes the first recordbatch for now.
+writeRecordBatchStream arrowFP;0;(< {.recordBatchPtrs) NB. Only writes the first recordbatch for now.
+
+
+NB. =========================================================
+NB. File IPC to recordbatch to table test
+
+arrowFP =. '~/Downloads/example_recordbatch.arrow' NB. works, created with garrow_record_batch_writer_write_record_batch
+readsTable recordBatchTable recordBatchFileReader arrowFP
+
+arrowFP =. '~/Downloads/example_table.arrow' NB. works, created with garrow_record_batch_writer_write_table
+readsTable recordBatchTable recordBatchFileReader arrowFP
+
+
+NB. Stream IPC to table tests
+y =. '~/Downloads/flights-200k.arrows'
+g_object_unref < fileInputStreamTable y
+g_object_unref < byteInputStreamTable (fread jpath y)
+(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
+(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
+
+y =. '~/Downloads/scrabble_games.arrows'
+g_object_unref < fileInputStreamTable y
+g_object_unref < byteInputStreamTable (fread jpath y)
+(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
+(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
+
+y =. '~/Downloads/example.arrows' 
+g_object_unref < fileInputStreamTable y
+g_object_unref < byteInputStreamTable (fread jpath y)
+(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
+(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
+
+readsTable tp =. byteInputStreamTable (fread jpath y)
+ret g_object_unref < tp
+
 
 NB. * * u * * g_input_stream_read_bytes (GInputStream *stream,gsize count,GCancellable *cancellable, GError **error);GBytes *
 NB. * * g_input_stream_clear_pending (GInputStream *stream);void
 
 
-NB. =========================================================
-NB. Readers
 
-arrowFP =. '~/Downloads/example_recordbatch.arrow' NB. works, created with garrow_record_batch_writer_write_record_batch
-recordBatchFileReader arrowFP
-
-arrowFP =. '~/Downloads/example_table.arrow' NB. works, created with garrow_record_batch_writer_write_table
-recordBatchFileReader arrowFP
-
-
-
-
-NB. This works, read with garrow_record_batch_stream_reader_new
-arrowFP =. '~/Downloads/flights-200k.arrows'
-recordBatchStreamReader arrowFP
-$ each  readTable  tableStreamReader arrowFP
-
-arrowFP =. '~/Downloads/example.arrows' 
-recordBatchStreamReader arrowFP
-$ each  readTable tableStreamReader arrowFP
-
-arrowFP =. '~/Downloads/scrabble_games.arrows'
-recordBatchStreamReader arrowFP
-$ each  readTable  tableStreamReader arrowFP 
 
 

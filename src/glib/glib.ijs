@@ -5,6 +5,7 @@ NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
 * & i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
+* & i	g_bytes_new_static	(gconstpointer data, gsize size);	GBytes*
 i *	g_bytes_get_size	(GBytes* bytes);	gsize
 * * *	g_bytes_get_data	(GBytes* bytes, gsize* size); gconstpointer
 * * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size); gpointer
