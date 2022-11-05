@@ -34,17 +34,6 @@ NB. 2) The writers for IPC-format files without footers, suitable for streaming.
 	NB. is that the input source must have a seek method for random access. 
 
 
-NB. Goal to formalize:
-NB. arrow::read_ipc_stream()
-NB. arrow::read_feather()
-NB. arrow::read_parquet()
-NB. arrow::read_csv_arrow()
-NB. arrow::read_json_arrow()
-NB. arrow::read_delim_arrow()
-NB. arrow::read_schema()
-NB. arrow::read_message()
-NB. arrow::read_tsv_arrow()
-
 NB. Event-driven API
 NB. https://arrow.apache.org/docs/cpp/api/ipc.html#event-driven-api
 NB. listener StreamDecoder
@@ -66,6 +55,11 @@ bytePtr =. mema ] byteCount =. # y
 y memw bytePtr,0,byteCount,2
 gBtyesPtr =. ptr g_bytes_new_static (<bytePtr);byteCount
 gBtyesPtr
+}}
+
+newResizableBuffer =: {{
+e=. < mema 4
+ptr garrow_resizable_buffer_new 1;<e
 }}
 
 newSchema=: {{
@@ -187,20 +181,16 @@ NB. =========================================================
 NB. Output streams
 NB. =========================================================
 
-newResizableBuffer =: {{
-e=. < mema 4
-ptr garrow_resizable_buffer_new 1;<e
-}}
-
-newBufferOutpuStream =:{{
-ptr garrow_buffer_output_stream_new < newResizableBuffer''
-}}
 
 fileOutpuStream=:{{
 'filepath appendboolean' =. y
 fnPtr =. setString jpath filepath
 e=. < mema 4
 ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
+}}
+
+bufferOutpuStream =:{{
+ptr garrow_buffer_output_stream_new < newResizableBuffer''
 }}
 
 newCompressedOutpuStream =:{{
@@ -221,19 +211,20 @@ NB. IPC WRITER CLASSES
 NB. =========================================================
 
 writeRecordBatchStream =. {{
-NB. IPC stream format is  optionally footer-terminated and does not contain ARROW1 magic numbers at beginning and end.
-'filepath appendboolean recordBatchPtr' =. y
+NB. IPC stream format is  optionally footer-terminated and
+NB. it does not contain ARROW1 magic numbers at beginning and end.
+'filepath appendboolean recordBatchPtrs' =. y
 fileOutputStreamPtr =. fileOutpuStream filepath;appendboolean
-NB. e1=. < mema 4
-NB. ret garrow_output_stream_align fileOutputStreamPtr;64;<e1
+e1=. < mema 4
+ret garrow_output_stream_align fileOutputStreamPtr;64;<e1
 writeOptionsPtr =. makeWriteOptions ''
 e2=. < mema 4
-schemaPtr =. ptr garrow_record_batch_get_schema <recordBatchPtr
+schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
 recordBatchStreamWriterPtr =. ptr garrow_record_batch_stream_writer_new fileOutputStreamPtr;schemaPtr;<e2
-NB. Then you could do the thing below and then close the writer, or use the garrow_record_batch_writer_write_record_batch on the writer.
 e3=. < mema 4
+for_recordBatchPtr. recordBatchPtrs do.
 garrow_record_batch_writer_write_record_batch recordBatchStreamWriterPtr;recordBatchPtr;<e3
-NB. echo ret garrow_output_stream_write_record_batch fileOutputStreamPtr;recordBatchPtr;writeOptionsPtr;<e3
+end.
 1
 }}
 
@@ -246,21 +237,19 @@ recordbatchFilestreamWriterPtr
 
 
 writeRecordBatchFile =. {{
-'filepath appendboolean recordBatchPtr' =. y
+'filepath appendboolean recordBatchPtrs' =. y
 NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
 fileOutputStreamPtr =. fileOutpuStream filepath;appendboolean
 e=. < mema 4
 ret garrow_output_stream_align fileOutputStreamPtr;64;<e
 writeOptionsPtr =. (makeWriteOptions '')
 e1=. < mema 4
-schemaPtr =. ptr garrow_record_batch_get_schema <recordBatchPtr
-NB. recordFileStreamWriterPtr =. ptr garrow_record_batch_file_writer_new fileOutputStreamPtr;schemaPtr;<e1 NB. Doesn't write anything yet.
+schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
 recordbatchFilestreamWriterPtr =.  recordBatchFileWriter fileOutputStreamPtr;<schemaPtr
-NB. Then you could do the thing below and then close the writer, or use the garrow_record_batch_writer_write_record_batch on the writer.
 e3=. < mema 4
+for_recordBatchPtr. recordBatchPtrs do.
 garrow_record_batch_writer_write_record_batch recordbatchFilestreamWriterPtr;recordBatchPtr;<e3
-NB. echo ret garrow_output_stream_write_record_batch fileOutputStreamPtr;recordBatchPtr;writeOptionsPtr;<e3
-NB. Close writes the terminating footer.
+end.
 e4=. < mema 4
 success =. ret garrow_record_batch_writer_close recordbatchFilestreamWriterPtr;< e4
 success
@@ -303,8 +292,6 @@ e2=. < mema 4
 rbreaderPtr =. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e2
 'Not a valid recordbatchReader.' assert * >  rbreaderPtr
 NB. schemaPtr =. ptr garrow_record_batch_file_reader_get_schema <rbreaderPtr
-NB. echo '[+] Schema: '
-NB. echo getSchemaFields schemaPtr
 recordBatchCount =. ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
 NB. echo '[+] Recordbatch count: ', ":ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
 NB. e3=. < mema 4
@@ -326,15 +313,12 @@ e2=. < mema 4
 streamReaderPtr =. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e2
 'Not a valid streamReader.' assert * >  streamReaderPtr
 schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
-NB. echo getSchemaFields schemaPtr
 readOptionsPtr =. makeReadOptions''
 'Not a valid table.' assert * > schemaPtr
 e4=. < mema 4
 recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e4
-NB. getString ptr garrow_record_batch_to_string recordBatchPtr;<e
 recordBatchPtr
 }}
-
 
 fileInputStreamTable =: {{
 NB. read input stream directly from file.
@@ -366,7 +350,6 @@ memf  > bytePtr
 tablePtr
 }}
 
-
 recordBatchTable =:{{
 recordBatches =. y
 schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatches
@@ -378,8 +361,11 @@ memf > e
 tablePtr
 }}
 
+removeObject =: -.@ret@g_object_unref@<
 
-
+readArrowTable =. readIPCTable =. recordBatchTable@recordBatchFileReader
+readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable
+readArrowsTable =. readIPCByteStreamTable =. byteInputStreamTable
 
 
 NB. =========================================================
@@ -393,11 +379,12 @@ flightInfoPtrs =. getClientFlightInfo clientPtr; ''   NB. This could be filtered
 flightInfo flightInfoPtrs
 endpointPtrs =. <@getEndpoints flightInfoPtrs
 
-NB. Select  first info and first endpoint for that info.
+NB. Select  first flightInfo (e.g. ticket) and first endpoint for that flightInfo. These methaphors are painful.
 endpointPtr =. 0 { 0{:: endpointPtrs
 
 NB. Get table pointers:
 tblPtr1 =. flightStreamReadAllTable endPointsFlightstreamReader clientPtr;<endpointPtr
+readsTable tblPtr1 
 
 NB. Get recordbatch  pointers:
 recordBatchPtrs =. flightStreamRecordBatch endPointsFlightstreamReader clientPtr;<endpointPtr
@@ -410,14 +397,13 @@ writeTableFile  arrowFP;0;< tblPtr1
 NB. Write into an arrow file
 NB. Write with: garrow_record_batch_writer_write_record_batch
 arrowFP =. '~/Downloads/example_recordbatch.arrow'
-writeRecordBatchFile arrowFP;0;(<  {.recordBatchPtrs) NB. Only writes the first recordbatch for now.
+writeRecordBatchFile arrowFP;0;(< recordBatchPtrs) NB. Only writes the first recordbatch for now.
 
 NB. Write into an arrows stream
 NB. This should iterate over a list of recordbatches rather than a single recordbatch
 NB. Write with: garrow_output_stream_write_record_batch
 arrowFP =. '~/Downloads/example.arrows'
-writeRecordBatchStream arrowFP;0;(< {.recordBatchPtrs) NB. Only writes the first recordbatch for now.
-
+writeRecordBatchStream arrowFP;0;(<recordBatchPtrs)
 
 NB. =========================================================
 NB. File IPC to recordbatch to table test
@@ -429,28 +415,52 @@ arrowFP =. '~/Downloads/example_table.arrow' NB. works, created with garrow_reco
 readsTable recordBatchTable recordBatchFileReader arrowFP
 
 
+load'web/gethttp'
+filename =. (jpath '~/Downloads/airports.csv')
+filename fwrite~ ('ID,Name,City,Country,IATA,ICAO,Latitude,Longitude,Altitude,Timezone,DST,TZ,Type,Source',LF)
+filename fappend~ (gethttp 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat')
+readsCSVTable fn
+
+tp =. byteInputStreamTable gethttp 'https://cdn.jsdelivr.net/npm/superstore-arrow/superstore.arrow'
+printSchema tp 
+removeObject tp
+
+filename =. '~/Downloads/flights-200k.arrows' NB. This is a typo on Vega's end, it's an 'arrows' file, not an arrow file.
+filename fwrite~ gethttp  'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/flights-200k.arrow'
+tp =. fileInputStreamTable filename
+printTableSchema tp
+readTableSchema tp
+readsTable tp
+removeObject tp
+
+NB. Check no memory leaks:
 NB. Stream IPC to table tests
+
 y =. '~/Downloads/flights-200k.arrows'
-g_object_unref < fileInputStreamTable y
-g_object_unref < byteInputStreamTable (fread jpath y)
-(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
-(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
+$ each readsTable tp =. fileInputStreamTable y
+removeObject tp
+$ each readsTable tp =. byteInputStreamTable (fread jpath y)
+removeObject tp
+(1e3) 6!:2  'removeObject fileInputStreamTable y'
+(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
+
 
 y =. '~/Downloads/scrabble_games.arrows'
-g_object_unref < fileInputStreamTable y
-g_object_unref < byteInputStreamTable (fread jpath y)
-(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
-(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
+$ each readsTable tp =. fileInputStreamTable y
+removeObject tp
+$ each readsTable tp =. byteInputStreamTable (fread jpath y)
+removeObject tp
+(1e3) 6!:2  'removeObject fileInputStreamTable y'
+(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
+
 
 y =. '~/Downloads/example.arrows' 
-g_object_unref < fileInputStreamTable y
-g_object_unref < byteInputStreamTable (fread jpath y)
-(1e3) 6!:2  'g_object_unref < fileInputStreamTable y'
-(1e3) 6!:2  'g_object_unref < byteInputStreamTable (fread jpath y)'
-
-readsTable tp =. byteInputStreamTable (fread jpath y)
-ret g_object_unref < tp
-
+$ each readsTable tp =. fileInputStreamTable y
+removeObject tp
+$ each readsTable tp =. byteInputStreamTable (fread jpath y) NB. This generates an index error because dat is empty. Why?
+removeObject tp
+(1e3) 6!:2  'removeObject fileInputStreamTable y'
+(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
 
 NB. * * u * * g_input_stream_read_bytes (GInputStream *stream,gsize count,GCancellable *cancellable, GError **error);GBytes *
 NB. * * g_input_stream_clear_pending (GInputStream *stream);void

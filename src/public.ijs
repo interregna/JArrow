@@ -2,6 +2,11 @@ NB. ====================
 NB. Expose public interface in z locale
 
 transfers=. 0 : 0
+printTableSchema
+readTableNames
+readTableSchema
+readTableColName
+
 readParquetSchema
 printParquetSchema
 readParquetData
@@ -45,4 +50,4 @@ readFeatherCol
 
 localemover =. ((,&'_parrow_')@[  (],(' =: '&,)@[)   (,&'_z_')@])
 move =. (".@localemover@deb each)@(LF&cut) 
-move transfers
+1 [ move transfers
