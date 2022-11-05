@@ -25,14 +25,34 @@ Uses C API.
 │6       │ 32.5     │6       │6        │6      │ 32     │ 40    │ 32    │ 82     │162     │ 32     │ 187.5    │ 182.5    │ 32        │ 32         │ 32.5    │data.    │0      │947203200000000│
 │7       │21.25     │7       │7        │7      │ 21     │ 30    │ 21    │ 46     │106     │ 21     │118.75    │ 96.25    │ 21        │ 21         │21.25    │         │0      │947289600000000│
 └────────┴──────────┴────────┴─────────┴───────┴────────┴───────┴───────┴────────┴────────┴────────┴──────────┴──────────┴───────────┴────────────┴─────────┴─────────┴───────┴───────────────┘
-   
    readCSVTable '~addons/data/arrow/test/test1.csv'
 ┌──┬───────────────────────────...
 │ID│1 2 3 4 5 8 10 11 12 14 15 ...
 ├──┼───────────────────────────...
 │y │100.669 100.669 100.669 100...
 └──┴───────────────────────────...
-
+  readsJsonTable'~Jaddons/data/arrow/test/test1.json'
+┌───────┬──────────┐
+│name   │date      │
+├───────┼──────────┤
+│Gilbert│12-13-2014│
+│Alexa  │09-04-1983│
+│May    │01-01-1924│
+│Deloise│04-25-1894│
+└───────┴──────────┘
+   readsFeatherTable '~addons/data/arrow/test/test1.feather'
+┌────┬───┬──────┐
+│team│pos│points│
+├────┼───┼──────┤
+│A   │G  │17    │
+│A   │F  │17    │
+│B   │G  │15    │
+│B   │F  │ 5    │
+│C   │G  │11    │
+│C   │F  │10    │
+│D   │G  │ 5    │
+│D   │F  │14    │
+└────┴───┴──────┘
 ```
 `(6!:16)` and `(6!:17)` can be used to convert Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
 `fromdate32` can be used to convert Arrow date32 types to YYYY M D tuples.
@@ -66,20 +86,26 @@ Examples:
 see `test/test1.ijs`
 
 ##### TODO
-* [ ] NULL and list handling
+
 * [ ] Tensors
 * [ ] Error catching for empty pointers, missing files, and general errors.
-* [ ] IPC fixed length
-* [ ] IPC streaming
-* [ ] Read web-based parquet, arrow, and IPC
-* [ ] Dictionary-encoded arrays
-* [ ] Document functions (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
-* [x] JSONL reader demo
-* [x] readArray full length (50x read speedup)
-* [x] Finish shims for array reading
-* [x] CSV reader demo
-* [x] Flight client
+* [ ] Dereference / cleanup gobjects and allocated memory
+* [ ] Additional data types
+	- Dictionaries (need to store lookup tables)
+	- Lists
+	- Maps
+* [ ] Documentation (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
+* [x] CSV reader
+* [x] JSONL reader
+* [x] Arrow Feather (IPC v1) reader
+* [~] IPC files (".arrow" files)
+* [~] IPC streams (".arrows" files when stored on disk)
 * [ ] Flight server
+* [~] Flight client 
+* [ ] Non-local filesystems (S3)
+* [ ] IPC streaming with event-driven calls
+
+
 
 
 ##### Notes

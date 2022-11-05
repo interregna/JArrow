@@ -26,13 +26,21 @@ readsCSVTable
 readCSVDataframe
 readCSVCol
 
-readJsonlSchema
-printJsonlSchema
-readJsonlData
-readJsonlTable
-readsJsonlTable
-readJsonlDataframe
-readJsonlCol
+readJsonSchema
+printJsonSchema
+readJsonData
+readJsonTable
+readsJsonTable
+readJsonDataframe
+readJsonCol
+
+readFeatherSchema
+printFeatherSchema
+readFeatherData
+readFeatherTable
+readsFeatherTable
+readFeatherDataframe
+readFeatherCol
 )
 
 localemover =. ((,&'_parrow_')@[  (],(' =: '&,)@[)   (,&'_z_')@])

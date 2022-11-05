@@ -1799,7 +1799,7 @@ readCSVCol=: (readCSV readFileCol)
 NB. =========================================================
 NB. JSON lines format
 NB. =========================================================
-readJsonl=: {{
+readJson=: {{
 'filepath'=. y
 'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
 filenamePtr=. setString (jpath filepath)
@@ -1813,13 +1813,13 @@ tablePtr=. ptr garrow_json_reader_read csvReaderPtr;<e
 tablePtr
 }}
 
-readJsonlSchema=: (readJsonl readFileSchema)
-printJsonlSchema=: (readJsonl printFileSchema)
-readJsonlData=: (readJsonl readFileData)
-readJsonlTable=: (readJsonl readFileTable)
-readsJsonlTable=: (readJsonl readsFileTable)
-readJsonlDataframe=: (readJsonl readFileDataframe)
-readJsonlCol=: (readJsonl readFileCol)
+readJsonSchema=: (readJson readFileSchema)
+printJsonSchema=: (readJson printFileSchema)
+readJsonData=: (readJson readFileData)
+readJsonTable=: (readJson readFileTable)
+readsJsonTable=: (readJson readsFileTable)
+readJsonDataframe=: (readJson readFileDataframe)
+readJsonCol=: (readJson readFileCol)
 
 
 NB. =========================================================
@@ -1924,13 +1924,21 @@ readsCSVTable
 readCSVDataframe
 readCSVCol
 
-readJsonlSchema
-printJsonlSchema
-readJsonlData
-readJsonlTable
-readsJsonlTable
-readJsonlDataframe
-readJsonlCol
+readJsonSchema
+printJsonSchema
+readJsonData
+readJsonTable
+readsJsonTable
+readJsonDataframe
+readJsonCol
+
+readFeatherSchema
+printFeatherSchema
+readFeatherData
+readFeatherTable
+readsFeatherTable
+readFeatherDataframe
+readFeatherCol
 )
 
 localemover =. ((,&'_parrow_')@[  (],(' =: '&,)@[)   (,&'_z_')@])

@@ -1,4 +1,4 @@
-CAPTION=: 'Apache Arrow API for J'
+CAPTION=: 'Apache Arrow for J'
 
 DESCRIPTION=: 0 : 0
 Apache Arrow API
@@ -14,7 +14,7 @@ https://arrow.apache.org/docs/c_glib/parquet-glib/
 
 VERSION=: '10.0.0'
 
-RELEASE=:'j904'
+RELEASE=:'j903'
 
 FOLDER=: 'data/arrow'
 
