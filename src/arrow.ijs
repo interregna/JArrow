@@ -1,6 +1,7 @@
 9!:5 (1) NB. Enable nameref caching.
 init ''
 
+removeObject =: -.@ret@g_object_unref@<
 
 NB. =========================================================
 NB. Array
@@ -68,8 +69,9 @@ NB.   end.
 result
 }}
 
-readArray2=: {{
+readSubArray=: {{
 NB. Use this only for reading parts of arrays.
+NB. Currently iterates through everything...
 'arrayPt'=. y
 indexType=. readArrayTypeIndex arrayPt
 arrayType=. readArrayType arrayPt
@@ -225,22 +227,22 @@ chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
 
 readCol=: {{
 'tablePt colIndex'=. y
-((<@readTableSchemaCol),.readDataCol) (< tablePt),< colIndex
+((<@readTableColName),.readDataCol) (< tablePt),< colIndex
 }}
 
 readTable=: {{
 'tablePt'=. y
-(readTableSchema ,. ,@readData) tablePt
+(readTableNames ,. ,@readData) tablePt
 }}
 
 readsTable=: {{
 'tablePt'=. y
-(,@readTableSchema ,: ,@((,.&.>)@:readData)) tablePt
+(,@readTableNames ,: ,@((,.&.>)@:readData)) tablePt
 }}
 
 readDataframe=: {{
 'tablePt'=. y
-((,@readTableSchema),: ,@readData) tablePt
+((,@readTableNames),: ,@readData) tablePt
 }}
 
 NB. =========================================================
@@ -753,12 +755,12 @@ memf > e
 tablePtr
 }}
 
-removeObject =: -.@ret@g_object_unref@<
-
+NB. IPC format for saved files (.arrow file)
 readArrowTable =. readIPCTable =. recordBatchTable@recordBatchFileReader
-readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable
-readArrowsTable =. readIPCByteStreamTable =. byteInputStreamTable
-
+NB. IPC format for streaming, but from a file on disk (.arrows file)
+readFileBufferTable =. readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable 
+NB. IPC format for streaming read bytes into a buffer
+readBufferTable =. readIPCByteStreamTable =. byteInputStreamTable
 
 
 

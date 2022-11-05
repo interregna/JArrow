@@ -7,6 +7,10 @@ readTableNames
 readTableSchema
 readTableColName
 
+readArrowTable
+readFileBufferTable
+readBufferTable
+
 readParquetSchema
 printParquetSchema
 readParquetData
