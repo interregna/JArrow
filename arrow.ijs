@@ -1031,8 +1031,11 @@ NB.
 NB. =========================================================
 
 gLibBindings =: lib 0 : 0 
+* i	g_malloc	(gsize n_bytes); 	pointer
+n *	g_free	(gpointer mem) void
 * & i	g_bytes_new	(gconstpointer data,  gsize size);	GBytes*
 * & i	g_bytes_new_static	(gconstpointer data, gsize size);	GBytes*
+* & i	g_bytes_new_take	(gconstpointer data, gsize size);	GBytes*
 i *	g_bytes_get_size	(GBytes* bytes);	gsize
 * * *	g_bytes_get_data	(GBytes* bytes, gsize* size); gconstpointer
 * * *	g_bytes_unref_to_data	(GBytes* bytes, gsize* size); gpointer
@@ -1041,6 +1044,7 @@ n *	g_bytes_unref 	(GBytes* bytes); 	void
 n * * * *	g_object_get	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 n * * * *	g_object_set	(GObject* object, const gchar* first_property_name, *first_value, NULL); void
 n * 	g_object_unref	(GObject* object); void
+n *	g_clear_object	(GObject** object_ptr);	void
 *	g_list_alloc	(void) GList*
 * * *	g_list_append	(GList* list, gpointer data) GList*
 n * 	g_list_free	(GList* list) void
@@ -1610,7 +1614,8 @@ readChunks=: {{
 'chunkedArrayPt'=. y
 nChunks=. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
 arrayPts=. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-< ; readArray each arrayPts
+res =. < ; readArray each arrayPts
+res
 }}"0
 
 readChunkedArray=: {{
@@ -1639,13 +1644,16 @@ fieldPtr
 
 getFieldName=: {{
 'fieldPt'=. y
-getString ptr garrow_field_get_name < fieldPt
+fieldNamePtr =. ptr garrow_field_get_name < fieldPt
+res =. getString  fieldNamePtr
+res
 }}
 
 getFieldDataType=: {{
 'fieldPt'=. y
 dataTypePt=. ptr garrow_field_get_data_type < fieldPt
-getString ret garrow_data_type_get_name < dataTypePt
+res =. getString ret garrow_data_type_get_name < dataTypePt
+res
 }}
 
 NB. =========================================================
@@ -1720,7 +1728,9 @@ readData=: {{
 'tablePt'=. y
 ncols=. tableNCols tablePt
 chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
-,. > readChunkedArray each chunkedArrayPts
+res =. ,. > readChunkedArray each chunkedArrayPts
+removeObject each chunkedArrayPts
+res
 }}
 
 readDataInverted=: ,@:(,each)@readData
@@ -1730,7 +1740,9 @@ readDataCol=: {{
 ncols=. tableNCols tablePt
 'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
 chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-,. ; each readChunkedArray each chunkedArrayPts
+results =. ,. ; each readChunkedArray each chunkedArrayPts
+removeObject each chunkedArrayPts
+results
 }}
 
 readCol=: {{
@@ -1756,8 +1768,8 @@ readDataframe=: {{
 NB. =========================================================
 NB. Format readers
 NB. =========================================================
-readFileSchema=: {{ readTableSchemaTypes@u ] filepath=. y }}
-printFileSchema=: {{ neatPrintSchema@u ] filepath=. y }}
+readFileSchema=: {{ readTableSchema@u ] filepath=. y }}
+printFileSchema=: {{ printSchema@u ] filepath=. y }}
 readFileData=: {{ readData@u ] filepath=. y }}
 readFileTable=: {{ readTable@u ] filepath=. y }}
 readsFileTable=: {{ readsTable@u ] filepath=. y }}

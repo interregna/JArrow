@@ -102,7 +102,8 @@ readChunks=: {{
 'chunkedArrayPt'=. y
 nChunks=. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
 arrayPts=. readChunk each <"1 (<chunkedArrayPt),.(<"0 i. nChunks)
-< ; readArray each arrayPts
+res =. < ; readArray each arrayPts
+res
 }}"0
 
 readChunkedArray=: {{
@@ -131,13 +132,16 @@ fieldPtr
 
 getFieldName=: {{
 'fieldPt'=. y
-getString ptr garrow_field_get_name < fieldPt
+fieldNamePtr =. ptr garrow_field_get_name < fieldPt
+res =. getString  fieldNamePtr
+res
 }}
 
 getFieldDataType=: {{
 'fieldPt'=. y
 dataTypePt=. ptr garrow_field_get_data_type < fieldPt
-getString ret garrow_data_type_get_name < dataTypePt
+res =. getString ret garrow_data_type_get_name < dataTypePt
+res
 }}
 
 NB. =========================================================
@@ -212,7 +216,9 @@ readData=: {{
 'tablePt'=. y
 ncols=. tableNCols tablePt
 chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data tablePt ;"0 i. ncols
-,. > readChunkedArray each chunkedArrayPts
+res =. ,. > readChunkedArray each chunkedArrayPts
+removeObject each chunkedArrayPts
+res
 }}
 
 readDataInverted=: ,@:(,each)@readData
@@ -222,7 +228,9 @@ readDataCol=: {{
 ncols=. tableNCols tablePt
 'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
 chunkedArrayPts=. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
-,. ; each readChunkedArray each chunkedArrayPts
+results =. ,. ; each readChunkedArray each chunkedArrayPts
+removeObject each chunkedArrayPts
+results
 }}
 
 readCol=: {{
@@ -248,8 +256,8 @@ readDataframe=: {{
 NB. =========================================================
 NB. Format readers
 NB. =========================================================
-readFileSchema=: {{ readTableSchemaTypes@u ] filepath=. y }}
-printFileSchema=: {{ neatPrintSchema@u ] filepath=. y }}
+readFileSchema=: {{ readTableSchema@u ] filepath=. y }}
+printFileSchema=: {{ printSchema@u ] filepath=. y }}
 readFileData=: {{ readData@u ] filepath=. y }}
 readFileTable=: {{ readTable@u ] filepath=. y }}
 readsFileTable=: {{ readsTable@u ] filepath=. y }}

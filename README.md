@@ -31,6 +31,7 @@ Uses C API.
 ├──┼───────────────────────────...
 │y │100.669 100.669 100.669 100...
 └──┴───────────────────────────...
+  NB. Note this is json-line format, not json-format. See: https://jsonlines.org
   readsJsonTable'~Jaddons/data/arrow/test/test1.json'
 ┌───────┬──────────┐
 │name   │date      │
@@ -57,13 +58,22 @@ Uses C API.
 `(6!:16)` and `(6!:17)` can be used to convert Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
 `fromdate32` can be used to convert Arrow date32 types to YYYY M D tuples.
 
-## Installation
+## Installation and Loading
 Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
 
 From your J session:
 ```j
    install 'github:interregna/JArrow@main'
+   load 'data/arrow'
 ```
+
+##### Notes
+
+
+`readsTable` minimizes display time in the UI but uses more space
+
+`readTable`  minimizes space but can take more time to display
+
 
 ## Development
 1) In Jqt, set your path for JPackageDev
@@ -100,15 +110,7 @@ see `test/test1.ijs`
 * [x] Arrow Feather (IPC v1) reader
 * [~] IPC files (".arrow" files)
 * [~] IPC streams (".arrows" files when stored on disk)
-* [ ] Flight server
 * [~] Flight client 
+* [ ] Flight server
 * [ ] Non-local filesystems (S3)
 * [ ] IPC streaming with event-driven calls
-
-
-
-
-##### Notes
-
-`readsTable` minimizes display time in the UI but uses more space
-`readTable`  minimizes space but can take more time to display

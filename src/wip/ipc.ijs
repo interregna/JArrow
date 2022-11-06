@@ -51,9 +51,12 @@ listPtr
 }}
 
 setBytes =. {{
-bytePtr =. mema ] byteCount =. # y
+byteCount =. # y
+NB. bytePtr =. mema  byteCount
+bytePtr  =. > ptr g_malloc <byteCount 
 y memw bytePtr,0,byteCount,2
-gBtyesPtr =. ptr g_bytes_new_static (<bytePtr);byteCount
+NB. gBtyesPtr =. ptr g_bytes_new_static (<bytePtr);byteCount
+gBtyesPtr =. ptr g_bytes_new_take (<bytePtr);byteCount
 gBtyesPtr
 }}
 
@@ -116,8 +119,6 @@ bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
 bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr 
 e=. < mema 4
 garrow_input_stream_align bufferInputStreamPtr;64;<e
-ret g_object_unref <  bufferPtr
-memf > e
 bufferInputStreamPtr
 }}
 
@@ -303,6 +304,7 @@ recordBatchPtr
 }}
 
 recordBatchStreamReader =: {{
+NB. This will read and return one recordbatch out of a stream file.
 filepath =. y
 fileInputStreamPtr =. fileInputStream filepath
 'Not a vaild inputstream pointer.' assert * > fileInputStreamPtr
@@ -333,6 +335,7 @@ ret  g_object_unref < streamReaderPtr
 tablePtr
 }}
 
+
 byteInputStreamTable =.{{
 bytes =. y
 bufferInputStreamPtr =. bufferInputStream ] gBtyesPtr =. setBytes bytes
@@ -344,9 +347,7 @@ bufferPtr =. ptr garrow_buffer_input_stream_get_buffer < bufferInputStreamPtr
 ret g_object_unref < bufferPtr
 ret g_object_unref < streamReaderPtr
 ret g_object_unref < bufferInputStreamPtr
-bytePtr =. ptr g_bytes_get_data  gBtyesPtr;<<0
 g_bytes_unref < gBtyesPtr
-memf  > bytePtr 
 tablePtr
 }}
 
@@ -368,74 +369,17 @@ readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable
 readArrowsTable =. readIPCByteStreamTable =. byteInputStreamTable
 
 
-NB. =========================================================
-NB. Test writing with several methods:
-NB. =========================================================
-
-load jpath '~JPackageDev/jarrow/src/wip/flight.ijs'
-
-clientPtr =. createClient@connectLocation 'grpc+tcp://localhost:5005'
-flightInfoPtrs =. getClientFlightInfo clientPtr; ''   NB. This could be filtered with search criteria.
-flightInfo flightInfoPtrs
-endpointPtrs =. <@getEndpoints flightInfoPtrs
-
-NB. Select  first flightInfo (e.g. ticket) and first endpoint for that flightInfo. These methaphors are painful.
-endpointPtr =. 0 { 0{:: endpointPtrs
-
-NB. Get table pointers:
-tblPtr1 =. flightStreamReadAllTable endPointsFlightstreamReader clientPtr;<endpointPtr
-readsTable tblPtr1 
-
-NB. Get recordbatch  pointers:
-recordBatchPtrs =. flightStreamRecordBatch endPointsFlightstreamReader clientPtr;<endpointPtr
-
-NB. Write into an arrow file
-NB. Write with: garrow_record_batch_writer_write_table
-arrowFP =. '~/Downloads/example_table.arrow'
-writeTableFile  arrowFP;0;< tblPtr1
-
-NB. Write into an arrow file
-NB. Write with: garrow_record_batch_writer_write_record_batch
-arrowFP =. '~/Downloads/example_recordbatch.arrow'
-writeRecordBatchFile arrowFP;0;(< recordBatchPtrs) NB. Only writes the first recordbatch for now.
-
-NB. Write into an arrows stream
-NB. This should iterate over a list of recordbatches rather than a single recordbatch
-NB. Write with: garrow_output_stream_write_record_batch
-arrowFP =. '~/Downloads/example.arrows'
-writeRecordBatchStream arrowFP;0;(<recordBatchPtrs)
-
-NB. =========================================================
-NB. File IPC to recordbatch to table test
-
-arrowFP =. '~/Downloads/example_recordbatch.arrow' NB. works, created with garrow_record_batch_writer_write_record_batch
-readsTable recordBatchTable recordBatchFileReader arrowFP
-
-arrowFP =. '~/Downloads/example_table.arrow' NB. works, created with garrow_record_batch_writer_write_table
-readsTable recordBatchTable recordBatchFileReader arrowFP
-
-
-load'web/gethttp'
-filename =. (jpath '~/Downloads/airports.csv')
-filename fwrite~ ('ID,Name,City,Country,IATA,ICAO,Latitude,Longitude,Altitude,Timezone,DST,TZ,Type,Source',LF)
-filename fappend~ (gethttp 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat')
-readsCSVTable fn
-
-tp =. byteInputStreamTable gethttp 'https://cdn.jsdelivr.net/npm/superstore-arrow/superstore.arrow'
-printSchema tp 
-removeObject tp
-
-filename =. '~/Downloads/flights-200k.arrows' NB. This is a typo on Vega's end, it's an 'arrows' file, not an arrow file.
-filename fwrite~ gethttp  'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/flights-200k.arrow'
-tp =. fileInputStreamTable filename
-printTableSchema tp
-readTableSchema tp
-readsTable tp
-removeObject tp
-
 NB. Check no memory leaks:
-NB. Stream IPC to table tests
 
+y =. '~/Downloads/example.arrows' 
+$ each readsTable tp =. fileInputStreamTable y
+removeObject tp
+$ each readsTable tp =. byteInputStreamTable (fread jpath y) NB. This fails nondeterministically.
+removeObject tp
+(1e3) 6!:2  'removeObject fileInputStreamTable y'
+(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)' NB. This fails nondeterministically.
+
+NB. Stream IPC to table tests
 y =. '~/Downloads/flights-200k.arrows'
 $ each readsTable tp =. fileInputStreamTable y
 removeObject tp
@@ -454,18 +398,81 @@ removeObject tp
 (1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
 
 
-y =. '~/Downloads/example.arrows' 
-$ each readsTable tp =. fileInputStreamTable y
+
+
+
+NB. =========================================================
+NB. Test writing with several methods:
+NB. =========================================================
+
+clientPtr =. createClient@connectLocation 'grpc+tcp://localhost:5005'
+flightInfoPtrs =. getClientFlightInfo clientPtr; ''   NB. This could be filtered with search criteria.
+flightInfo flightInfoPtrs
+endpointPtrs =. <@getEndpoints flightInfoPtrs
+
+NB. Select  first flightInfo (e.g. ticket) and first endpoint for that flightInfo. These methaphors are painful.
+endpointPtr =. 0 { 0{:: endpointPtrs
+
+NB. Get table pointers:
+tblPtr1 =. flightStreamReadAllTable endPointsFlightstreamReader clientPtr;<endpointPtr
+$ each readsTable tblPtr1 
+
+NB. Get recordbatch  pointers:
+recordBatchPtrs =. flightStreamRecordBatch endPointsFlightstreamReader clientPtr;<endpointPtr
+# recordBatchPtrs 
+
+NB. Write into an arrow file
+NB. Write with: garrow_record_batch_writer_write_table
+arrowFP =. '~/Downloads/example_table.arrow'
+writeTableFile  arrowFP;0;< tblPtr1
+
+NB. Write into an arrow file
+NB. Write with: garrow_record_batch_writer_write_record_batch
+arrowFP =. '~/Downloads/example_recordbatch.arrow'
+writeRecordBatchFile arrowFP;0;(< recordBatchPtrs) NB. Only writes the first recordbatch for now.
+
+NB. Write into an arrows stream
+NB. Write with: garrow_output_stream_write_record_batch
+arrowFP =. '~/Downloads/example.arrows'
+writeRecordBatchStream arrowFP;0;(<recordBatchPtrs)
+
+
+NB. =========================================================
+NB. File IPC to recordbatch to table test
+
+arrowFP =. '~/Downloads/example_recordbatch.arrow' NB. works, created with garrow_record_batch_writer_write_record_batch
+$ each readsTable recordBatchTable recordBatchFileReader arrowFP
+
+arrowFP =. '~/Downloads/example_table.arrow' NB. works, created with garrow_record_batch_writer_write_table
+$ each readsTable recordBatchTable recordBatchFileReader arrowFP
+
+load'web/gethttp'
+source =. 'https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat'
+filename =. jpath '~/Downloads/airports.csv'
+filename fwrite~ 'ID,Name,City,Country,IATA,ICAO,Latitude,Longitude,Altitude,Timezone,DST,TZ,Type,Source',LF
+filename fappend~ gethttp source
+readsCSVTable fn
+
+filename =. jpath '~/Downloads/barley.json'
+filename fwrite~ (('},',LF);('}',LF))&(rplc~) }:@}. gethttp quote 'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/barley.json' NB. Make this into a json-line file.
+readsTable readJson filename
+
+source =. 'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/flights-200k.arrow'
+filename =. '~/Downloads/flights-200k.arrows' NB. This is a typo on Vega's end, it's an 'arrows' file, not an arrow file.
+filename fwrite~ gethttp  source
+tp =. fileInputStreamTable filename
+printTableSchema tp
+readTableSchema tp
+readsTable tp
 removeObject tp
-$ each readsTable tp =. byteInputStreamTable (fread jpath y) NB. This generates an index error because dat is empty. Why?
+
+source =. 'https://cdn.jsdelivr.net/npm/superstore-arrow/superstore.arrow'
+tp =. byteInputStreamTable gethttp source
+printTableSchema tp 
 removeObject tp
-(1e3) 6!:2  'removeObject fileInputStreamTable y'
-(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
+
+
+
 
 NB. * * u * * g_input_stream_read_bytes (GInputStream *stream,gsize count,GCancellable *cancellable, GError **error);GBytes *
 NB. * * g_input_stream_clear_pending (GInputStream *stream);void
-
-
-
-
-
