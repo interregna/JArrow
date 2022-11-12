@@ -177,7 +177,9 @@ nFields=. ret garrow_schema_n_fields < schemaPt
 fieldPts=. getSchemaFieldPt each <"1 (<schemaPt),.<"0 i. nFields
 types=. getFieldDataType each fieldPts
 names=. getFieldName each fieldPts
-names,:types
+res =. names,:types
+removeObject each fieldPts
+res
 }}
 
 printBasicSchema=: {{
@@ -197,7 +199,9 @@ getSchemaNames schemaPt
 readTableSchema=: {{
 tablePt=. y
 schemaPt=. getSchemaPt tablePt
-getSchemaFields schemaPt
+res =. getSchemaFields schemaPt
+removeObject schemaPt
+res
 }}
 
 readTableColName=: {{
@@ -735,40 +739,41 @@ ret  g_object_unref < streamReaderPtr
 tablePtr
 }}
 
-byteInputStreamTable =.{{
+
+byteInputStream =.{{
 bytes =. y
-bufferInputStreamPtr =. bufferInputStream ] gBtyesPtr =. setBytes bytes
+byteCount =. # bytes 
+bytePtr  =. > ptr g_malloc <byteCount  NB. N
+bytes  memw bytePtr,0,byteCount,2 NB. Y
+gBtyesPtr =. ptr g_bytes_new_take (<bytePtr);byteCount
+bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
+'Not a vaild buffer pointer.' assert * > bufferPtr
+g_bytes_unref < gBtyesPtr NB. Must use bytes unref, not object unref. Object unref will cause segfault.
+bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr
+'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
+removeObject bufferPtr
+e=. < mema 4
+garrow_input_stream_align bufferInputStreamPtr;64;<e
+memf > e
+bufferInputStreamPtr
+}}
+
+recordBatchStreamReaderTable =. {{
+bufferInputStreamPtr =. y
+'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
 e =. < mema 4
 streamReaderPtr =. ptr garrow_record_batch_stream_reader_new bufferInputStreamPtr;<e
-tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
+'Not a vaild stream reader pointer.' assert * > streamReaderPtr
+tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e NB. N
+'Not a vaild table pointer.' assert * > tablePtr
 memf > e
-bufferPtr =. ptr garrow_buffer_input_stream_get_buffer < bufferInputStreamPtr
-ret g_object_unref < bufferPtr
-ret g_object_unref < streamReaderPtr
-ret g_object_unref < bufferInputStreamPtr
-bytePtr =. ptr g_bytes_get_data  gBtyesPtr;<<0
-g_bytes_unref < gBtyesPtr
-memf  > bytePtr 
+removeObject streamReaderPtr
 tablePtr
 }}
 
-recordBatchTable =:{{
-recordBatches =. y
-schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatches
-recordBatchArrayPointer  =. setInts > recordBatches
-countRecordBatches =. # recordBatches
-e=. < mema 4
-tablePtr =. ptr garrow_table_new_record_batches schemaPtr;recordBatchArrayPointer;countRecordBatches;<e
-memf > e
-tablePtr
-}}
 
 NB. IPC format for saved files (.arrow file)
 readArrowTable =. readIPCTable =. recordBatchTable@recordBatchFileReader
 NB. IPC format for streaming, but from a file on disk (.arrows file)
-readFileBufferTable =. readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable 
-NB. IPC format for streaming read bytes into a buffer
-readBufferTable =. readIPCByteStreamTable =. byteInputStreamTable
-
-
+readFileBufferTable =. readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable
 

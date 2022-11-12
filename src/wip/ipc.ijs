@@ -119,9 +119,9 @@ bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
 bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr 
 e=. < mema 4
 garrow_input_stream_align bufferInputStreamPtr;64;<e
+NB. ret g_object_unref < bufferPtr NB. Unrefing the buffer here allows mem overwrites, non-deterministically fails.
 bufferInputStreamPtr
 }}
-
 
 memmoryMappedFileInputStream =. {{
 filepath =. y
@@ -330,24 +330,8 @@ e =. < mema 4
 streamReaderPtr =. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
 tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
 memf > e
-ret  g_object_unref < inputStreamPtr
-ret  g_object_unref < streamReaderPtr
-tablePtr
-}}
-
-
-byteInputStreamTable =.{{
-bytes =. y
-bufferInputStreamPtr =. bufferInputStream ] gBtyesPtr =. setBytes bytes
-e =. < mema 4
-streamReaderPtr =. ptr garrow_record_batch_stream_reader_new bufferInputStreamPtr;<e
-tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
-memf > e
-bufferPtr =. ptr garrow_buffer_input_stream_get_buffer < bufferInputStreamPtr
-ret g_object_unref < bufferPtr
-ret g_object_unref < streamReaderPtr
-ret g_object_unref < bufferInputStreamPtr
-g_bytes_unref < gBtyesPtr
+removeObject inputStreamPtr
+removeObject streamReaderPtr
 tablePtr
 }}
 
@@ -362,22 +346,57 @@ memf > e
 tablePtr
 }}
 
-removeObject =: -.@ret@g_object_unref@<
+byteInputStream =.{{
+bytes =. y
+byteCount =. # bytes 
+bytePtr  =. > ptr g_malloc <byteCount  NB. N
+bytes  memw bytePtr,0,byteCount,2 NB. Y
+gBtyesPtr =. ptr g_bytes_new_take (<bytePtr);byteCount
+bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
+g_bytes_unref < gBtyesPtr NB. Must use bytes unref, NOT object unref. Object unref will cause segfault.
+bufferInputStreamPtr =. ptr garrow_buffer_input_stream_new <bufferPtr
+'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
+removeObject bufferPtr
+e=. < mema 4
+garrow_input_stream_align bufferInputStreamPtr;64;<e
+memf > e
+bufferInputStreamPtr
+}}
+
+recordBatchStreamReaderTable =. {{
+bufferInputStreamPtr =. y
+'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
+e =. < mema 4
+streamReaderPtr =. ptr garrow_record_batch_stream_reader_new bufferInputStreamPtr;<e
+'Not a vaild stream reader pointer.' assert * > streamReaderPtr
+tablePtr =. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e NB. N
+'Not a vaild table pointer.' assert * > tablePtr
+memf > e
+removeObject streamReaderPtr
+tablePtr
+}}
+
 
 readArrowTable =. readIPCTable =. recordBatchTable@recordBatchFileReader
 readArrowsTable =. readIPCFileStreamTable =. fileInputStreamTable
-readArrowsTable =. readIPCByteStreamTable =. byteInputStreamTable
 
 
-NB. Check no memory leaks:
 
-y =. '~/Downloads/example.arrows' 
-$ each readsTable tp =. fileInputStreamTable y
+NB. Test for memory leaks:
+y =. '~/Downloads/example.arrows' NB. Something about this file is causing memory leaks.
+NB. y =. '~/Downloads/flights-200k.arrows'
+bis =. byteInputStream fread y
+tp =. recordBatchStreamReaderTable bis
+$ each readsTable tp
+removeObject bis
 removeObject tp
-$ each readsTable tp =. byteInputStreamTable (fread jpath y) NB. This fails nondeterministically.
+
+y =. '~/Downloads/example.arrows'
+tp =. fileInputStreamTable y
+NB. $ each readsTable tp
 removeObject tp
 (1e3) 6!:2  'removeObject fileInputStreamTable y'
-(1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)' NB. This fails nondeterministically.
+
 
 NB. Stream IPC to table tests
 y =. '~/Downloads/flights-200k.arrows'
@@ -396,8 +415,6 @@ $ each readsTable tp =. byteInputStreamTable (fread jpath y)
 removeObject tp
 (1e3) 6!:2  'removeObject fileInputStreamTable y'
 (1e3) 6!:2  'removeObject byteInputStreamTable (fread jpath y)'
-
-
 
 
 
