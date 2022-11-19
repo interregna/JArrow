@@ -1,10 +1,11 @@
 # J language addon for Apache Arrow
 Read (and eventually write) Apache Arrow and Parquet files to and from J.
 Uses C API.
-## Installation and Loading
-Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
 
-From your J session:
+## Installation and Loading
+1) Ensure that you have installed the Arrow libraries for your OS. Libraries are at: [arrow.apache.org/install](https://arrow.apache.org/install/).
+
+2) From your J session:
 ```j
    install 'github:interregna/JArrow@main'
    load 'data/arrow'

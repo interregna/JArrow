@@ -21,21 +21,24 @@ getString=:{{memr (> y),0,_1,2}}
 getStringFree =: {{res [ memf y [ res=.memr (y=.>y),0,_1,2}}
 getInts=:{{memr (> y),0,x,4}}
 
-
 libload =: {{
   if.     UNAME-:'Linux' do.
-    libArrow   =: '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
-    libParquet =: '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
-    libFlight   =: '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
+    arrow    =. '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
+    parquet  =. '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
+    flight   =. '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
   elseif. UNAME-:'Darwin' do.
-    libArrow   =: '"','" ',~  '/usr/local/lib/libarrow-glib.dylib'
-    libParquet =: '"','" ',~  '/usr/local/lib/libparquet-glib.dylib'
-    libFlight   =: '"','" ',~  '/usr/local/lib/libarrow-flight-glib.dylib'
+    arrow    =.  '/usr/local/lib/libarrow-glib.dylib'
+    parquet  =.  '/usr/local/lib/libparquet-glib.dylib'
+    flight   =. '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    libArrow   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
-    libParquet =: '"','" ',~  'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
-    libFlight   =: '"','" ',~  'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
+    arrow    =. 'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
+    parquet  =. 'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
+    flight   =. 'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
   end.
+  binariesinstalled =. fexist@> arrow;parquet;flight
+  msg =. 'Need to install or update binaries.',LF,'See: https://arrow.apache.org/install/',LF,'Missing files:',LF,  LF joinstring ( (-. binariesinstalled) # arrow;parquet;flight)
+  msg assert <./ binariesinstalled
+  'libArrow libParquet libFlight'  =: dquote each arrow;parquet;flight NB. Add double-quotes for cd calls.
   1
 }}
 
