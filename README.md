@@ -1,6 +1,15 @@
 # J language addon for Apache Arrow
 Read (and eventually write) Apache Arrow and Parquet files to and from J.
 Uses C API.
+## Installation and Loading
+Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
+
+From your J session:
+```j
+   install 'github:interregna/JArrow@main'
+   load 'data/arrow'
+```
+
 ## Usage
 ```j
    install 'github:interregna/JArrow@main'
@@ -58,14 +67,6 @@ Uses C API.
 `(6!:16)` and `(6!:17)` can be used to convert Arrow datetime64 types to and from ISO 8601 format (e.g. 2000-01-11T22:58:04).
 `fromdate32` can be used to convert Arrow date32 types to YYYY M D tuples.
 
-## Installation and Loading
-Ensure that you have [installed the appropriate libraries for your OS](https://arrow.apache.org/install/).
-
-From your J session:
-```j
-   install 'github:interregna/JArrow@main'
-   load 'data/arrow'
-```
 
 ##### Notes
 
