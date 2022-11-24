@@ -80,9 +80,10 @@ rbPtrs
 readRecordBatchString =: {{
 'recordBatchPtr' =. y
 e=. mema 4
-getString  ptr garrow_record_batch_to_string recordBatchPtr;<<e
+res =. getString  ptr garrow_record_batch_to_string recordBatchPtr;<<e
+memf  > e 
+res
 }}
-
 
 connectLocation =. {{
 locationString =. y

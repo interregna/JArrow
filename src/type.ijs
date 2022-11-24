@@ -59,7 +59,14 @@ garrow_float_array_get_valuesSHIM=: (_1&fc byteSHIM garrow_float_array_get_value
 garrow_date32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_date32_array_get_values)
 garrow_time32_array_get_valuesSHIM=: (_2&ic byteSHIM garrow_time32_array_get_values)
 
-garrow_dictionary_array_get_indicesSHIM=: garrow_dictionary_array_get_indices@{.
+garrow_dictionary_array_get_indicesSHIM=: {{
+indicesArrayPtr =. ptr@garrow_dictionary_array_get_indices@{. y
+res =. readArray indicesArrayPtr
+removeObject indicesArrayPtr
+res
+}}
+
+NB. or use garrow_dictionary_array_get_dictionary for values
 
 deTAB =. #~ ((+.) (1: |. (> </\)))@(TAB&~:)
 

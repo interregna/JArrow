@@ -54,7 +54,7 @@ arrayType=. readArrayType arrayPt
 fRun=. typeGetValues&typeIndexLookup indexType NB. lookup functions
 Jtype=. ". typeJMemr&typeIndexLookup indexType
 lengthPtr=. setInts ] length=. readArrayLength arrayPt
-if. indexType e. (0,4,5,6,7,11,13,16,19) do.  NB. Shims for getValues return values directly instead of pointers.
+if. indexType e. (0,4,5,6,7,11,13,16,19,29) do.  NB. Shims for getValues return values directly instead of pointers.
   result=. > (fRun)~ arrayPt;<lengthPtr
 else.
   resPtr=. ptr (fRun)~ arrayPt;<lengthPtr
@@ -621,15 +621,13 @@ NB. IPC stream format is  optionally footer-terminated and
 NB. it does not contain ARROW1 magic numbers at beginning and end.
 'filepath appendboolean recordBatchPtrs' =. y
 fileOutputStreamPtr =. fileOutpuStream filepath;appendboolean
-e1=. < mema 4
-ret garrow_output_stream_align fileOutputStreamPtr;64;<e1
+e=. < mema 4
+ret garrow_output_stream_align fileOutputStreamPtr;64;<e
 writeOptionsPtr =. makeWriteOptions ''
-e2=. < mema 4
 schemaPtr =. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
-recordBatchStreamWriterPtr =. ptr garrow_record_batch_stream_writer_new fileOutputStreamPtr;schemaPtr;<e2
-e3=. < mema 4
+recordBatchStreamWriterPtr =. ptr garrow_record_batch_stream_writer_new fileOutputStreamPtr;schemaPtr;<e
 for_recordBatchPtr. recordBatchPtrs do.
-garrow_record_batch_writer_write_record_batch recordBatchStreamWriterPtr;recordBatchPtr;<e3
+garrow_record_batch_writer_write_record_batch recordBatchStreamWriterPtr;recordBatchPtr;<e
 end.
 1
 }}
@@ -690,20 +688,16 @@ NB. =========================================================
 recordBatchFileReader =. {{
 filepath =. y
 fileInputStreamPtr =. fileInputStream filepath
-e0=. < mema 4
-ret garrow_input_stream_align fileInputStreamPtr;64;<e0
-e1=. < mema 4
-NB. echo '[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e1
-e2=. < mema 4
-rbreaderPtr =. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e2
+e=. < mema 4
+ret garrow_input_stream_align fileInputStreamPtr;64;<e
+NB. echo '[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
+rbreaderPtr =. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e
 'Not a valid recordbatchReader.' assert * >  rbreaderPtr
 NB. schemaPtr =. ptr garrow_record_batch_file_reader_get_schema <rbreaderPtr
 recordBatchCount =. ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
 NB. echo '[+] Recordbatch count: ', ":ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
-NB. e3=. < mema 4
-NB. p3r garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;(makeReadOptions'');<e2
-e4=. < mema 4
-recordBatchPtr =. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e4
+NB. p3r garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;(makeReadOptions'');<e
+recordBatchPtr =. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
 ('Not a valid recordbatch.'&assert)@* each recordBatchPtr
 recordBatchPtr
 }}
@@ -712,17 +706,16 @@ recordBatchStreamReader =: {{
 filepath =. y
 fileInputStreamPtr =. fileInputStream filepath
 'Not a vaild inputstream pointer.' assert * > fileInputStreamPtr
-e1=. < mema 4
-ret garrow_input_stream_align fileInputStreamPtr;64;<e1
+e=. < mema 4
+ret garrow_input_stream_align fileInputStreamPtr;64;<e
 NB. echo ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-e2=. < mema 4
-streamReaderPtr =. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e2
+streamReaderPtr =. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
 'Not a valid streamReader.' assert * >  streamReaderPtr
 schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
 readOptionsPtr =. makeReadOptions''
 'Not a valid table.' assert * > schemaPtr
-e4=. < mema 4
-recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e4
+recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e
+memf > e
 recordBatchPtr
 }}
 
@@ -743,8 +736,8 @@ tablePtr
 byteInputStream =.{{
 bytes =. y
 byteCount =. # bytes 
-bytePtr  =. > ptr g_malloc <byteCount  NB. N
-bytes  memw bytePtr,0,byteCount,2 NB. Y
+bytePtr  =. > ptr g_malloc <byteCount
+bytes  memw bytePtr,0,byteCount,2
 gBtyesPtr =. ptr g_bytes_new_take (<bytePtr);byteCount
 bufferPtr =. ptr garrow_buffer_new_bytes <gBtyesPtr
 'Not a vaild buffer pointer.' assert * > bufferPtr
