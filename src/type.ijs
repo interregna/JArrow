@@ -20,6 +20,8 @@ NB. val =. ret garrow_buffer_get_size < bufferPtr
 gbPtr=. ptr garrow_buffer_get_data < bufferPtr
 gbsize=. ret g_bytes_get_size < gbPtr
 dataPtr=. ptr g_bytes_get_data gbPtr; < pt=. setInts gbsize
+NB. g_bytes_unref < gbPtr
+NB. dataPtr=. ptr g_bytes_unref_to_data gbPtr; < pt=. setInts gbsize
 memf > pt
 dataPtr
 }}
@@ -29,16 +31,18 @@ dataPtr =. y
 ptr garrow_buffer_new_bytes < dataPtr
 }}
 
-
 NB. Read variable length strings directly from buffer.
 garrow_string_array_get_stringsSHIM=: {{
 'arrayPt'=. > {. y
-dataPtr=. getBufferData ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
+bufferPtr =. ptr garrow_binary_array_get_data_buffer < arrayPt NB. Two pointers for binary arrays: 1) data and 2) offsets
+dataPtr=. getBufferData bufferPtr
 offsetPtr=. getBufferData ptr garrow_binary_array_get_offsets_buffer < arrayPt
 locLen=. (4&*)@>: ret garrow_array_get_length < arrayPt
 loc=. _2&(3!:4) memr (>offsetPtr),0,locLen,2
 dat=. getString dataPtr
 res=. ((0&|:)@,:@(}:,.(}.-}:)) loc) <;.0 dat
+removeObject"0 bufferPtr
+NB. g_bytes_unref < dataPtr
 res
 }}
 
@@ -49,6 +53,7 @@ length =. 1 getInts lengthPtr
 bitWidth=. ret garrow_fixed_width_data_type_get_bit_width < ptr garrow_array_get_value_data_type <arrayPt
 bytes=. memr (>resPtr),0,(length * bitWidth <.@% 8),2
 res=. u bytes
+res
 }}
 
 garrow_uint16_array_get_valuesSHIM=: (_1&ic byteSHIM garrow_uint16_array_get_values)

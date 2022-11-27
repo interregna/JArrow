@@ -3,7 +3,7 @@ Read (and eventually write) Apache Arrow and Parquet files to and from J.
 Uses C API.
 
 ## Installation and Loading
-1) Ensure that you have installed the Arrow libraries for your OS. Libraries are at: [arrow.apache.org/install](https://arrow.apache.org/install/).
+1) Ensure that you have installed the Arrow GLib (C) Packages for your OS. Instructions can be found at: [arrow.apache.org/install](https://arrow.apache.org/install/).
 
 2) From your J session:
 ```j
@@ -99,20 +99,20 @@ see `test/test1.ijs`
 
 ##### TODO
 
-* [ ] Tensors
 * [ ] Error catching for empty pointers, missing files, and general errors.
 * [ ] Dereference / cleanup gobjects and allocated memory
 * [ ] Additional data types
 	- Dictionaries (need to store lookup tables)
 	- Lists
 	- Maps
+* [ ] Tensors	
 * [ ] Documentation (see: ~/addons/gui/cobrowser/scriptdoc.ijs)
 * [x] CSV reader
 * [x] JSONL reader
 * [x] Arrow Feather (IPC v1) reader
-* [~] IPC files (".arrow" files)
-* [~] IPC streams (".arrows" files when stored on disk)
-* [~] Flight client 
+* [ ] IPC files (".arrow" files)
+* [ ] IPC streams (".arrows" files when stored on disk)
+* [ ] Flight client 
 * [ ] Flight server
 * [ ] Non-local filesystems (S3)
 * [ ] IPC streaming with event-driven calls

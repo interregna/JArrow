@@ -31,9 +31,9 @@ libload =: {{
     parquet  =.  '/usr/local/lib/libparquet-glib.dylib'
     flight   =. '/usr/local/lib/libarrow-flight-glib.dylib'
   elseif. UNAME-:'Win' do.
-    arrow    =. 'C:/msys64/mingqw64/bin/libarrow-glib-1000.dll'
-    parquet  =. 'C:/msys64/mingqw64/bin/libparquet-glib-1000.dll'
-    flight   =. 'C:/msys64/mingqw64/bin/libarrow-flight-glib-1000.dll'
+    arrow    =. 'C:/msys64/mingw64/bin/libarrow-glib-1000.dll'
+    parquet  =. 'C:/msys64/mingw64/bin/libparquet-glib-1000.dll'
+    flight   =. 'C:/msys64/mingw64/bin/libarrow-flight-glib-1000.dll'
   end.
   binariesinstalled =. fexist@> arrow;parquet;flight
   msg =. 'Need to install or update binaries.',LF,'See: https://arrow.apache.org/install/',LF,'Missing files:',LF,  LF joinstring ( (-. binariesinstalled) # arrow;parquet;flight)
