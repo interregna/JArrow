@@ -342,7 +342,7 @@ readOptionPtr=. ptr garrow_json_read_options_new ''
 jsonReaderPtr=. ptr garrow_json_reader_new fInputStreamPtr;readOptionPtr;<e
 tablePtr=. ptr garrow_json_reader_read jsonReaderPtr;<e
 'Invalid JSON-format.' assert > tablePtr
-removeObject"0 readOptionPtr, fInputStreamPtr jsonReaderPtr
+removeObject"0 readOptionPtr, fInputStreamPtr, jsonReaderPtr
 memf"0 > (filenamePtr),e
 tablePtr
 }}

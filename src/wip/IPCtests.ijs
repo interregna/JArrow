@@ -3,6 +3,7 @@ NB. =========================================================
 NB. Tests
 y=. '~/Downloads/scrabble_games.arrows'
 res=. recordBatchStreamReader y
+recordBatchStreamReader y
 (1e3) 6!:2 '$ > recordBatchStreamReader y'
 
 
@@ -28,8 +29,6 @@ removeObject tp
 bis=. byteInputStream (fread jpath y)
 $ each readsTable tp=. recordBatchStreamReaderTable bis
 removeObject bis
-removeObject tp
-$ each readsTable tp=. 
 removeObject tp
 (1e3) 6!:2 'removeObject fileInputStreamTable y'
 (1e3) 6!:2 'removeObject byteInputStream (fread jpath y)'
@@ -60,8 +59,6 @@ filename=. jpath '~/Downloads/barley.json'
 filename fwrite~ (('},',LF);('}',LF))&(rplc~) }:@}. gethttp quote 'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/barley.json' NB. Make this into a json-line file.
 readsTable readJson filename
 
-
-
 source=. 'https://cdn.jsdelivr.net/npm/vega-datasets@2.5.2/data/flights-200k.arrow'
 filename=. '~/Downloads/flights-200k.arrows' NB. This is a typo on Vega's end, it's an 'arrows' file, not an arrow file.
 filename fwrite~ gethttp source
@@ -69,7 +66,8 @@ NB. Stream IPC to table tests
 $ each readsTable tp=. fileInputStreamTable filename
 printTableSchema tp
 removeObject tp
-bis=. byteInputStream (fread jpath y)
+
+bis=. byteInputStream (fread jpath filename)
 $ each readsTable tp=. recordBatchStreamReaderTable bis
 removeObject bis
 removeObject tp
