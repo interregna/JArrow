@@ -12,7 +12,7 @@ https://arrow.apache.org/docs/c_glib/arrow-glib/
 https://arrow.apache.org/docs/c_glib/parquet-glib/
 )
 
-VERSION=: '10.0.0'
+VERSION=: '11.0.0'
 
 RELEASE=:'j903'
 

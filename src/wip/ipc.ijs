@@ -40,7 +40,7 @@ NB. listener StreamDecoder
 
 NB. =========================================================
 
-newList=. {{
+newList=: {{
 items=. y
 listPtr=. <0
 for_item. items do.
@@ -49,7 +49,7 @@ end.
 listPtr
 }}
 
-setBytes=. {{
+setBytes=: {{
 byteCount=. # y
 NB. bytePtr =. mema  byteCount
 bytePtr=. > ptr g_malloc <byteCount
@@ -104,7 +104,7 @@ NB. =========================================================
 NB. Input streams
 NB. =========================================================
 
-fileInputStream=. {{
+fileInputStream=: {{
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
@@ -115,7 +115,7 @@ memf > e
 inputStreamPtr
 }}
 
-bufferInputStream=. {{
+bufferInputStream=: {{
 gBtyesPtr=. y
 bufferPtr=. ptr garrow_buffer_new_bytes <gBtyesPtr
 bufferInputStreamPtr=. ptr garrow_buffer_input_stream_new <bufferPtr
@@ -125,7 +125,7 @@ memf > e
 bufferInputStreamPtr
 }}
 
-memmoryMappedFileInputStream=. {{
+memmoryMappedFileInputStream=: {{
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
@@ -136,7 +136,7 @@ memf > e
 inputStreamPtr
 }}
 
-gioInputStream=. {{
+gioInputStream=: {{
 inputStream=. y
 inputStreamPtr=. ptr garrow_gio_input_stream_new inputStream
 e=. < mema 4
@@ -145,7 +145,7 @@ memf > e
 inputStreamPtr
 }}
 
-codec=. {{
+codec=: {{
 compressionTypes=. 'UNCOMPRESSED SNAPPY GZIP BROTLI ZSTD LZ4 LZO BZ2'
 NB. UNCOMPRESSED Not compressed.
 NB. SNAPPY Snappy compression.
@@ -170,7 +170,7 @@ memf > e
 codecPtr
 }}
 
-compressedInputStream=. {{
+compressedInputStream=: {{
 'codecName inputStreamPtr'=. y
 codePtr=. codec codecName
 e=. < mema 4
@@ -209,13 +209,13 @@ memf > e
 compressedOutputStreamPtr
 }}
 
-NB. gio_output_stream 
+NB. gio_output_stream
 
 NB. =========================================================
 NB. IPC WRITER CLASSES
 NB. =========================================================
 
-writeRecordBatchStream=:{{
+writeRecordBatchStream=: {{
 NB. IPC stream format is  optionally footer-terminated and
 NB. it does not contain ARROW1 magic numbers at beginning and end.
 'outputStreamPtr recordBatchPtrs'=. y
@@ -232,7 +232,7 @@ memf > e
 outputStreamPtr
 }}
 
-writeRecordBatchFileOutputStream=:{{
+writeRecordBatchFileOutputStream=: {{
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
 outputStreamPtr=. fileOutputStream filepath;appendboolean
@@ -240,21 +240,21 @@ writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchBufferOutputStream=:{{
-recordBatchPtrs =. y
-outputStreamPtr=.bufferOutputStream''
+writeRecordBatchBufferOutputStream=: {{
+recordBatchPtrs=. y
+outputStreamPtr=. bufferOutputStream''
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchCompressedOutputStream=:{{
+writeRecordBatchCompressedOutputStream=: {{
 'codecPtr outputStreamPtr recordBatchPtrs'=. y
 outputStreamPtr=. newCompressedOutputStream codecPtr;outputStreamPtr
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchGIOOutputStream=:{{
+writeRecordBatchGIOOutputStream=: {{
 'gio_output_stream recordBatchPtrs'=. y
 outputStreamPtr=. garrow_gio_output_stream_new gio_output_stream NB. FIX
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
@@ -271,7 +271,7 @@ recordbatchFilestreamWriterPtr
 }}
 
 
-writeRecordBatchFile=. {{
+writeRecordBatchFile=: {{
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
 NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
@@ -301,7 +301,7 @@ memf > e
 >./ success1, success2
 }}
 
-writeTensorFile=. {{
+writeTensorFile=: {{
 'filepath appendboolean tensorPtr'=. y
 'File does not exist.' assert fexist jpath filepath
 fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
@@ -316,7 +316,7 @@ NB. =========================================================
 NB. IPC READER CLASSES
 NB. =========================================================
 
-readFileStreamRecordBatches=. {{
+readFileStreamRecordBatches=: {{
 NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
@@ -327,12 +327,12 @@ rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
 'Not a valid recordbatchReader.' assert * > rbreaderPtr
 '[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
 garrow_record_batch_reader_get_schema < rbreaderPtr
-recordBatchPtrs  =. >a:
+recordBatchPtrs=. >a:
 whilst. > rb do.
-rb =. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
-if. > rb do.
-recordBatchPtrs =. recordBatchPtrs, rb
-end.
+  rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
+  if. > rb do.
+    recordBatchPtrs=. recordBatchPtrs, rb
+  end.
 end.
 memf > e
 ('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
@@ -384,7 +384,7 @@ memf > e
 tablePtr
 }}
 
-byteInputStream=. {{
+byteInputStream=: {{
 bytes=. y
 byteCount=. # bytes
 bytePtr=. > ptr g_malloc <byteCount
@@ -401,7 +401,7 @@ memf > e
 bufferInputStreamPtr
 }}
 
-recordBatchStreamReaderTable=. {{
+recordBatchStreamReaderTable=: {{
 bufferInputStreamPtr=. y
 'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
 e=. < mema 4
