@@ -267,3 +267,15 @@ AA =. setString each a;b;c;d
 paramspec AA,0;1;0;1
 
 read_options.skip_rows,
+
+
+
+NB. =========================================================
+NB. Buffer test
+NB. =========================================================
+
+NB. Read record batches from a file, then write that to an outputStream buffer
+y =. '~/Documents/flights200k.arrows'
+rbs =. readFileStreamRecordBatches y
+rbos =. writeRecordBatchBufferOutputStream rbs
+garrow_buffer_get_size <rbos

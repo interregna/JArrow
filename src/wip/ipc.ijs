@@ -27,7 +27,7 @@ NB. The message encapsulation format in flatbuffers
 NB. https://arrow.apache.org/docs/format/Columnar.html#encapsulated-message-format
 
 
-NB. Tbere are two concepts of streams in Arrow; the term is overloaded and this is a a source of confusion.
+NB. There are two concepts of streams in Arrow; the term is overloaded and this is a a source of confusion.
 NB. 1) Input and output streams, which reference interfaces to data stores.
 NB. 2) The writers for IPC-format files without footers, suitable for streaming.
 NB. The difference between RecordBatchFileReader and RecordBatchStreaader
@@ -106,7 +106,7 @@ NB. =========================================================
 
 fileInputStream=. {{
 filepath=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
 e=. < mema 4
 inputStreamPtr=. ptr garrow_file_input_stream_new filePtr;<e
@@ -127,7 +127,7 @@ bufferInputStreamPtr
 
 memmoryMappedFileInputStream=. {{
 filepath=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
 e=. < mema 4
 inputStreamPtr=. ptr garrow_memory_mapped_input_stream_new filePtr;<e
@@ -187,57 +187,80 @@ NB. Output streams
 NB. =========================================================
 
 
-fileOutpuStream=: {{
+fileOutputStream=: {{
 'filepath appendboolean'=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 fnPtr=. setString jpath filepath
 e=. < mema 4
-fileOutpuStreamPtr=. ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
+fileOutputStreamPtr=. ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
 memf > e
-fileOutpuStreamPtr
+fileOutputStreamPtr
 }}
 
-bufferOutpuStream=: {{
+bufferOutputStream=: {{
 ptr garrow_buffer_output_stream_new < newResizableBuffer''
 }}
 
-newCompressedOutpuStream=: {{
+newCompressedOutputStream=: {{
 'codecPtr outputStreamPtr'=. y
 e=. < mema 4
-compressedOutpuStreamPtr=. ptr garrow_compressed_output_stream_new codecPtr;outputStreamPtr;<e
+compressedOutputStreamPtr=. ptr garrow_compressed_output_stream_new codecPtr;outputStreamPtr;<e
 memf > e
-compressedOutpuStreamPtr
+compressedOutputStreamPtr
 }}
 
-recordBatchStreamWriter=: {{
-'outputStreamPtr schemaPtr'=. y
-e=. < mema 4
-recordBatchStreamWriterPtr=. ptr garrow_record_batch_stream_writer_new outputStreamPtr;schemaPtr;<e
-memf > e
-recordBatchStreamWriterPtr
-}}
+NB. gio_output_stream 
 
 NB. =========================================================
 NB. IPC WRITER CLASSES
 NB. =========================================================
 
-writeRecordBatchStream=. {{
+writeRecordBatchStream=:{{
 NB. IPC stream format is  optionally footer-terminated and
 NB. it does not contain ARROW1 magic numbers at beginning and end.
-'filepath appendboolean recordBatchPtrs'=. y
-'File does not exist.' assert jpath filepath
-fileOutputStreamPtr=. fileOutpuStream filepath;appendboolean
+'outputStreamPtr recordBatchPtrs'=. y
 e=. < mema 4
-ret garrow_output_stream_align fileOutputStreamPtr;64;<e
+ret garrow_output_stream_align outputStreamPtr;64;<e
 writeOptionsPtr=. makeWriteOptions ''
 schemaPtr=. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
-recordBatchStreamWriterPtr=. ptr garrow_record_batch_stream_writer_new fileOutputStreamPtr;schemaPtr;<e
+recordBatchStreamWriterPtr=. ptr garrow_record_batch_stream_writer_new outputStreamPtr;schemaPtr;<e
 for_recordBatchPtr. recordBatchPtrs do.
   garrow_record_batch_writer_write_record_batch recordBatchStreamWriterPtr;recordBatchPtr;<e
 end.
+garrow_record_batch_writer_close recordBatchStreamWriterPtr;<e
 memf > e
-1
+outputStreamPtr
 }}
+
+writeRecordBatchFileOutputStream=:{{
+'filepath appendboolean recordBatchPtrs'=. y
+'File does not exist.' assert fexist jpath filepath
+outputStreamPtr=. fileOutputStream filepath;appendboolean
+writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
+outputStreamPtr
+}}
+
+writeRecordBatchBufferOutputStream=:{{
+recordBatchPtrs =. y
+outputStreamPtr=.bufferOutputStream''
+writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
+outputStreamPtr
+}}
+
+writeRecordBatchCompressedOutputStream=:{{
+'codecPtr outputStreamPtr recordBatchPtrs'=. y
+outputStreamPtr=. newCompressedOutputStream codecPtr;outputStreamPtr
+writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
+outputStreamPtr
+}}
+
+writeRecordBatchGIOOutputStream=:{{
+'gio_output_stream recordBatchPtrs'=. y
+outputStreamPtr=. garrow_gio_output_stream_new gio_output_stream NB. FIX
+writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
+outputStreamPtr
+}}
+
 
 recordBatchFileWriter=: {{
 'outputStreamPtr schemaPtr'=. y
@@ -250,9 +273,9 @@ recordbatchFilestreamWriterPtr
 
 writeRecordBatchFile=. {{
 'filepath appendboolean recordBatchPtrs'=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
-fileOutputStreamPtr=. fileOutpuStream filepath;appendboolean
+fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
 e=. < mema 4
 ret garrow_output_stream_align fileOutputStreamPtr;64;<e
 writeOptionsPtr=. (makeWriteOptions '')
@@ -268,9 +291,9 @@ success
 
 writeTableFile=: {{
 'filepath appendboolean tablePtr'=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 schemaPtr=. getSchemaPt tablePtr
-recordBatchFileWriterPtr=. recordBatchFileWriter (fileOutpuStream filepath;appendboolean);<schemaPtr
+recordBatchFileWriterPtr=. recordBatchFileWriter (fileOutputStream filepath;appendboolean);<schemaPtr
 e=. < mema 4
 success1=. ret garrow_record_batch_writer_write_table recordBatchFileWriterPtr;tablePtr;<e
 success2=. ret garrow_record_batch_writer_close recordBatchFileWriterPtr;<e
@@ -280,8 +303,8 @@ memf > e
 
 writeTensorFile=. {{
 'filepath appendboolean tensorPtr'=. y
-'File does not exist.' assert jpath filepath
-fileOutputStreamPtr=. fileOutpuStream filepath;appendboolean
+'File does not exist.' assert fexist jpath filepath
+fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
 e=. < mema 4
 res=. ret garrow_output_stream_write_tensor outputStreamPtr;tensorPtr;<e
 memf > e
@@ -293,10 +316,33 @@ NB. =========================================================
 NB. IPC READER CLASSES
 NB. =========================================================
 
-
-recordBatchFileReader=. {{
+readFileStreamRecordBatches=. {{
+NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
 filepath=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
+fileInputStreamPtr=. fileInputStream filepath
+e=. < mema 4
+ret garrow_input_stream_align fileInputStreamPtr;64;<e
+rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
+'Not a valid recordbatchReader.' assert * > rbreaderPtr
+'[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
+garrow_record_batch_reader_get_schema < rbreaderPtr
+recordBatchPtrs  =. >a:
+whilst. > rb do.
+rb =. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
+if. > rb do.
+recordBatchPtrs =. recordBatchPtrs, rb
+end.
+end.
+memf > e
+('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
+recordBatchPtrs
+}}
+
+readFileRecordBatches=: {{
+NB. Necessary for '.arrow' file (i.e. has a end marker and is seekable)
+filepath=. y
+'File does not exist.' assert fexist jpath filepath
 fileInputStreamPtr=. fileInputStream filepath
 e=. < mema 4
 ret garrow_input_stream_align fileInputStreamPtr;64;<e
@@ -307,16 +353,16 @@ NB. schemaPtr =. ptr garrow_record_batch_file_reader_get_schema <rbreaderPtr
 recordBatchCount=. ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
 NB. echo '[+] Recordbatch count: ', ":ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
 NB. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;makeReadOptions'');<e
-recordBatchPtr=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
+recordBatchPtrs=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
 ('Not a valid recordbatch.'&assert)@* each recordBatchPtr
 memf > e
-recordBatchPtr
+recordBatchPtrs
 }}
 
-fileInputStreamTable=: {{
-NB. read input stream directly from file.
+readFileStreamTable=: {{
+NB. read input stream directly to table from file.
 filepath=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
 e=. < mema 4
 streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
@@ -384,9 +430,9 @@ NB. names
 }}
 
 recordBatchStreamReader=: {{
-NB. This will read recordbatchs out of a stream file.
+NB. This will read recordbatches out of a stream file.
 filepath=. y
-'File does not exist.' assert jpath filepath
+'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
 NB. inputStreamPtr =. memmoryMappedFileInputStream filepath
 'Not a vaild inputstream pointer.' assert * > inputStreamPtr

@@ -1,7 +1,7 @@
 loc_z_=: 3 : 'jpath > (4!:4 <''y'') { 4!:3 $0'  NB. pathname of script calling it
 ProjPath=: fpath_j_^:2 loc ''                   NB. path of grand-parent folder (project)
 TempPath=: jpath '~temp/'
-
+`
 NB. copy test parquet files to ~temp if they're not already there
 copytestfiles =. {{
   tstpqs=: <;._2 , 0 dir ProjPath,'/test/test*.',y
@@ -65,3 +65,7 @@ echo readCSVTable t3path
 echo readsCSVTable t3path
 echo readCSVDataframe t3path
 echo readCSVCol t3path;0
+
+
+
+": < 10
