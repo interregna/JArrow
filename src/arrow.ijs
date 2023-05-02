@@ -432,7 +432,6 @@ readsFeatherTable=: (readFeather readsFileTable)
 readFeatherDataframe=: (readFeather readFileDataframe)
 readFeatherCol=: (readFeather readFileCol)
 
-
 NB. =========================================================
 NB. Reading and writing IPC
 NB. =========================================================
@@ -451,8 +450,18 @@ NB. Table: Logical table as sequence of chunked arrays.
 NB. RecordBatch: Collection of equal-length arrays matching a particular Schema.
 NB. A record batch is table-like data structure that is semantically a sequence of fields, each a contiguous Arrow array
 
-NB. ".arrow"  We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
-NB. ".arrows" We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
+NB. FILE FORMAT: ".arrow"
+NB. We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
+NB. Arrow IPC 'file format' schema
+NB. 	<magic number "ARROW1">
+NB. 	<empty padding bytes [to 8 byte boundary]>
+NB. 	<STREAMING FORMAT with EOS>
+NB. 	<FOOTER>
+NB. 	<FOOTER SIZE: int32>
+NB. <magic number "ARROW1">
+NB. STREAMING FORMAT: ".arrows"
+NB. We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
+NB. 	The stream writer can signal end-of-stream (EOS) either by writing 8 bytes containing the 4-byte continuation indicator (0xFFFFFFFF) followed by 0 metadata length (0x00000000) or closing the stream interface.
 NB. https://arrow.apache.org/docs/format/Columnar.html
 
 NB. IPC Format
@@ -550,7 +559,7 @@ memf > e
 inputStreamPtr
 }}
 
-bufferInputStream=:{{
+bufferInputStream=: {{
 gBtyesPtr=. y
 bufferPtr=. ptr garrow_buffer_new_bytes <gBtyesPtr
 bufferInputStreamPtr=. ptr garrow_buffer_input_stream_new <bufferPtr
@@ -624,7 +633,6 @@ NB. =========================================================
 
 fileOutputStream=: {{
 'filepath appendboolean'=. y
-'File does not exist.' assert fexist jpath filepath
 fnPtr=. setString jpath filepath
 e=. < mema 4
 fileOutputStreamPtr=. ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
@@ -644,13 +652,13 @@ memf > e
 compressedOutputStreamPtr
 }}
 
-NB. gio_output_stream 
+NB. gio_output_stream
 
 NB. =========================================================
 NB. IPC WRITER CLASSES
 NB. =========================================================
 
-writeRecordBatchStream=:{{
+writeRecordBatchStream=: {{
 NB. IPC stream format is  optionally footer-terminated and
 NB. it does not contain ARROW1 magic numbers at beginning and end.
 'outputStreamPtr recordBatchPtrs'=. y
@@ -662,11 +670,12 @@ recordBatchStreamWriterPtr=. ptr garrow_record_batch_stream_writer_new outputStr
 for_recordBatchPtr. recordBatchPtrs do.
   garrow_record_batch_writer_write_record_batch recordBatchStreamWriterPtr;recordBatchPtr;<e
 end.
+garrow_record_batch_writer_close recordBatchStreamWriterPtr;<e
 memf > e
 outputStreamPtr
 }}
 
-writeRecordBatchFileOutputStream=:{{
+writeRecordBatchFileOutputStream=: {{
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
 outputStreamPtr=. fileOutputStream filepath;appendboolean
@@ -674,21 +683,21 @@ writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchBufferOutputStream=:{{
-recordBatchPtrs =. y
-outputStreamPtr=.bufferOutputStream''
+writeRecordBatchBufferOutputStream=: {{
+recordBatchPtrs=. y
+outputStreamPtr=. bufferOutputStream''
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchCompressedOutputStream=:{{
+writeRecordBatchCompressedOutputStream=: {{
 'codecPtr outputStreamPtr recordBatchPtrs'=. y
 outputStreamPtr=. newCompressedOutputStream codecPtr;outputStreamPtr
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
 outputStreamPtr
 }}
 
-writeRecordBatchGIOOutputStream=:{{
+writeRecordBatchGIOOutputStream=: {{
 'gio_output_stream recordBatchPtrs'=. y
 outputStreamPtr=. garrow_gio_output_stream_new gio_output_stream NB. FIX
 writeRecordBatchStream outputStreamPtr;<recordBatchPtrs
@@ -704,11 +713,11 @@ memf > e
 recordbatchFilestreamWriterPtr
 }}
 
-
 writeRecordBatchFile=: {{
+NB. Write '.arrow' file.
+NB. The IPC file format is footer-terminated and contains ARROW1 magic numbers at beginning and end.
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
-NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
 fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
 e=. < mema 4
 ret garrow_output_stream_align fileOutputStreamPtr;64;<e
@@ -725,7 +734,7 @@ success
 
 writeTableFile=: {{
 'filepath appendboolean tablePtr'=. y
-'File does not exist.' assert fexist jpath filepath
+'File does not exist.' assert -. appendboolean * -. fexist jpath filepath
 schemaPtr=. getSchemaPt tablePtr
 recordBatchFileWriterPtr=. recordBatchFileWriter (fileOutputStream filepath;appendboolean);<schemaPtr
 e=. < mema 4
@@ -751,7 +760,7 @@ NB. IPC READER CLASSES
 NB. =========================================================
 
 readFileStreamRecordBatches=: {{
-NB. Necessary for '.arrows' file (i.e. the file does not have an end marker and is not seekable)
+NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 fileInputStreamPtr=. fileInputStream filepath
@@ -761,12 +770,12 @@ rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
 'Not a valid recordbatchReader.' assert * > rbreaderPtr
 '[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
 garrow_record_batch_reader_get_schema < rbreaderPtr
-recordBatchPtrs  =. >a:
+recordBatchPtrs=. >a:
 whilst. > rb do.
-rb =. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
-if. > rb do.
-recordBatchPtrs =. recordBatchPtrs, rb
-end.
+  rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
+  if. > rb do.
+    recordBatchPtrs=. recordBatchPtrs, rb
+  end.
 end.
 memf > e
 ('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
@@ -774,7 +783,7 @@ recordBatchPtrs
 }}
 
 readFileRecordBatches=: {{
-NB. Necessary for '.arrow' file (i.e. the file has a end marker and is seekable)
+NB. Necessary for '.arrow' file (i.e. has a end marker and is seekable)
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 fileInputStreamPtr=. fileInputStream filepath
@@ -794,7 +803,7 @@ recordBatchPtrs
 }}
 
 readFileStreamTable=: {{
-NB. read input stream directly to table from file.
+NB. read input stream directly to table from '.arrow' file.
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
@@ -864,7 +873,7 @@ NB. names
 }}
 
 recordBatchStreamReader=: {{
-NB. This will read individual recordbatches out of a stream file.
+NB. This will read recordbatches out of a stream file.
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
@@ -896,6 +905,5 @@ NB. IPC format for saved files (.arrow file)
 readArrowTable=. readIPCTable=. recordBatchTable@recordBatchFileReader
 NB. IPC format for streaming, but from a file on disk (.arrows file)
 readFileBufferTable=. readArrowsTable=. readIPCFileStreamTable=. fileInputStreamTable
-
 
 

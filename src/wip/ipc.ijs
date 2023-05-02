@@ -16,8 +16,18 @@ NB. Table: Logical table as sequence of chunked arrays.
 NB. RecordBatch: Collection of equal-length arrays matching a particular Schema.
 NB. A record batch is table-like data structure that is semantically a sequence of fields, each a contiguous Arrow array
 
-NB. ".arrow"  We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
-NB. ".arrows" We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
+NB. FILE FORMAT: ".arrow"
+NB. We recommend the “.arrow” extension for files created with this format. Note that files created with this format are sometimes called “Feather V2” or with the “.feather” extension, the name and the extension derived from “Feather (V1)”, which was a proof of concept early in the Arrow project for language-agnostic fast data frame storage for Python (pandas) and R.
+NB. Arrow IPC 'file format' schema
+NB. 	<magic number "ARROW1">
+NB. 	<empty padding bytes [to 8 byte boundary]>
+NB. 	<STREAMING FORMAT with EOS>
+NB. 	<FOOTER>
+NB. 	<FOOTER SIZE: int32>
+NB. <magic number "ARROW1">
+NB. STREAMING FORMAT: ".arrows" 
+NB. We recommend the “.arrows” file extension for the streaming format although in many cases these streams will not ever be stored as files.
+NB. 	The stream writer can signal end-of-stream (EOS) either by writing 8 bytes containing the 4-byte continuation indicator (0xFFFFFFFF) followed by 0 metadata length (0x00000000) or closing the stream interface. 
 NB. https://arrow.apache.org/docs/format/Columnar.html
 
 NB. IPC Format
@@ -189,7 +199,6 @@ NB. =========================================================
 
 fileOutputStream=: {{
 'filepath appendboolean'=. y
-'File does not exist.' assert fexist jpath filepath
 fnPtr=. setString jpath filepath
 e=. < mema 4
 fileOutputStreamPtr=. ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
@@ -270,11 +279,11 @@ memf > e
 recordbatchFilestreamWriterPtr
 }}
 
-
 writeRecordBatchFile=: {{
+NB. Write '.arrow' file.
+NB. The IPC file format is footer-terminated and contains ARROW1 magic numbers at beginning and end.
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
-NB. The IPC file format is footer-terminated and does contain ARROW1 magic numbers at beginning and end.
 fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
 e=. < mema 4
 ret garrow_output_stream_align fileOutputStreamPtr;64;<e
@@ -291,7 +300,7 @@ success
 
 writeTableFile=: {{
 'filepath appendboolean tablePtr'=. y
-'File does not exist.' assert fexist jpath filepath
+'File does not exist.' assert -. appendboolean * -. fexist jpath filepath
 schemaPtr=. getSchemaPt tablePtr
 recordBatchFileWriterPtr=. recordBatchFileWriter (fileOutputStream filepath;appendboolean);<schemaPtr
 e=. < mema 4
@@ -360,7 +369,7 @@ recordBatchPtrs
 }}
 
 readFileStreamTable=: {{
-NB. read input stream directly to table from file.
+NB. read input stream directly to table from '.arrow' file.
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
