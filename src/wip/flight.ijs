@@ -13,7 +13,7 @@ description =. getString desCharPtr
 recordcount =. ret gaflight_info_get_total_records < infoPtr
 byteCount =.  ret gaflight_info_get_total_bytes < infoPtr
 readOptionsPtr =. makeReadOptions''
-e=. < mema 4
+e=. initError ''
 schema =. getString ret ptr garrow_schema_to_string <  ptr gaflight_info_get_schema infoPtr;readOptionsPtr;<e
 res =. >a:
 res=. res, '[+] Flight Info:',LF
@@ -49,7 +49,7 @@ ticketPtr
 getEndpointReader =:{{
 'clientPtr ticketPtr callOptPtr' =. y
 NB. if no client or call option, make one from the ticket
-e=. < mema 4
+e=. initError ''
 FSReaderPtr =. ptr gaflight_client_do_get clientPtr;ticketPtr;callOptPtr;<e
 FSReaderPtr
 }}"1
@@ -79,9 +79,9 @@ rbPtrs
 
 readRecordBatchString =: {{
 'recordBatchPtr' =. y
-e=. mema 4
-res =. getString  ptr garrow_record_batch_to_string recordBatchPtr;<<e
-memf  > e 
+e=. initError ''
+res =. getString  ptr garrow_record_batch_to_string recordBatchPtr;<e
+checkError e
 res
 }}
 
@@ -126,12 +126,13 @@ NB. }}
 NB. List Flights
 getClientFlightInfo =. {{
 'clientPtr criteria' =. y 	NB. '' is default
-e=. mema 4 
+e=. initError ''
 critPtr =. setString criteria
 bytePtr =. ptr g_bytes_new critPtr; # criteria
 callOptPtr =. ptr gaflight_call_options_new ''
 criteriaPtr =. ptr  gaflight_criteria_new < bytePtr
 infoListPtr =. ptr gaflight_client_list_flights clientPtr;criteriaPtr;callOptPtr;<<e
+checkError e
 flightPtrCount =. ret g_list_length < infoListPtr
 infoPtrs =. (ptr@g_list_nth_data)"1 (<infoListPtr),.  <"0 i.flightPtrCount NB. Turn this into a function, interate on flightPtrCount
 }}"1
@@ -215,8 +216,6 @@ gaflight_data_stream_get_type
 gaflight_servable_get_type
 gaflight_record_batch_stream_get_type
 )
-
-
 
 NB. locsPtr =. ptr gaflight_endpoint_get_locations < endpointPtr
 NB. p0 =. ptr gaflight_endpoint_get_type ''

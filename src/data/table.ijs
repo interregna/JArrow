@@ -18,7 +18,8 @@ l *	garrow_table_get_n_rows	(GArrowTable *table); guint64
 * * i *	garrow_table_remove_column	(GArrowTable *table, guint i, GError **error); GArrowTable *
 * * i * * *	garrow_table_replace_column	(GArrowTable *table, guint i, GArrowField *field, GArrowChunkedArray *chunked_array, GError **error); GArrowTable *
 * * *	garrow_table_to_string	(GArrowTable *table, GError **error); gchar *
-* * * *	garrow_table_concatenate	(GArrowTable *table, GList *other_tables, GError **error); GArrowTable *
+* * * * *	garrow_table_concatenate 	(GArrowTable *table, GList *other_tables, GArrowTableConcatenateOptions *options, GError **error); GArrowTable *
+*	garrow_table_concatenate_options_new	(void);	GArrowTableConcatenateOptions *
 * * x x	garrow_table_slice	(GArrowTable *table, gint64 offset, gint64 length); GArrowTable *
 * * *	garrow_table_combine_chunks	(GArrowTable *table, GError **error); GArrowTable *
 n *	garrow_feather_write_properties_finalize	(GObject *object); static void 

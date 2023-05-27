@@ -70,7 +70,7 @@ gBtyesPtr
 }}
 
 newResizableBuffer=: {{
-e=. < mema 4
+e=. initError ''
 res=. ptr garrow_resizable_buffer_new 1;<e
 memf > e
 res
@@ -118,7 +118,7 @@ fileInputStream=: {{
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
-e=. < mema 4
+e=. initError ''
 inputStreamPtr=. ptr garrow_file_input_stream_new filePtr;<e
 garrow_input_stream_align inputStreamPtr;64;<e
 memf > e
@@ -129,7 +129,7 @@ bufferInputStream=: {{
 gBtyesPtr=. y
 bufferPtr=. ptr garrow_buffer_new_bytes <gBtyesPtr
 bufferInputStreamPtr=. ptr garrow_buffer_input_stream_new <bufferPtr
-e=. < mema 4
+e=. initError ''
 garrow_input_stream_align bufferInputStreamPtr;64;<e
 memf > e
 bufferInputStreamPtr
@@ -139,7 +139,7 @@ memmoryMappedFileInputStream=: {{
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 filePtr=. setString jpath filepath
-e=. < mema 4
+e=. initError ''
 inputStreamPtr=. ptr garrow_memory_mapped_input_stream_new filePtr;<e
 garrow_input_stream_align inputStreamPtr;64;<e
 memf > e
@@ -149,7 +149,7 @@ inputStreamPtr
 gioInputStream=: {{
 inputStream=. y
 inputStreamPtr=. ptr garrow_gio_input_stream_new inputStream
-e=. < mema 4
+e=. initError ''
 garrow_input_stream_align inputStreamPtr;64;<e
 memf > e
 inputStreamPtr
@@ -167,7 +167,7 @@ NB. LZO LZO compression.
 NB. BZ2 bzip2 compression.
 compression=. y
 compressionEnum=. {. (< tolower compression) I.@E. ;: tolower compressionTypes
-e=. < mema 4
+e=. initError ''
 codecPtr=. ptr garrow_codec_new compressionEnum;<e
 if. -. * > codecPtr do.
   echo 'Invalid compression type. Valid compression types are: ', > ;: 'UNCOMPRESSED SNAPPY GZIP BROTLI ZSTD LZ4 LZO BZ2'
@@ -183,7 +183,7 @@ codecPtr
 compressedInputStream=: {{
 'codecName inputStreamPtr'=. y
 codePtr=. codec codecName
-e=. < mema 4
+e=. initError ''
 inputStreamPtr=. ptr garrow_compressed_input_stream_new codecPtr;inputStreamPtr;<e
 garrow_input_stream_align inputStreamPtr;64;<e
 memf > e
@@ -200,7 +200,7 @@ NB. =========================================================
 fileOutputStream=: {{
 'filepath appendboolean'=. y
 fnPtr=. setString jpath filepath
-e=. < mema 4
+e=. initError ''
 fileOutputStreamPtr=. ptr garrow_file_output_stream_new fnPtr;appendboolean;<e
 memf > e
 fileOutputStreamPtr
@@ -212,7 +212,7 @@ ptr garrow_buffer_output_stream_new < newResizableBuffer''
 
 newCompressedOutputStream=: {{
 'codecPtr outputStreamPtr'=. y
-e=. < mema 4
+e=. initError ''
 compressedOutputStreamPtr=. ptr garrow_compressed_output_stream_new codecPtr;outputStreamPtr;<e
 memf > e
 compressedOutputStreamPtr
@@ -228,7 +228,7 @@ writeRecordBatchStream=: {{
 NB. IPC stream format is  optionally footer-terminated and
 NB. it does not contain ARROW1 magic numbers at beginning and end.
 'outputStreamPtr recordBatchPtrs'=. y
-e=. < mema 4
+e=. initError ''
 ret garrow_output_stream_align outputStreamPtr;64;<e
 writeOptionsPtr=. makeWriteOptions ''
 schemaPtr=. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
@@ -273,7 +273,7 @@ outputStreamPtr
 
 recordBatchFileWriter=: {{
 'outputStreamPtr schemaPtr'=. y
-e=. < mema 4
+e=. initError ''
 recordbatchFilestreamWriterPtr=. ptr garrow_record_batch_file_writer_new outputStreamPtr;schemaPtr;<e
 memf > e
 recordbatchFilestreamWriterPtr
@@ -285,7 +285,7 @@ NB. The IPC file format is footer-terminated and contains ARROW1 magic numbers a
 'filepath appendboolean recordBatchPtrs'=. y
 'File does not exist.' assert fexist jpath filepath
 fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
-e=. < mema 4
+e=. initError ''
 ret garrow_output_stream_align fileOutputStreamPtr;64;<e
 writeOptionsPtr=. (makeWriteOptions '')
 schemaPtr=. ptr garrow_record_batch_get_schema < {. recordBatchPtrs
@@ -303,7 +303,7 @@ writeTableFile=: {{
 'File does not exist.' assert -. appendboolean * -. fexist jpath filepath
 schemaPtr=. getSchemaPt tablePtr
 recordBatchFileWriterPtr=. recordBatchFileWriter (fileOutputStream filepath;appendboolean);<schemaPtr
-e=. < mema 4
+e=. initError ''
 success1=. ret garrow_record_batch_writer_write_table recordBatchFileWriterPtr;tablePtr;<e
 success2=. ret garrow_record_batch_writer_close recordBatchFileWriterPtr;<e
 memf > e
@@ -314,7 +314,7 @@ writeTensorFile=: {{
 'filepath appendboolean tensorPtr'=. y
 'File does not exist.' assert fexist jpath filepath
 fileOutputStreamPtr=. fileOutputStream filepath;appendboolean
-e=. < mema 4
+e=. initError ''
 res=. ret garrow_output_stream_write_tensor outputStreamPtr;tensorPtr;<e
 memf > e
 res
@@ -330,7 +330,7 @@ NB. Necessary for '.arrows' file (does not have an end marker and is not seekabl
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 fileInputStreamPtr=. fileInputStream filepath
-e=. < mema 4
+e=. initError ''
 ret garrow_input_stream_align fileInputStreamPtr;64;<e
 rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
 'Not a valid recordbatchReader.' assert * > rbreaderPtr
@@ -341,6 +341,7 @@ whilst. > rb do.
   rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
   if. > rb do.
     recordBatchPtrs=. recordBatchPtrs, rb
+    NB. removeObject rb
   end.
 end.
 memf > e
@@ -353,7 +354,7 @@ NB. Necessary for '.arrow' file (i.e. has a end marker and is seekable)
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 fileInputStreamPtr=. fileInputStream filepath
-e=. < mema 4
+e=. initError ''
 ret garrow_input_stream_align fileInputStreamPtr;64;<e
 NB. echo '[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
 rbreaderPtr=. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e
@@ -373,7 +374,7 @@ NB. read input stream directly to table from '.arrow' file.
 filepath=. y
 'File does not exist.' assert fexist jpath filepath
 inputStreamPtr=. fileInputStream filepath
-e=. < mema 4
+e=. initError ''
 streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
 tablePtr=. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
 memf > e
@@ -387,7 +388,7 @@ recordBatches=. y
 schemaPtr=. ptr garrow_record_batch_get_schema < {. recordBatches
 recordBatchArrayPointer=. setInts > recordBatches
 countRecordBatches=. # recordBatches
-e=. < mema 4
+e=. initError ''
 tablePtr=. ptr garrow_table_new_record_batches schemaPtr;recordBatchArrayPointer;countRecordBatches;<e
 memf > e
 tablePtr
@@ -404,7 +405,7 @@ g_bytes_unref < gBtyesPtr NB. Must use bytes unref, NOT object unref. Object unr
 bufferInputStreamPtr=. ptr garrow_buffer_input_stream_new <bufferPtr
 'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
 removeObject bufferPtr
-e=. < mema 4
+e=. initError ''
 ret garrow_input_stream_align bufferInputStreamPtr;64;<e
 memf > e
 bufferInputStreamPtr
@@ -413,7 +414,7 @@ bufferInputStreamPtr
 recordBatchStreamReaderTable=: {{
 bufferInputStreamPtr=. y
 'Not a vaild buffer input stream pointer.' assert * > bufferInputStreamPtr
-e=. < mema 4
+e=. initError ''
 streamReaderPtr=. ptr garrow_record_batch_stream_reader_new bufferInputStreamPtr;<e
 'Not a vaild stream reader pointer.' assert * > streamReaderPtr
 tablePtr=. ptr garrow_record_batch_reader_read_all streamReaderPtr;<e
@@ -445,7 +446,7 @@ filepath=. y
 inputStreamPtr=. fileInputStream filepath
 NB. inputStreamPtr =. memmoryMappedFileInputStream filepath
 'Not a vaild inputstream pointer.' assert * > inputStreamPtr
-e=. < mema 4
+e=. initError ''
 ret garrow_input_stream_align inputStreamPtr;64;<e
 NB. echo ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
 streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
