@@ -53,10 +53,8 @@ tablePtr
 }}
 
 
-spt =. getSchemaPt readCSV > 7 { csvlist
-readCSVBatch"1 [ 18 {. csvlist,.<spt
-
-
+spt =. getSchemaPt readCSV > 0 { csvlist
+readCSVBatch"1 [ 40 {. csvlist,.<spt
 
 $ each readsTable ({. tblPrt)
 NB. (<'ENDDATE') i.~ {. readsTable concatPtr
