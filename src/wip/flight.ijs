@@ -1,6 +1,7 @@
 
 NB. =========================================================
 NB. Arrow flight
+NB. python3 flightserver.py
 NB. python3 flightclient.py list localhost:5005
 NB. python3 flightclient.py put localhost:5005 iGd220525.csv
 NB. python3 flightclient.py do localhost:5005 shutdown
@@ -131,7 +132,7 @@ critPtr =. setString criteria
 bytePtr =. ptr g_bytes_new critPtr; # criteria
 callOptPtr =. ptr gaflight_call_options_new ''
 criteriaPtr =. ptr  gaflight_criteria_new < bytePtr
-infoListPtr =. ptr gaflight_client_list_flights clientPtr;criteriaPtr;callOptPtr;<<e
+infoListPtr =. ptr gaflight_client_list_flights clientPtr;criteriaPtr;callOptPtr;<e
 checkError e
 flightPtrCount =. ret g_list_length < infoListPtr
 infoPtrs =. (ptr@g_list_nth_data)"1 (<infoListPtr),.  <"0 i.flightPtrCount NB. Turn this into a function, interate on flightPtrCount
@@ -187,6 +188,7 @@ readTableSchema tblPtr1
 readTableSchema tblPtr2
 readCol tblPtr1; 0
 readCol tblPtr2; 0
+
 
 NB. =========================================================
 

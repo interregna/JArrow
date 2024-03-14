@@ -86,8 +86,8 @@ restPtr =. newList }. tablePts
 [ concatPtr =. ptr garrow_table_concatenate first; restPtr; tabConcatOptPtr ; <e
 checkError e
 
-
-
+spt =. getSchemaPt readCSV > 0 { csvlist
+readCSVBatch"1 [ 40 {. csvlist,.<spt
 
 $ each readsTable concatPtr
 readTableColName concatPtr;0
