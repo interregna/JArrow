@@ -1501,10 +1501,17 @@ GARROW_TYPE_LARGE_BINARY		large_binary		garrow_large_binary_array_get_value		NA	
 GARROW_TYPE_LARGE_LIST		large_list		garrow_large_list_array_get_value		garrow_large_list_array_get_values				NA			NA		0	A list of some logical data type with 64-bit offsets.
 )
 
+typeTranslation =: |: >@(cut&.>)@(LF&cut)@detab 0 : 0 NB. schema text vs typeName
+date32[day]	date32
+date64[day]	date64
+string	utf8
+)
+
 typeIndexLookup=: {{> x {~ y}}
 typeNameIndex=: (typeName&i.)@<
 typeNameLookup=: {{> x {~ typeNameIndex y}}
 NB. typeNameIndex each typeName
+
 
 NB. Examples:
 NB. typeNameIndex 'float'
@@ -1516,7 +1523,7 @@ NB. typeNew&typeNameLookup 'float'
 
 NB. Date from Unix epoch 1970-01-01
 NB. fromdate32 0, 18262
-fromdate32 =. {{
+fromdate32 =: {{
 a=. 719468.75 + , y
 c=. <. 36524.25 %~ a
 d=. <. a - 36524.25 * c
@@ -1526,20 +1533,20 @@ mm =. <. 30.6 %~ (da - 0.59)
 ((c*100)+db+mm >: 10),.(1+12 | mm+2),.<. 0.41 + da - 30.6 * mm
 }}
 
-fromdatetime64 =. (6!:16)
+fromdatetime64 =: (6!:16)
 9!:5 (1) NB. Enable nameref caching.
 init ''
 
 fileExistAssert=: ('File does not exist.'&assert)@fexist@jpath
-initError=: {{ < r [ 0 memw (r =. mema 2^2+IF64),0,1,4 }}
-checkError=: {{ 
-ie =. > memr (>y),0,1,4
+initError=: {{ < r [ 0 memw (r=. mema 2^2+IF64),0,1,4 }}
+checkError=: {{
+ie=. > memr (>y),0,1,4
 if. ie do.
-message=. getString < memr (ie),8,1,4
-g_error_free << {. memr (>y),0,1,4
+  message=. getString < memr (ie),8,1,4
+  g_error_free << {. memr (>y),0,1,4
 else.
-message=. 'unknown'
-memf > y
+  message=. 'unknown'
+  memf > y
 end.
 message assert 0 = ie
 }}
@@ -1550,19 +1557,19 @@ NB. Object and property management
 NB. =========================================================
 removeObject=: -.@ret@g_object_unref@<
 
-getPropertyBoolean=:{{
-'objectPtr propertyName' =. y
+getPropertyBoolean=: {{
+'objectPtr propertyName'=. y
 propertyPtr=. setString propertyName
-valPtr =. < mema 8
+valPtr=. < mema 8
 ret g_object_get objectPtr;propertyPtr;valPtr;<<0 	NB. Need to terminate in a null pointer.
 1 getInts valPtr
 }}
 
-setPropertyBoolean=:{{
-'objectPtr propertyName propertyValue' =. y
+setPropertyBoolean=: {{
+'objectPtr propertyName propertyValue'=. y
 propertyPtr=. setString propertyName
 g_object_set objectPtr;propertyPtr;propertyValue;<<0 	NB. Need to terminate in a null pointer.
-res =. getPropertyBoolean objectPtr;propertyName
+res=. getPropertyBoolean objectPtr;propertyName
 res
 }}
 
@@ -1795,6 +1802,30 @@ removeObject schemaPt
 res
 }}
 
+NB. Make a schema from a text file with fieldname fieldtype [nullableBoolean]
+schemFileaBox=: {{ dltb &.> > ':'&cut (&.>) (LF&cut) fread jpath y }}
+
+makeField=: {{
+NB. Two or three args, fieldname fieldType nullableBoolean
+'fieldname fieldType'=. 2 {. y
+if. 1 = (3!:0) > {: y do.   NB. If  three-length box row is a integer, assume this is a
+  'nullableBoolean must be either 0 or 1' assert 1 = (3!:0) > {: < 1
+  nullableBoolean=. > {: y
+else.
+  nullableBoolean=. 0
+end.
+fieldType=. > (({: typeTranslation),<fieldType) {~ (<fieldType) i.~ ({. typeTranslation),<fieldType   NB. Translate fieldtypes from string to utf8
+('Invalid datatype: ',fieldType) assert typeName e.~ (<fieldType)
+index=. typeNameIndex fieldType
+NB. fnewtype =. typeNew&typeNameLookup fieldtype
+NB. typePtr =. ptr ".  fnewtype,''''''
+ptr newField fieldname;fieldType;nullableBoolean
+}}"1
+
+schemaFromTable=: {{ptr@garrow_schema_new@<@newList makeField y }}
+
+scheemaReadFile=: schemaFromTable@schemFileaBox
+
 
 NB. =========================================================
 NB. Table
@@ -1849,7 +1880,7 @@ NB. =========================================================
 NB. Format readers
 NB. =========================================================
 readFileSchema=: {{ readTableSchema@u ] filepath=. y }}
-printFileSchema=: {{ printSchema@u ] filepath=. y }}
+printFileSchema=: {{ printBasicSchema@u ] filepath=. y }}
 readFileData=: {{ readData@u ] filepath=. y }}
 readFileTable=: {{ readTable@u ] filepath=. y }}
 readsFileTable=: {{ readsTable@u ] filepath=. y }}
