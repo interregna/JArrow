@@ -12,7 +12,7 @@ copytestfiles =. {{
 
 copytestfiles each 'parquet';'csv';'jsonl';'arrow';'json';'feather'
 
-load ProjPath,'/arrow.ijs'
+load ProjPath,'/arrow/arrow.ijs'
 coinsert 'parrow'
 
 t1path =. TempPath,'test1.parquet'
@@ -66,6 +66,3 @@ echo readsCSVTable t3path
 echo readCSVDataframe t3path
 echo readCSVCol t3path;0
 
-
-
-": < 10

@@ -15,7 +15,7 @@ loc_z_=: 3 : 'jpath > (4!:4 <''y'') { 4!:3 $0'  NB. pathname of script calling i
 ProjPath=: fpath_j_ loc ''                      NB. folder containing this file
 
 Proj_Src=: ProjPath
-Proj_Tgt=: ProjPath,'/arrow.ijs'
+Proj_Tgt=: ProjPath,'/arrow/arrow.ijs'
 writesource_jp_ Proj_Src;Proj_Tgt
 
 echo 'Built file: ',Proj_Tgt
