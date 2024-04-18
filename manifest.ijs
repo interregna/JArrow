@@ -21,11 +21,17 @@ FOLDER=: 'data/arrow'
 FILES=: 0 : 0
 LICENSE
 arrow.ijs
+test/make_test_parquet.ijs
 test/test1.ijs
-test/make_test_parquet.py
+test/test1.csv
 test/test1.parquet
 test/test2.parquet
 test/test3.parquet
+test/test1.json
+test/test2.json
+test/test3.json
+test/test4.json
+test/test1.feather
 )
 
 DEPENDS=: 0 : 0
