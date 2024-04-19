@@ -121,7 +121,7 @@ NB. NB. A list of flights is a list of pointers to 'info'
 NB. flightInfoList =:{{
 NB. infoListPtr =. y
 NB. flightPtrCount =. ret g_list_length < infoListPtr
-NB. infoPtrs =.( ptr@g_list_nth_data)"1 (<infoListPtr),.  <"0 i.flightPtrCount NB. Turn this into a function, interate on flightPtrCount
+NB. infoPtrs =.( ptr@g_list_nth_data)"1 (<infoListPtr),.  <"0 i.flightPtrCount NB. Turn this into a function, iterate on flightPtrCount
 NB. }}
 
 NB. List Flights
@@ -186,15 +186,9 @@ flightInfo 0{ infoPtr
 readsTable tblPtrs1
 readTableSchema tblPtr1
 readTableSchema tblPtr2
-readCol tblPtr1; 1
-readCol tblPtr2; 1
 
-(1 2) {:: readsTable tblPtr1
-(1 2) {:: readsTable tblPtr2
-
-
-
-
+readCol tblPtr1; 15
+readCol tblPtr2; 13
 
 NB. =========================================================
 

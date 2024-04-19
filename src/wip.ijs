@@ -266,9 +266,6 @@ AA =. setString each a;b;c;d
 
 paramspec AA,0;1;0;1
 
-read_options.skip_rows,
-
-
 
 NB. =========================================================
 NB. Buffer test

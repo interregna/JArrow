@@ -116,10 +116,17 @@ GARROW_TYPE_LARGE_BINARY		large_binary		garrow_large_binary_array_get_value		NA	
 GARROW_TYPE_LARGE_LIST		large_list		garrow_large_list_array_get_value		garrow_large_list_array_get_values				NA			NA		0	A list of some logical data type with 64-bit offsets.
 )
 
+typeTranslation =: |: >@(cut&.>)@(LF&cut)@detab 0 : 0 NB. schema text vs typeName
+date32[day]	date32
+date64[day]	date64
+string	utf8
+)
+
 typeIndexLookup=: {{> x {~ y}}
 typeNameIndex=: (typeName&i.)@<
 typeNameLookup=: {{> x {~ typeNameIndex y}}
 NB. typeNameIndex each typeName
+
 
 NB. Examples:
 NB. typeNameIndex 'float'
@@ -131,7 +138,7 @@ NB. typeNew&typeNameLookup 'float'
 
 NB. Date from Unix epoch 1970-01-01
 NB. fromdate32 0, 18262
-fromdate32 =. {{
+fromdate32 =: {{
 a=. 719468.75 + , y
 c=. <. 36524.25 %~ a
 d=. <. a - 36524.25 * c
@@ -141,4 +148,4 @@ mm =. <. 30.6 %~ (da - 0.59)
 ((c*100)+db+mm >: 10),.(1+12 | mm+2),.<. 0.41 + da - 30.6 * mm
 }}
 
-fromdatetime64 =. (6!:16)
+fromdatetime64 =: (6!:16)
