@@ -169,7 +169,7 @@ NB. With a client and an endpoint, we can retrieve either a list of recordbatche
 NB. =========================================================
 
 clientPtr =. createClient@connectLocation 'grpc+tcp://localhost:5005'
-flightInfoPtrs =. getClientFlightInfo clientPtr; ''   NB. This could be filtered with search criteria.
+flightInfoPtrs =. getClientFlightInfo clientPtr; 'example string'   NB. This could be filtered with search criteria.
 flightInfo flightInfoPtrs
 endpointPtrs =. <@getEndpoints flightInfoPtrs
 
@@ -186,8 +186,14 @@ flightInfo 0{ infoPtr
 readsTable tblPtrs1
 readTableSchema tblPtr1
 readTableSchema tblPtr2
-readCol tblPtr1; 0
-readCol tblPtr2; 0
+readCol tblPtr1; 1
+readCol tblPtr2; 1
+
+(1 2) {:: readsTable tblPtr1
+(1 2) {:: readsTable tblPtr2
+
+
+
 
 
 NB. =========================================================
