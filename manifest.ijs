@@ -14,7 +14,7 @@ https://arrow.apache.org/docs/c_glib/parquet-glib/
 
 VERSION=: '18.0.1'
 
-RELEASE=:'j904'
+RELEASE=:'j903'
 
 FOLDER=: 'data/arrow'
 
