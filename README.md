@@ -76,17 +76,15 @@ Uses C API.
 
 `readTable`  minimizes space but can take more time to display
 
-
 ## Development
-1) In Jqt, set your path for JPackageDev
-   File > Configure > Folders
-   `JPackageDev /code/JPackageDev`
-   (or the path of your choice in, then modify build.ijs)
+1) In Jqt, identify your path for ~Projects
+   jpath '~Projects'
 
-2) Clone the JArrow repo in JPackageDev
+2) Git clone the JArrow repo within ~Projects
+
 
 3) Restart Jqt and open the Arrow project
-   Project > Open > JPackageDev > arrow
+   Project > Open > Projects > jarrow
 
 4) Re-build the addon.
    Ctrl + F9
