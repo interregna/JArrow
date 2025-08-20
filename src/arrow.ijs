@@ -369,7 +369,7 @@ checkError e
 'Check file exists and permissions.' assert * > fInputStreamPtr
 NB. Example adding column names:
 readOptionPtr=. ptr garrow_csv_read_options_new ''
-garrow_csv_read_options_add_schema readOptionPtr;<
+NB. garrow_csv_read_options_add_schema readOptionPtr;<
 NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
 NB. ptr i32 =. '"/usr/local/lib/libarrow-glib.dylib" garrow_int32_data_type_get_type *'&cd ''
 NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setString 'col1');(< ptr i32)
@@ -433,11 +433,13 @@ readParquet=: {{
 'filepath'=. y
 'File does not exist or is not permissioned for read.' assert fexist (jpath filepath)
 e=. initError ''
-readerPathPtr=. ptr gparquet_arrow_file_reader_new_path (jpath filepath);<e
+pathPtr =. setString (jpath filepath)
+readerPathPtr=. ptr gparquet_arrow_file_reader_new_path (pathPtr);<e
 checkError e
 e=. initError ''
 tablePtr=. ptr gparquet_arrow_file_reader_read_table readerPathPtr;<e
 checkError e
+memf > pathPtr
 removeObject readerPathPtr
 tablePtr
 }}

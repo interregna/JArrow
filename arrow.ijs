@@ -21,29 +21,125 @@ getString=:{{memr (> y),0,_1,2}}
 getStringFree =: {{res [ memf y [ res=.memr (y=.>y),0,_1,2}}
 getInts=:{{memr (> y),0,x,4}}
 
-libload =: {{
-  if.     UNAME-:'Linux' do.
-    arrow    =. '/usr/lib/x86_64-linux-gnu/libarrow-glib.so'
-    parquet  =. '/usr/lib/x86_64-linux-gnu/libparquet-glib.so'
-    flight   =. '/usr/lib/x86_64-linux-gnu/libarrow-flight-glib.so'
-    dataset  =. '/usr/lib/x86_64-linux-gnu/libarrow-dataset-glib.so'
-  elseif. UNAME-:'Darwin' do.
-    arrow    =.  '/usr/local/lib/libarrow-glib.dylib'
-    parquet  =.  '/usr/local/lib/libparquet-glib.dylib'
-    flight   =. '/usr/local/lib/libarrow-flight-glib.dylib'
-    dataset   =. '/usr/local/lib/libarrow-dataset-glib.dylib'
-  elseif. UNAME-:'Win' do.
-    arrow    =. 'C:/msys64/mingw64/bin/libarrow-glib-1800.dll'
-    parquet  =. 'C:/msys64/mingw64/bin/libparquet-glib-1800.dll'
-    flight   =. 'C:/msys64/mingw64/bin/libarrow-flight-glib-1800.dll'
-    dataset  =. 'C:/msys64/mingw64/bin/libarrow-dataset-glib-1800.dll'
+trim_nl =: 3 : 'if. LF = {:y do. }:y else. y end.'
+
+toupper =: 3 : 0
+i =. a. i. y
+mask =. (97 <: i) *. (i <: 122)
+newi =. i - 32 * mask
+ascii_pos =. I. i < #a.
+(newi { a.) ascii_pos } y
+)
+
+try_fallbacks =: 3 : 0
+'basename ext dirlist' =. y
+for_dir. dirlist do.
+  path =. (>dir) , 'lib' , basename , ext
+  if. fexist path do. return. path end.
+end.
+''
+)
+
+getenv_default =: 3 : 0
+'var def' =. y
+res =. 2!:5 var
+if. #res do. res else. def end.
+)
+
+try_dir_search =: 3 : 0
+'dir base ext' =. y
+cmd =. 'dir /b "' , dir , 'lib' , base , '*' , ext , '"'
+out =. 2!:0 cmd
+files =. <;._2 out , LF
+files =. files #~ #&> files
+if. 0 = #files do. '' return. end.
+dir , > {. files  NB. Pick the first matching file
+)
+
+check_env_or_error =: 3 : 0
+basename =. y
+envvar =. 'ARROW_LIB_' , toupper basename
+p =. 2!:5 envvar
+if. #p do. return. p end.
+echo 'Library not found: lib' , basename , '. Please install via package manager or set ' , envvar , '=<full path>'
+assert 0 [ 'Library not found'
+)
+
+get_lib_path_linux =: 3 : 0
+  basename =. y
+  pkg =. basename  NB. e.g., 'arrow-glib' for pkg-config
+  try.
+    cmd =. 'pkg-config --variable=libdir ' , pkg
+    libdir =. trim_nl 2!:0 cmd
+    path =. libdir , '/lib' , basename , '.so'
+  catch.
+    path =. try_fallbacks basename ; '.so' ; '/usr/lib/x86_64-linux-gnu/' ; '/usr/lib/' ; '/usr/local/lib/'
   end.
-  binariesinstalled =. fexist@> arrow;parquet;flight
-  msg =. 'Need to install or update binaries.',LF,'See: https://arrow.apache.org/install/',LF,'Missing files:',LF,  LF joinstring ( (-. binariesinstalled) # arrow;parquet;flight)
-  msg assert <./ binariesinstalled
-  'libArrow libParquet libFlight'  =: dquote each arrow;parquet;flight NB. Add double-quotes for cd calls.
-  1
+  if. '' -: path do. check_env_or_error basename end.
+  path
+)
+
+get_lib_path_mac =: 3 : 0
+  basename =. y
+  pkg =. 'apache-arrow-glib'  NB. Single package for all GLib bindings
+  arch =. trim_nl 2!:0 'uname -m'
+  if. 'arm64' -: arch do.
+    primary_brew =. '/opt/homebrew/bin/brew'
+    fallback_dirs =. '/opt/homebrew/lib/' ; '/usr/local/lib/'
+  else.
+    primary_brew =. '/usr/local/bin/brew'
+    fallback_dirs =. '/usr/local/lib/' ; '/opt/homebrew/lib/'
+  end.
+  prefix =. ''
+  try.
+    cmd =. primary_brew , ' --prefix ' , pkg
+    prefix =. trim_nl 2!:0 cmd
+  catch. end.
+  if. '' -: prefix do.
+    NB. Try the other brew path as fallback
+    secondary_brew =. primary_brew {~: '/opt/homebrew/bin/brew' ; '/usr/local/bin/brew'
+    try.
+      cmd =. secondary_brew , ' --prefix ' , pkg
+      prefix =. trim_nl 2!:0 cmd
+    catch. end.
+  end.
+  if. #prefix do.
+    path =. prefix , '/lib/lib' , basename , '.dylib'
+    if. fexist path do. return. path end.
+  end.
+  path =. try_fallbacks basename ; '.dylib' ; fallback_dirs
+  if. '' -: path do. check_env_or_error basename end.
+  path
+)
+
+get_lib_path_win =: 3 : 0
+  basename =. y
+  msys =. getenv_default 'MSYS2_PATH' ; 'C:\msys64'
+  cmd =. msys , '\usr\bin\bash.exe -c "pacman -Ql mingw-w64-x86_64-arrow | grep ''/mingw64/bin/lib' , basename , '.*\.dll$''"'
+  try.
+    relpath =. trim_nl 2!:0 cmd
+    path =. msys , (}. relpath)  NB. Drop leading /
+  catch.
+    path =. try_dir_search msys , '\mingw64\bin\' ; basename ; '.dll'
+  end.
+  if. '' -: path do. check_env_or_error basename end.
+  path
+)
+
+libload =: {{
+  get_lib_path =. get_lib_path_linux ` get_lib_path_mac ` get_lib_path_win @. (('Linux' ; 'Darwin' ; 'Win') i. <UNAME)
+  basenames =. 'arrow-glib' ; 'parquet-glib' ; 'arrow-flight-glib' ; 'arrow-dataset-glib'
+  paths =. get_lib_path &.> basenames
+  binariesinstalled =. fexist"0 paths
+  missing =. paths #~ -. binariesinstalled
+  if. #missing do.
+    msg =. 'Need to install or update binaries.',LF,'See: https://arrow.apache.org/install/',LF,'Missing files:',LF, ; LF ,~ each missing
+    assert 0 [ msg
+  end.
+  dquote each paths
 }}
+
+'libArrow libParquet libFlight libDataset' =: libload''
 
 cbind =: 4 : 0"1 1
   'type name args' =. y
@@ -1908,7 +2004,7 @@ checkError e
 'Check file exists and permissions.' assert * > fInputStreamPtr
 NB. Example adding column names:
 readOptionPtr=. ptr garrow_csv_read_options_new ''
-garrow_csv_read_options_add_schema readOptionPtr;<
+NB. garrow_csv_read_options_add_schema readOptionPtr;<
 NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_name n * *'&cd (< ptr rdOptPt ),(<< setString 'col1')
 NB. ptr i32 =. '"/usr/local/lib/libarrow-glib.dylib" garrow_int32_data_type_get_type *'&cd ''
 NB. '"/usr/local/lib/libarrow-glib.dylib" garrow_csv_read_options_add_column_type n * * *'&cd (< ptr rdOptPt ),(< setString 'col1');(< ptr i32)
