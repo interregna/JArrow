@@ -1235,6 +1235,7 @@ outputStreamBindings =: lib 0 : 0
 i * i *	garrow_output_stream_align	(GArrowOutputStream *stream, gint32 alignment, GError **error); gboolean
 i * * *	garrow_output_stream_write_tensor	(GArrowOutputStream *stream , GArrowTensor *tensor , GError **error); gint64
 i * * * *	garrow_output_stream_write_record_batch	(GArrowOutputStream *stream, GArrowRecordBatch *record_batch, GArrowWriteOptions *options, GError **error); gint64
+i * *	garrow_output_stream_close	(GArrowOutputStream *stream, GError **error); gboolean
 * *c b *	garrow_file_output_stream_new	(const gchar *path, gboolean append, GError **error); GArrowFileOutputStream *
 * *	garrow_buffer_output_stream_new	(GArrowResizableBuffer *buffer); GArrowBufferOutputStream *
 * *	garrow_gio_output_stream_new	(GOutputStream *gio_output_stream); GArrowGIOOutputStream *
@@ -2655,9 +2656,74 @@ res
 }}
 
 NB. IPC format for saved files (.arrow file)
-readArrowTable=. readIPCTable=. recordBatchTable@recordBatchFileReader
+NB. NB:  =:  not  =.  — these need to be globals so the transfers
+NB. block at the bottom can move them to z. Previously =. made them
+NB. local-only and the transfers silently failed for IPC verbs.
+readArrowTable=:  readIPCTable=:  recordBatchTable@recordBatchFileReader
 NB. IPC format for streaming, but from a file on disk (.arrows file)
-readFileBufferTable=. readArrowsTable=. readIPCFileStreamTable=. fileInputStreamTable
+readFileBufferTable=: readArrowsTable=: readIPCFileStreamTable=: readFileStreamTable
+
+NB. =========================================================
+NB. IPC writers — '.arrow' file format and '.arrows' streaming format
+NB. =========================================================
+
+NB. writeArrowTable tablePtr;'~out.arrow'
+NB. Write a table to an IPC file (.arrow). Uses the standard recommended
+NB. extension; this is the same on-disk format as Feather v2.
+writeArrowTable=: {{
+'tablePtr filepath'=. y
+filenamePtr=. setString jpath filepath
+e=. initError ''
+outStreamPtr=. ptr garrow_file_output_stream_new filenamePtr;0;<e
+checkError e
+e=. initError ''
+schemaPtr=. ptr garrow_table_get_schema < tablePtr
+'Null schema'   assert * > schemaPtr
+writerPtr=. ptr garrow_record_batch_file_writer_new outStreamPtr;schemaPtr;<e
+checkError e
+e=. initError ''
+ret garrow_record_batch_writer_write_table writerPtr;tablePtr;<e
+checkError e
+e=. initError ''
+ret garrow_record_batch_writer_close writerPtr;<e
+checkError e
+e=. initError ''
+ret garrow_output_stream_close outStreamPtr;<e
+checkError e
+removeObject"0 writerPtr, outStreamPtr, schemaPtr
+memf > filenamePtr
+1
+}}
+
+NB. writeArrowsTable tablePtr;'~out.arrows'  — streaming IPC, no footer
+writeArrowsTable=: {{
+'tablePtr filepath'=. y
+filenamePtr=. setString jpath filepath
+e=. initError ''
+outStreamPtr=. ptr garrow_file_output_stream_new filenamePtr;0;<e
+checkError e
+e=. initError ''
+schemaPtr=. ptr garrow_table_get_schema < tablePtr
+writerPtr=. ptr garrow_record_batch_stream_writer_new outStreamPtr;schemaPtr;<e
+checkError e
+e=. initError ''
+ret garrow_record_batch_writer_write_table writerPtr;tablePtr;<e
+checkError e
+e=. initError ''
+ret garrow_record_batch_writer_close writerPtr;<e
+checkError e
+e=. initError ''
+ret garrow_output_stream_close outStreamPtr;<e
+checkError e
+removeObject"0 writerPtr, outStreamPtr, schemaPtr
+memf > filenamePtr
+1
+}}
+
+NB. writeFeatherTable tablePtr;'~out.feather'  — Feather v2 (IPC file)
+NB. Same on-disk format as writeArrowTable; provided for naming symmetry
+NB. with readsFeatherTable.
+writeFeatherTable=: writeArrowTable
 NB. ====================
 NB. Expose public interface in z locale
 
@@ -2668,8 +2734,14 @@ readTableSchema
 readTableColName
 
 readArrowTable
+readArrowsTable
 readFileBufferTable
 readBufferTable
+
+writeArrowTable
+writeArrowsTable
+writeFeatherTable
+writeParquet
 
 readParquetSchema
 printParquetSchema

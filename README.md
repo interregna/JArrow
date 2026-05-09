@@ -108,9 +108,35 @@ see `test/test1.ijs`
 * [x] CSV reader
 * [x] JSONL reader
 * [x] Arrow Feather (IPC v1) reader
-* [ ] IPC files (".arrow" files)
-* [ ] IPC streams (".arrows" files when stored on disk)
-* [ ] Flight client 
+* [x] IPC files (".arrow" files)        — `readArrowTable`,  `writeArrowTable`
+* [x] IPC streams (".arrows" files)     — `readArrowsTable`, `writeArrowsTable`
+* [x] Feather v2 writer                 — `writeFeatherTable`  (alias of `writeArrowTable`)
+* [x] Parquet writer                    — `writeParquet`
+* [ ] Flight client
 * [ ] Flight server
 * [ ] Non-local filesystems (S3)
 * [ ] IPC streaming with event-driven calls
+
+##### Writers (new in 21.1.0)
+
+```j
+   writeArrowTable    tablePtr;'~out.arrow'      NB. IPC file format
+   writeArrowsTable   tablePtr;'~out.arrows'     NB. IPC streaming format
+   writeFeatherTable  tablePtr;'~out.feather'    NB. Feather v2 (= IPC file)
+   writeParquet       tablePtr;'~out.parquet'    NB. Parquet
+```
+
+The IPC file (`.arrow`) and Feather v2 (`.feather`) formats are the
+random-access-preserving choice. `.arrows` (streaming, no footer) is
+the right shape for pipes and sockets. Parquet is the cross-ecosystem
+format.
+
+##### Bug fixes in 21.1.0
+
+* The IPC reader verbs `readArrowTable`, `readArrowsTable`, and
+  `readFileBufferTable` were defined with `=.` (local) instead of
+  `=:` (global) — the public-interface transfers block at the bottom
+  of `arrow.ijs` silently failed to expose them. Now fixed; these
+  verbs are reachable as documented.
+* Added missing `garrow_output_stream_close` binding (needed by the
+  new writers to flush before deallocation).
