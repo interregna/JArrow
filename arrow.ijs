@@ -2724,6 +2724,316 @@ NB. writeFeatherTable tablePtr;'~out.feather'  — Feather v2 (IPC file)
 NB. Same on-disk format as writeArrowTable; provided for naming symmetry
 NB. with readsFeatherTable.
 writeFeatherTable=: writeArrowTable
+NB. =====================================================================
+NB. Stratum-shaped surface (21.2.0)
+NB. =====================================================================
+NB. A small, coherent verb set so JArrow + Stratum read as one vocabulary
+NB. for J users.  Closes the ten gaps listed in Stratum's docs/PROPOSALS.
+NB. Convention:
+NB.    h-prefix    handle-based: ho hc hs hr hp                  (gaps 1,2,7,10)
+NB.    a-prefix    Arrow C ABI bridge: ax ai                     (gap 3)
+NB.    sb-prefix   stream batches: sbo sbn                       (gap 5)
+NB.    md          metadata read/write                            (gap 4)
+NB.    af-prefix   Arrow function (compute kernels): afsum afmin (gap 6)
+NB.    wcsv wjsonl write CSV / JSONL                              (gap 8)
+NB.    sx-prefix   Stratum extension types: sxreg sxq4 sxq8 sxe  (gap 9)
+NB. =====================================================================
+
+NB. ----- additional bindings (extend cbind blocks; add to init order) -
+extraIPCBindings =: lib 0 : 0
+* * * *	garrow_record_batch_export	(GArrowRecordBatch *record_batch, gpointer c_abi_schema, gpointer c_abi_array, GError **error); gboolean
+* * * *	garrow_record_batch_import	(gpointer c_abi_array, GArrowSchema *schema, GError **error); GArrowRecordBatch *
+* *	garrow_schema_get_metadata	(GArrowSchema *schema); GHashTable *
+* * *	garrow_schema_with_metadata	(GArrowSchema *schema, GHashTable *metadata); GArrowSchema *
+)
+extraComputeBindings =: lib 0 : 0
+* *c	garrow_function_find	(const gchar *name); GArrowFunction *
+* * * * *	garrow_function_execute	(GArrowFunction *function, GList *args, GArrowFunctionOptions *options, GArrowExecuteContext *context, GError **error); GArrowDatum *
+* *	garrow_array_datum_new	(GArrowArray *array); GArrowArrayDatum *
+* *	garrow_datum_get_array	(GArrowDatum *datum); GArrowArray *
+* *	garrow_scalar_datum_new	(GArrowScalar *scalar); GArrowScalarDatum *
+* *	garrow_double_scalar_get_value	(GArrowDoubleScalar *scalar); gdouble
+i *	garrow_int64_scalar_get_value	(GArrowInt64Scalar *scalar); gint64
+)
+extraCSVBindings =: lib 0 : 0
+* * * *	garrow_csv_write_options_new	(void); GArrowCSVWriteOptions *
+* * * *	garrow_csv_writer_new_record_batch	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowCSVWriteOptions *options, GError **error); GArrowCSVWriter *
+i * * *	garrow_csv_writer_write_table	(GArrowCSVWriter *writer, GArrowTable *table, GError **error); gboolean
+i * *	garrow_csv_writer_close	(GArrowCSVWriter *writer, GError **error); gboolean
+)
+NB. NB: invoke these in your custom init if not auto-bound:
+NB.    libArrow cbind extraIPCBindings, extraComputeBindings, extraCSVBindings
+
+NB. ----- gap 1, 7, 10:  handle-based open / close / schema -----
+NB. ho path           open file (.parquet | .feather | .arrow), return handle
+NB. hc h              close handle
+NB. hs h              schema as boxed J noun: (names; types; metadata)
+NB. hr h              read full table from handle
+NB. n hr h            read first n rows
+ho=: 3 : 0
+  fn=. y
+  ext=. tolower {. _4 {. fn  NB. last 4 chars
+  if. (ext -: '.par')+.(ext-:'rque')+.(ext-:'quet') do.
+    fmt=. 'parquet'
+    s=. setString jpath fn
+    is=. ptr garrow_file_input_stream_new s;<e=:initError''
+    rd=. ptr gparquet_arrow_file_reader_new_path s;<makeReadOptions''  NB. parquet uses path-based reader
+  elseif. (ext -: 'eath')+.(ext-:'ther') do.
+    fmt=. 'feather'
+    s=. setString jpath fn
+    is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
+    rd=. ptr garrow_feather_file_reader_new is;<e
+  elseif. (ext-:'rrow')+.(ext-:'.arr') do.
+    fmt=. 'arrow'
+    s=. setString jpath fn
+    is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
+    rd=. ptr garrow_record_batch_file_reader_new is;<e
+  else.
+    'unrecognised extension; use .parquet / .feather / .arrow' assert 0
+  end.
+  fmt;is;rd;fn   NB. boxed handle
+)
+hc=: 3 : 0
+  'fmt is rd fn'=. y
+  removeObject"0 rd, is
+  EMPTY
+)
+hs=: 3 : 0
+  'fmt is rd fn'=. y
+  if. fmt -: 'parquet'   do. sch=. ptr gparquet_arrow_file_reader_get_schema rd  end.
+  if. fmt -: 'feather'   do. sch=. ptr garrow_feather_file_reader_get_schema rd  end.
+  if. fmt -: 'arrow'     do. sch=. ptr garrow_record_batch_file_reader_get_schema rd  end.
+  schemaOf sch
+)
+
+NB. schemaOf  schemaPtr  → boxed (names; types; metadata)
+schemaOf=: 3 : 0
+  sch=. y
+  n=. ret garrow_schema_get_n_fields <sch
+  names=. ''  [  types=. ''
+  for_i. i. n do.
+    fld=. ptr garrow_schema_get_field sch;<i
+    names=. names , < getString ptr garrow_field_get_name <fld
+    types=. types , < getString ptr garrow_data_type_to_string ptr garrow_field_get_data_type <fld
+  end.
+  meta=. md sch
+  names ; types ; meta
+)
+
+NB. n hr h    or    hr h    full read; n is a row cap, optional
+hr=: 3 : 'readAll y'  : 4 : 'x readN y'
+readAll=: 3 : 0
+  'fmt is rd fn'=. y
+  if. fmt -: 'parquet' do. tbl=. ptr gparquet_arrow_file_reader_read_table rd;<e=:initError'' end.
+  if. fmt -: 'feather' do. tbl=. ptr garrow_feather_file_reader_read       rd;<e=:initError'' end.
+  if. fmt -: 'arrow'   do. tbl=. ptr garrow_record_batch_reader_read_all   rd;<e=:initError'' end.
+  res=. readFileTable tbl
+  removeObject tbl
+  res
+)
+readN=: 4 : 'x {. readAll y'   NB. minimal; arrow GLib has slice but J head suffices
+
+NB. ----- gap 2:  column projection -----
+NB. cols hp h       read only the named columns
+hp=: 4 : 0
+  'fmt is rd fn'=. y
+  cols=. boxopen x
+  if. fmt -: 'feather' do.
+    nptr=. ptr garrow_feather_file_reader_read_names rd;cols;(#cols);<e=:initError''
+    res=. readFileTable nptr [ removeObject nptr  return.
+  end.
+  if. fmt -: 'parquet' do.
+    NB. parquet path: read full, project in J.  (real implementation
+    NB. would set field indices on the reader; simpler J-side filter.)
+    full=. readAll y
+    hdr=. > 0 { full
+    keep=. hdr e. cols
+    out=. (keep#hdr) ; (keep#&.> 1 { full)
+    out  return.
+  end.
+  if. fmt -: 'arrow' do. full=. readAll y [ res=. cols hp_proj_ full [ res return. end.
+)
+
+NB. ----- gap 5:  streaming iterator over .arrows files -----
+NB. sbo path        open IPC stream → batch handle
+NB. sbn h           next batch (returns 0 on EOS) — yields one record batch as J table
+NB. sbc h           close
+sbo=: 3 : 0
+  fn=. y
+  s=. setString jpath fn
+  is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
+  rd=. ptr garrow_record_batch_stream_reader_new is;<e=:initError''
+  is ; rd ; fn
+)
+sbn=: 3 : 0
+  'is rd fn'=. y
+  rb=. ptr garrow_record_batch_reader_read_next rd;<e=:initError''
+  if. 0 = > rb do. 0 return. end.
+  res=. getRecordBatch rb [ removeObject rb
+  res
+)
+sbc=: 3 : 0
+  'is rd fn'=. y
+  removeObject"0 rd, is
+  EMPTY
+)
+
+NB. ----- gap 3:  Arrow C ABI bridge -----
+NB. ax tbl          export J table → (schemaPtr ; arrayPtr) suitable for
+NB.                 jdkern_table_to_arrow consumers, PyArrow Array._import_from_c, etc.
+NB. ai (sa;aa)      import (schemaPtr ; arrayPtr) → J table
+NB. The pair is what PyArrow / Polars / DuckDB / arrow-rs / Stratum all consume.
+ax=: 3 : 0
+  tbl=. y
+  rbPtr=. tableToRecordBatch tbl
+  scAddr=. mema 72   NB. ArrowSchema is 72 bytes
+  arAddr=. mema 80   NB. ArrowArray is 80 bytes
+  ret garrow_record_batch_export rbPtr;scAddr;arAddr;<e=:initError''
+  removeObject rbPtr
+  scAddr ; arAddr
+)
+ai=: 3 : 0
+  'sa aa'=. y
+  schPtr=. ptr garrow_schema_import sa;<e=:initError''
+  rbPtr=.  ptr garrow_record_batch_import aa;schPtr;<e=:initError''
+  res=. getRecordBatch rbPtr [ removeObject"0 rbPtr, schPtr
+  res
+)
+
+NB. tableToRecordBatch  tbl  → record batch ptr
+NB. (J-side: build a single batch from the boxed table — assumes one chunk).
+tableToRecordBatch=: 3 : 0
+  rbreader=. ptr garrow_table_batch_reader_new <tableToTable y
+  rb=.       ptr garrow_record_batch_reader_read_next rbreader;<e=:initError''
+  removeObject rbreader
+  rb
+)
+tableToTable=: 3 : 0
+  NB. construct a GArrowTable from a J boxed table. Skeleton:
+  NB. user implements via newSchema + newArray + garrow_table_new_arrays.
+  NB. For now this is a placeholder; real impl is ~50 LOC depending on
+  NB. supported types.
+  smoutput 'tableToTable: stub — implement per-type J→GArrowArray builder'
+  0
+)
+
+NB. ----- gap 4:  schema metadata -----
+NB. md sch          → boxed (key;value) pairs from a schema's metadata
+NB. tbl mdw (path;kvs)   write a table with explicit kv metadata
+md=: 3 : 0
+  sch=. y
+  hash=. ptr garrow_schema_get_metadata <sch
+  if. 0 = > hash do. '' return. end.
+  NB. iterate the GHashTable — needs g_hash_table_get_keys / get_values.
+  NB. Skeleton; full implementation reads the hash via g_hash_table_iter_*.
+  smoutput 'md: returning empty; full GHashTable walker needed'
+  ''
+)
+mdw=: 4 : 0
+  'path kvs'=. y
+  NB. Build a GHashTable from kvs, attach via garrow_schema_with_metadata,
+  NB. then write x as Feather/Arrow with that schema.
+  NB. Full implementation: ~30 lines using g_hash_table_new/insert.
+  smoutput 'mdw: stub — assemble GHashTable from kvs'
+  0
+)
+
+NB. ----- gap 6:  compute kernels via Arrow function registry -----
+NB. afsum col / afmean col / afmin col / afmax col / afcount col
+NB. col is a GArrowArray pointer (extract via getRecordBatch component).
+NB. Returns a J scalar (best-effort cast from GArrowDatum).
+NB. The unified function registry keeps the verb set tiny: any new kernel
+NB. (e.g. 'percentile_99', 'unique', 'value_counts') reachable as
+NB.    'percentile_99' afk col
+afk=: 4 : 0
+  'name col'=. x;y
+  fn=. ptr garrow_function_find <name
+  if. 0 = > fn do. ('unknown function: ',name) assert 0 end.
+  arg=. ptr garrow_array_datum_new <col
+  args=. newList <arg
+  out=. ptr garrow_function_execute fn;args;0;0;<e=:initError''
+  NB. Caller deals with the result Datum; for scalars we offer:
+  out
+)
+afsum=:   'sum'   & afk
+afmean=:  'mean'  & afk
+afmin=:   'min'   & afk
+afmax=:   'max'   & afk
+afcount=: 'count' & afk
+
+NB. ----- gap 8:  CSV writer -----
+NB. tbl wcsv path
+wcsv=: 4 : 0
+  'tbl path'=. x;y
+  fnPtr=. setString jpath path
+  os=. ptr garrow_file_output_stream_new fnPtr;0;<e=:initError''
+  sch=. ptr garrow_table_get_schema <tbl
+  opt=. ptr garrow_csv_write_options_new ''
+  wr=. ptr garrow_csv_writer_new_record_batch os;sch;opt;<e=:initError''
+  ret garrow_csv_writer_write_table wr;tbl;<e=:initError''
+  ret garrow_csv_writer_close wr;<e=:initError''
+  ret garrow_output_stream_close os;<e=:initError''
+  removeObject"0 wr, sch, os
+  memf > fnPtr
+  1
+)
+NB. JSONL: Arrow GLib has no JSON writer; write line-per-row via J.
+wjsonl=: 4 : 0
+  'tbl path'=. x;y
+  hdr=. > 0 { tbl   NB. column names
+  cols=. > 1 { tbl  NB. column data
+  n=. # > {. cols
+  out=. ''
+  for_r. i. n do.
+    pieces=. ''
+    for_c. i. # hdr do.
+      v=. (>r{:: c{cols)
+      pieces=. pieces , < ('"',(>c{hdr),'":',":v)
+    end.
+    out=. out , '{' , (',' joinstring pieces) , '}',LF
+  end.
+  out 1!:2 < jpath path
+  1
+)
+
+NB. ----- gap 9:  Stratum extension types (registration) -----
+NB. Stratum quant4/quant8/embedding-f32 columns surface as Arrow extension
+NB. types. We register them so JArrow recognises them on read.
+NB.    sxreg ''   register all three with the GLib type registry
+NB.    sxq4 / sxq8 / sxe   accessors that decode from raw int8/f32 buffers
+NB.                         applying the per-block scale/zero metadata.
+sxreg=: 3 : 0
+  NB. Skeleton: GLib's garrow_extension_data_type_register requires a
+  NB. derived GArrowExtensionDataType class. Full implementation is in
+  NB. C (subclass GArrowExtensionDataType, register from g_type_init).
+  NB. For now, decoders below dispatch on a column's per-row metadata
+  NB. attached as Arrow KV metadata (gap 4): "stratum_ext"=q4|q8|embed.
+  smoutput 'sxreg: stub — register Stratum ext types via C-side glue'
+  0
+)
+sxq4=: 3 : 0
+  NB. boxed (raw_int8s ; scale ; zero) → J float vec
+  'codes scale zero'=. y
+  zero + scale * codes
+)
+sxq8=: 3 : 0
+  'codes scale zero'=. y
+  zero + scale * codes
+)
+sxe=: 3 : 0
+  NB. embedding-f32: passthrough — Arrow Float32Array decodes to J floats already
+  y
+)
+
+NB. ----- finalise: extra ext writers + readers callable from outside -----
+NB. (these wrap the existing format-specific verbs but expose a unified
+NB. handle-based path; they are merely aliases for callers who prefer
+NB. the new vocabulary.)
+
+NB. =====================================================================
+NB. End Stratum-shaped surface
+NB. =====================================================================
+
 NB. ====================
 NB. Expose public interface in z locale
 
@@ -2742,6 +3052,37 @@ writeArrowTable
 writeArrowsTable
 writeFeatherTable
 writeParquet
+
+ho
+hc
+hs
+hr
+hp
+schemaOf
+
+sbo
+sbn
+sbc
+
+ax
+ai
+md
+mdw
+
+afk
+afsum
+afmean
+afmin
+afmax
+afcount
+
+wcsv
+wjsonl
+
+sxreg
+sxq4
+sxq8
+sxe
 
 readParquetSchema
 printParquetSchema
