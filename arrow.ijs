@@ -163,6 +163,13 @@ init =: {{
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
   r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
   r =. r <. <./ libFlight cbind commonFlightBindings, clientFlightBindings, serverFlightBindings
+  NB. 21.2.0 additions: C-ABI export/import + compute registry + CSV writer
+  NB. (defined further down in arrow.ijs; bind here once those blocks are
+  NB. lexically reachable in this script file. Wrapped in `try.` because
+  NB. older Arrow GLib (<19) lacks some of these symbols.)
+  try. r =. r <. <./ libArrow cbind extraIPCBindings end.
+  try. r =. r <. <./ libArrow cbind extraComputeBindings end.
+  try. r =. r <. <./ libArrow cbind extraCSVBindings end.
   r
 }}
 NB. =========================================================
