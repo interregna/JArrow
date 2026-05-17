@@ -25,7 +25,6 @@ b * * * *	garrow_file_system_copy_file	(GArrowFileSystem *file_system, const gch
 * * * *	garrow_file_system_open_input_file	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowSeekableInputStream *
 * * * *	garrow_file_system_open_output_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
 * * * *	garrow_file_system_open_append_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
-n *	garrow_sub_tree_file_system_dispose	(GObject *object); static void
 * * *	garrow_sub_tree_file_system_new	(const gchar *base_path, GArrowFileSystem *base_file_system); GArrowSubTreeFileSystem *
 * * l	garrow_slow_file_system_new_average_latency	(GArrowFileSystem *base_file_system, gdouble average_latency); GArrowSlowFileSystem *
 * * l i	garrow_slow_file_system_new_average_latency_and_seed	(GArrowFileSystem *base_file_system, gdouble average_latency, gint32 seed); GArrowSlowFileSystem *
@@ -38,6 +37,5 @@ NB. =========================================================
 
 localFileSystemBindings =: lib 0 : 0
 *	garrow_local_file_system_options_new	(void); GArrowLocalFileSystemOptions *	
-n *	garrow_local_file_system_init	(GArrowLocalFileSystem *file_system); static void
 * *	garrow_local_file_system_new	(GArrowLocalFileSystemOptions *options); GArrowLocalFileSystem *
 )

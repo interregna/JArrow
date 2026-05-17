@@ -327,26 +327,7 @@ NB. =========================================================
 
 readFileStreamRecordBatches=: {{
 NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-fileInputStreamPtr=. fileInputStream filepath
-e=. initError ''
-ret garrow_input_stream_align fileInputStreamPtr;64;<e
-rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
-'Not a valid recordbatchReader.' assert * > rbreaderPtr
-'[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-garrow_record_batch_reader_get_schema < rbreaderPtr
-recordBatchPtrs=. >a:
-whilst. > rb do.
-  rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
-  if. > rb do.
-    recordBatchPtrs=. recordBatchPtrs, rb
-    NB. removeObject rb
-  end.
-end.
-memf > e
-('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
-recordBatchPtrs
+'garrow_record_batch_reader_read_next is unstable in this J/Arrow GLib 24.0.0 build; use readArrowsTable or readFileStreamTable' assert 0
 }}
 
 readFileRecordBatches=: {{
@@ -441,34 +422,13 @@ NB. names
 
 recordBatchStreamReader=: {{
 NB. This will read recordbatches out of a stream file.
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-inputStreamPtr=. fileInputStream filepath
-NB. inputStreamPtr =. memmoryMappedFileInputStream filepath
-'Not a vaild inputstream pointer.' assert * > inputStreamPtr
-e=. initError ''
-ret garrow_input_stream_align inputStreamPtr;64;<e
-NB. echo ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
-'Not a valid streamReader.' assert * > streamReaderPtr
-NB. schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
-NB. readOptionsPtr =. makeReadOptions''
-NB. 'Not a valid schema.' assert * > schemaPtr
-NB. recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e
-res=. > a:
-recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-while. > recordBatchPtr do.
-  res=. res, getRecordBatch recordBatchPtr
-  removeObject recordBatchPtr
-  recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-end.
-removeObject inputStreamPtr
-removeObject streamReaderPtr
-memf > e
+tablePtr=. readFileStreamTable y
+res=. readTable tablePtr
+removeObject tablePtr
 res
 }}
 
 NB. IPC format for saved files (.arrow file)
-readArrowTable=. readIPCTable=. recordBatchTable@recordBatchFileReader
+readArrowTable=. readIPCTable=. readFileRecordBatchTable
 NB. IPC format for streaming, but from a file on disk (.arrows file)
-readFileBufferTable=. readArrowsTable=. readIPCFileStreamTable=. fileInputStreamTable
+readFileBufferTable=. readArrowsTable=. readIPCFileStreamTable=. readFileStreamTable

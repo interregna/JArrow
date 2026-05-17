@@ -26,6 +26,7 @@ readerBindings =: lib 0 : 0
 * * *	garrow_record_batch_reader_read_next	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
 * * *	garrow_record_batch_reader_read_all	(GArrowRecordBatchReader *reader, GError **error); GArrowTable *
 * *	garrow_table_batch_reader_new	(GArrowTable *table); GArrowTableBatchReader *
+n * x	garrow_table_batch_reader_set_max_chunk_size	(GArrowTableBatchReader *reader, gint64 max_chunk_size); void
 * * *	garrow_record_batch_stream_reader_new	(GArrowInputStream *stream, GError **error); GArrowRecordBatchStreamReader *
 * * *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
 * *	garrow_record_batch_file_reader_get_schema	(GArrowRecordBatchFileReader *reader); GArrowSchema *
@@ -89,6 +90,8 @@ writerBindings =: lib 0 : 0
 i * * *	garrow_record_batch_writer_write_record_batch	(GArrowRecordBatchWriter *writer, GArrowRecordBatch *record_batch, GError **error); gboolean
 i * * *	garrow_record_batch_writer_write_table	(GArrowRecordBatchWriter *writer, GArrowTable *table, GError **error); gboolean
 i * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
+i *	garrow_record_batch_writer_is_closed	(GArrowRecordBatchWriter *writer); gboolean
 * * * *	garrow_record_batch_stream_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchStreamWriter *
 * * * *	garrow_record_batch_file_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchFileWriter *
+* * * * * *	garrow_record_batch_file_writer_new_full	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowWriteOptions *options, GHashTable *metadata, GError **error); GArrowRecordBatchFileWriter *
 )

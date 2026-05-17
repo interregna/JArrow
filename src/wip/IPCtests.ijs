@@ -33,7 +33,6 @@ NB. ferase filename
 filename fwrite~ gethttp source
 NB. Stream IPC to table tests
 NB. IPC format for streaming (.arrows file)
-readTable tp=. recordBatchTable@readFileStreamRecordBatches filename
 readTable tp=. readFileStreamTable filename
 printTableSchema tp
 removeObject tp
@@ -43,7 +42,6 @@ source=. 'https://cdn.jsdelivr.net/npm/superstore-arrow/superstore.arrow'
 filename=. jpath '~/Desktop/af/superstores.arrows' NB. Also a typo, should be .arrows (streaming)
 ferase filename
 (filename) fwrite~ (gethttp source)
-readTable tp=. recordBatchTable@readFileStreamRecordBatches filename
 readTable tp=. readFileStreamTable filename
 printTableSchema tp
 removeObject tp
@@ -51,7 +49,6 @@ removeObject tp
 NB. scrabble
 filename=. '~/Desktop/af/scrabble.arrows'
 fexist (jpath filename)
-readTable tp=. recordBatchTable@readFileStreamRecordBatches filename
 readTable tp=. readFileStreamTable filename
 printTableSchema tp
 removeObject tp
@@ -59,7 +56,6 @@ removeObject tp
 NB. credit
 filename=. '~/Desktop/af/example.arrows'
 fexist (jpath filename)
-readTable tp=. recordBatchTable@readFileStreamRecordBatches filename
 readTable tp=. readFileStreamTable filename
 printTableSchema tp
 removeObject tp
@@ -128,4 +124,3 @@ NB. Write into an arrows stream
 NB. Write with: garrow_output_stream_write_record_batch
 arrowFP=. '~/Desktop/af/example.arrows'
 writeRecordBatchStream arrowFP;0;(<recordBatchPtrs)
-

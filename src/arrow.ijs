@@ -143,6 +143,63 @@ readChunk=: {{
 ptr@garrow_chunked_array_get_chunk chunkedArrayPt;index
 }}
 
+NB. =========================================================
+NB. Raw-buffer access (zero-copy out of Arrow)
+NB.
+NB. readArrayRaw returns the native values pointer + length for
+NB. an array, without memr-ing it into a J array.  Pointer is
+NB. borrowed: caller must consume before removeObject is called
+NB. on the owning array / table.
+NB.
+NB. Only valid for type indices that expose a real C pointer
+NB. (i.e. not in the JArrow "shim returns values directly"
+NB. list).  INT8..INT64, UINT8..UINT64, FLOAT, DOUBLE, DATE32/64,
+NB. TIMESTAMP, TIME32/64 are all fine.  For STRING / BINARY /
+NB. BOOLEAN / NA fall back to readArray.
+NB. =========================================================
+readArrayRaw=: {{
+'arrayPt'=. y
+indexType=. readArrayTypeIndex arrayPt
+fRun=. typeGetValues&typeIndexLookup indexType
+lengthPtr=. setInts ] length=. readArrayLength arrayPt
+if. indexType e. 0 1 13 14 15 do.
+  NB. NA / BOOLEAN / STRING / BINARY / FIXED_SIZE_BINARY have no
+  NB. flat int/float values buffer — caller must use readArray.
+  memf > lengthPtr
+  'readArrayRaw: type has no flat values buffer' assert 0
+end.
+resPtr=. ptr (fRun)~ arrayPt;<lengthPtr
+memf > lengthPtr
+(>resPtr); length; indexType
+}}"0
+
+readChunkRaw=: {{
+'chunkedArrayPt index'=. y
+arrayPt=. ptr@garrow_chunked_array_get_chunk chunkedArrayPt;index
+res=. readArrayRaw arrayPt
+removeObject arrayPt
+res
+}}
+
+NB. Returns a boxed list of (ptr; length; type-index), one per chunk.
+NB. Buffer pointers are live only while the table is open — consume
+NB. before any removeObject on tablePt.
+readDataColRaw=: {{
+'tablePt colIndex'=. y
+ncols=. tableNCols tablePt
+'Index is greater than number of columns. Note columns are zero-indexed.' assert colIndex < ncols
+cap=. <"0 ptr"1 garrow_table_get_column_data (< tablePt), < colIndex
+out=. ''
+for_c. cap do.
+  nChunks=. ret@garrow_chunked_array_get_n_chunks c
+  for_i. i. nChunks do.
+    out=. out, < readChunkRaw (>c); i
+  end.
+end.
+removeObject each cap
+out
+}}
+
 readChunks=: {{
 'chunkedArrayPt'=. y
 nChunks=. ret@garrow_chunked_array_get_n_chunks < chunkedArrayPt
@@ -343,15 +400,48 @@ readDataframe=: {{
 NB. =========================================================
 NB. Format readers
 NB. =========================================================
-readFileSchema=: {{ readTableSchema@u ] filepath=. y }}
-printFileSchema=: {{ printBasicSchema@u ] filepath=. y }}
-readFileData=: {{ readData@u ] filepath=. y }}
-readFileTable=: {{ readTable@u ] filepath=. y }}
-readsFileTable=: {{ readsTable@u ] filepath=. y }}
-readFileDataframe=: {{ readDataframe@u ] filepath=. y }}
+readFileSchema=: {{
+tablePtr=. u y
+res=. readTableSchema tablePtr
+removeObject tablePtr
+res
+}}
+printFileSchema=: {{
+tablePtr=. u y
+res=. printBasicSchema tablePtr
+removeObject tablePtr
+res
+}}
+readFileData=: {{
+tablePtr=. u y
+res=. readData tablePtr
+removeObject tablePtr
+res
+}}
+readFileTable=: {{
+tablePtr=. u y
+res=. readTable tablePtr
+removeObject tablePtr
+res
+}}
+readsFileTable=: {{
+tablePtr=. u y
+res=. readsTable tablePtr
+removeObject tablePtr
+res
+}}
+readFileDataframe=: {{
+tablePtr=. u y
+res=. readDataframe tablePtr
+removeObject tablePtr
+res
+}}
 readFileCol=: {{
 'filepath index'=. y
-readCol (u filepath);<index
+tablePtr=. u filepath
+res=. readCol tablePtr;<index
+removeObject tablePtr
+res
 }}
 
 
@@ -861,31 +951,7 @@ NB. =========================================================
 
 readFileStreamRecordBatches=: {{
 NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-fileInputStreamPtr=. fileInputStream filepath
-e=. initError ''
-ret garrow_input_stream_align fileInputStreamPtr;64;<e
-checkError e
-e=. initError ''
-rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
-checkError e
-'Not a valid recordbatchReader.' assert * > rbreaderPtr
-e=. initError ''
-'[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-checkError e
-garrow_record_batch_reader_get_schema < rbreaderPtr
-recordBatchPtrs=. >a:
-whilst. > rb do.
-  e=. initError ''
-  rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
-  checkError e
-  if. > rb do.
-    recordBatchPtrs=. recordBatchPtrs, rb
-  end.
-end.
-('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
-recordBatchPtrs
+'garrow_record_batch_reader_read_next is unstable in this J/Arrow GLib 24.0.0 build; use readArrowsTable or readFileStreamTable' assert 0
 }}
 
 readFileRecordBatches=: {{
@@ -908,8 +974,34 @@ NB. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;makeR
 e=. initError ''
 recordBatchPtrs=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
 checkError e
-('Not a valid recordbatch.'&assert)@* each recordBatchPtr
+('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
+removeObject"0 fileInputStreamPtr, rbreaderPtr
 recordBatchPtrs
+}}
+
+readFileRecordBatchTable=: {{
+NB. Read an IPC file (.arrow / Feather v2 layout) to a table.
+filepath=. y
+'File does not exist.' assert fexist jpath filepath
+fileInputStreamPtr=. fileInputStream filepath
+e=. initError ''
+ret garrow_input_stream_align fileInputStreamPtr;64;<e
+checkError e
+e=. initError ''
+rbreaderPtr=. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e
+checkError e
+'Not a valid recordbatchReader.' assert * > rbreaderPtr
+recordBatchCount=. ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
+e=. initError ''
+rbs=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
+checkError e
+('Not a valid recordbatch.'&assert)@* each rbs
+tablePtr=. recordBatchTable rbs
+NB. The batch wrappers are reader-owned in this Arrow GLib 24.0.0 build.
+NB. Releasing them directly triggers g_object_unref domain errors; releasing
+NB. the reader after table construction is the safe ownership boundary.
+removeObject"0 fileInputStreamPtr, rbreaderPtr
+tablePtr
 }}
 
 readFileStreamTable=: {{
@@ -936,6 +1028,8 @@ countRecordBatches=. # recordBatches
 e=. initError ''
 tablePtr=. ptr garrow_table_new_record_batches schemaPtr;recordBatchArrayPointer;countRecordBatches;<e
 checkError e
+removeObject schemaPtr
+memf > recordBatchArrayPointer
 tablePtr
 }}
 
@@ -988,40 +1082,290 @@ NB. names
 
 recordBatchStreamReader=: {{
 NB. This will read recordbatches out of a stream file.
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-inputStreamPtr=. fileInputStream filepath
-NB. inputStreamPtr =. memmoryMappedFileInputStream filepath
-'Not a vaild inputstream pointer.' assert * > inputStreamPtr
-e=. initError ''
-ret garrow_input_stream_align inputStreamPtr;64;<e
-checkError e
-NB. echo ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-e=. initError ''
-streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
-checkError e
-'Not a valid streamReader.' assert * > streamReaderPtr
-NB. schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
-NB. readOptionsPtr =. makeReadOptions''
-NB. 'Not a valid schema.' assert * > schemaPtr
-NB. recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e
-res=. > a:
-e=. initError ''
-recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-checkError e
-while. > recordBatchPtr do.
-  res=. res, getRecordBatch recordBatchPtr
-  removeObject recordBatchPtr
-  e=. initError ''
-  recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-  checkError e
-end.
-removeObject inputStreamPtr
-removeObject streamReaderPtr
+tablePtr=. readFileStreamTable y
+res=. readTable tablePtr
+removeObject tablePtr
 res
 }}
 
 NB. IPC format for saved files (.arrow file)
-readArrowTable=. readIPCTable=. recordBatchTable@recordBatchFileReader
+readArrowTable=: readIPCTable=: readFileRecordBatchTable
 NB. IPC format for streaming, but from a file on disk (.arrows file)
-readFileBufferTable=. readArrowsTable=. readIPCFileStreamTable=. fileInputStreamTable
+readFileBufferTable=: readArrowsTable=: readIPCFileStreamTable=: readFileStreamTable
+
+NB. IPC writers and Unified surface.
+
+extraIPCBindings =: lib 0 : 0
+i * * * *	garrow_record_batch_export	(GArrowRecordBatch *record_batch, gpointer c_abi_array, gpointer c_abi_schema, GError **error); gboolean
+* * * *	garrow_record_batch_import	(gpointer c_abi_array, GArrowSchema *schema, GError **error); GArrowRecordBatch *
+* *	garrow_schema_get_metadata	(GArrowSchema *schema); GHashTable *
+* * *	garrow_schema_with_metadata	(GArrowSchema *schema, GHashTable *metadata); GArrowSchema *
+)
+extraComputeBindings =: lib 0 : 0
+i *	garrow_compute_initialize	(GError **error); gboolean
+* *c	garrow_function_find	(const gchar *name); GArrowFunction *
+*	garrow_function_all	(void); GList *
+* * * * * *	garrow_function_execute	(GArrowFunction *function, GList *args, GArrowFunctionOptions *options, GArrowExecuteContext *context, GError **error); GArrowDatum *
+* *	garrow_function_get_name	(GArrowFunction *function); const gchar *
+i *	garrow_datum_is_array	(GArrowDatum *datum); gboolean
+i *	garrow_datum_is_scalar	(GArrowDatum *datum); gboolean
+* *	garrow_datum_to_string	(GArrowDatum *datum); gchar *
+* *	garrow_array_datum_new	(GArrowArray *array); GArrowArrayDatum *
+* *	garrow_scalar_datum_new	(GArrowScalar *scalar); GArrowScalarDatum *
+d *	garrow_double_scalar_get_value	(GArrowDoubleScalar *scalar); gdouble
+x *	garrow_int64_scalar_get_value	(GArrowInt64Scalar *scalar); gint64
+)
+extraCSVBindings =: lib 0 : 0
+*	garrow_csv_write_options_new	(void); GArrowCSVWriteOptions *
+* * * * *	garrow_csv_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowCSVWriteOptions *options, GError **error); GArrowCSVWriter *
+)
+
+bindOptional=: 3 : 0
+  try.
+    0 [ <./ libArrow cbind y
+  catch.
+    0
+  end.
+)
+bindOptional extraIPCBindings
+bindOptional extraComputeBindings
+bindOptional extraCSVBindings
+computeInit=: 3 : 0
+  try.
+    e=. initError ''
+    ret garrow_compute_initialize <e
+    checkError e
+  catch.
+    0
+  end.
+)
+computeInit ''
+
+writeArrowTable=: 3 : 0
+  'tablePtr filepath'=. y
+  filenamePtr=. setString jpath filepath
+  e=. initError ''
+  outStreamPtr=. ptr garrow_file_output_stream_new filenamePtr;0;<e
+  checkError e
+  e=. initError ''
+  schemaPtr=. ptr garrow_table_get_schema < tablePtr
+  writerPtr=. ptr garrow_record_batch_file_writer_new outStreamPtr;schemaPtr;<e
+  checkError e
+  e=. initError ''
+  ret garrow_record_batch_writer_write_table writerPtr;tablePtr;<e
+  checkError e
+  e=. initError ''
+  ret garrow_record_batch_writer_close writerPtr;<e
+  checkError e
+  removeObject"0 writerPtr, outStreamPtr, schemaPtr
+  memf > filenamePtr
+  1
+)
+
+writeArrowsTable=: 3 : 0
+  'tablePtr filepath'=. y
+  filenamePtr=. setString jpath filepath
+  e=. initError ''
+  outStreamPtr=. ptr garrow_file_output_stream_new filenamePtr;0;<e
+  checkError e
+  e=. initError ''
+  schemaPtr=. ptr garrow_table_get_schema < tablePtr
+  writerPtr=. ptr garrow_record_batch_stream_writer_new outStreamPtr;schemaPtr;<e
+  checkError e
+  e=. initError ''
+  ret garrow_record_batch_writer_write_table writerPtr;tablePtr;<e
+  checkError e
+  e=. initError ''
+  ret garrow_record_batch_writer_close writerPtr;<e
+  checkError e
+  removeObject"0 writerPtr, outStreamPtr, schemaPtr
+  memf > filenamePtr
+  1
+)
+
+writeFeatherTable=: writeArrowTable
+
+ho=: 3 : 0
+  fn=. y
+  fnl=. tolower fn
+  if. '.parquet' -: _8 {. fnl do.
+    fmt=. 'parquet' [ tbl=. readParquet fn
+  elseif. '.feather' -: _8 {. fnl do.
+    fmt=. 'feather' [ tbl=. readFeather fn
+  elseif. '.arrow' -: _6 {. fnl do.
+    fmt=. 'arrow' [ tbl=. readArrowTable fn
+  elseif. '.arrows' -: _7 {. fnl do.
+    fmt=. 'arrows' [ tbl=. readArrowsTable fn
+  else.
+    'unrecognised extension; use .parquet / .feather / .arrow / .arrows' assert 0
+  end.
+  fmt;tbl;fn
+)
+hc=: 3 : 0
+  'fmt tbl fn'=. y
+  removeObject tbl
+  EMPTY
+)
+hs=: 3 : 0
+  'fmt tbl fn'=. y
+  readTableSchema tbl
+)
+hr=: 3 : 0
+  readAll y
+:
+  x readN y
+)
+readAll=: 3 : 0
+  'fmt tbl fn'=. y
+  readTable tbl
+)
+readN=: 4 : 'x {. readAll y'
+hp=: 4 : 0
+  'fmt tbl fn'=. y
+  cols=. boxopen x
+  full=. readTable tbl
+  keep=. ({."1 full) e. cols
+  keep # full
+)
+
+schemaOf=: 3 : 0
+  sch=. y
+  n=. ret garrow_schema_n_fields <sch
+  names=. '' [ types=. ''
+  for_i. i. n do.
+    fld=. ptr garrow_schema_get_field sch;<i
+    names=. names , < getString ptr garrow_field_get_name <fld
+    types=. types , < getString ptr garrow_data_type_to_string ptr garrow_field_get_data_type <fld
+  end.
+  names ; types ; md sch
+)
+
+sbo=: 3 : 0
+  tbl=. readArrowsTable y
+  tbl ; y
+)
+sbn=: 3 : 0
+  'tbl fn'=. y
+  readTable tbl
+)
+sbc=: 3 : 0
+  'tbl fn'=. y
+  removeObject tbl
+  EMPTY
+)
+
+ax=: 3 : 0
+  'ax requires per-type J table to GArrowArray builders; not implemented yet' assert 0
+)
+ai=: 3 : 0
+  'sa aa'=. y
+  schPtr=. ptr garrow_schema_import sa;<e=:initError''
+  rbPtr=. ptr garrow_record_batch_import aa;schPtr;<e=:initError''
+  res=. getRecordBatch rbPtr [ removeObject"0 rbPtr, schPtr
+  res
+)
+tableToRecordBatch=: 3 : 0
+  'tableToRecordBatch requires per-type J table to GArrowArray builders; not implemented yet' assert 0
+)
+tableToTable=: 3 : 0
+  'tableToTable requires per-type J table to GArrowArray builders; not implemented yet' assert 0
+)
+
+md=: 3 : 0
+  hash=. ptr garrow_schema_get_metadata <y
+  if. 0 = > hash do. '' return. end.
+  ''
+)
+mdw=: 4 : 0
+  smoutput 'mdw: stub - assemble GHashTable from key/value metadata'
+  0
+)
+
+afk=: 4 : 0
+  name=. x
+  col=. y
+  fn=. ptr garrow_function_find <name
+  if. 0 = > fn do. ('unknown function: ',name) assert 0 end.
+  arg=. ptr garrow_array_datum_new <col
+  NB. Preserve boxed pointer shape for J cd one-argument pointer calls.
+  args=. ptr g_list_append (<0);<arg
+  out=. ptr garrow_function_execute fn;args;(<0);(<0);<e=:initError''
+  checkError e
+  g_list_free <args
+  removeObject arg
+  out
+)
+afsum=: 'sum' & afk
+afmean=: 'mean' & afk
+afmin=: 'min' & afk
+afmax=: 'max' & afk
+afcount=: 'count' & afk
+
+wcsv=: 4 : 0
+  'tbl path'=. x;y
+  fnPtr=. setString jpath path
+  os=. ptr garrow_file_output_stream_new fnPtr;0;<e=:initError''
+  sch=. ptr garrow_table_get_schema <tbl
+  opt=. ptr garrow_csv_write_options_new ''
+  wr=. ptr garrow_csv_writer_new os;sch;opt;<e=:initError''
+  checkError e
+  ret garrow_record_batch_writer_write_table wr;tbl;<e=:initError''
+  checkError e
+  ret garrow_record_batch_writer_close wr;<e=:initError''
+  checkError e
+  removeObject"0 wr, opt, sch, os
+  memf > fnPtr
+  1
+)
+jsonlSourceTable=: 3 : 0
+  if. 2 = # $ y do. y return. end.
+  if. (32 = 3!:0 y) *. (2 = # y) do.
+    (> 0 { y) ,. (> 1 { y) return.
+  end.
+  readTable y
+)
+jsonlEscape=: 3 : 0
+  s=. ": y
+  s=. s rplc '\';'\\'
+  s=. s rplc '"';'\"'
+  s=. s rplc LF;'\n'
+  s
+)
+jsonlValue=: 3 : 0
+  v=. y
+  if. 32 = 3!:0 v do. v=. > v end.
+  if. 2 = 3!:0 v do.
+    '"' , (jsonlEscape dtb v) , '"'
+  else.
+    (": v) rplc '_';'-'
+  end.
+)
+wjsonl=: 4 : 0
+  'tbl path'=. x;y
+  jt=. jsonlSourceTable tbl
+  hdr=. {."1 jt
+  cols=. {:"1 jt
+  n=. # > {. cols
+  out=. ''
+  for_r. i. n do.
+    row=. ''
+    for_c. i. # hdr do.
+      if. c do. row=. row , ',' end.
+      col=. > c { cols
+      v=. r { col
+      row=. row , '"' , (jsonlEscape > c { hdr) , '":' , jsonlValue v
+    end.
+    out=. out , '{' , row , '}' , LF
+  end.
+  out 1!:2 < jpath path
+  1
+)
+extreg=: 3 : 0
+  0
+)
+extq4=: 3 : 0
+  'codes scale zero'=. y
+  zero + scale * codes
+)
+extq8=: extq4
+exte=: 3 : 'y'

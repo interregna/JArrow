@@ -117,7 +117,7 @@ see `test/test1.ijs`
 * [ ] Non-local filesystems (S3)
 * [ ] IPC streaming with event-driven calls
 
-##### Writers (new in 21.1.0)
+##### Writers (available with Arrow GLib 24.0.0)
 
 ```j
    writeArrowTable    tablePtr;'~out.arrow'      NB. IPC file format
@@ -126,27 +126,27 @@ see `test/test1.ijs`
    writeParquet       tablePtr;'~out.parquet'    NB. Parquet
 ```
 
-##### Stratum-shaped unified surface (new in 21.2.0)
+##### Unified surface (updated for Arrow GLib 24.0.0)
 
-A small terse vocabulary so JArrow + Stratum read as one columnar story
-for J users.
+A small terse vocabulary giving JArrow a consistent handle-based
+columnar interface for J users.
 
 ```j
 NB. handle open / close / schema / read / project (gaps 1, 2, 7, 10)
    h=:    ho '~data.feather'        NB. auto-detects format from extension
-   hs h                              NB. boxed (names; types; metadata)
+   hs h                              NB. Arrow schema
    tbl=: hr h                        NB. read full table
    tbl=: 1000 hr h                   NB. read first 1000 rows
    tbl=: ('price';'qty') hp h        NB. project columns
    hc h                              NB. close
 
-NB. stream batches over .arrows files (gap 5)
+NB. stream table fallback over .arrows files (gap 5)
    sh=: sbo '~stream.arrows'
-   while. -. 0 -: b=. sbn sh do.  process_z_ b  end.
+   b=:  sbn sh
    sbc sh
 
 NB. Arrow C ABI bridge — zero-copy hand-off (gap 3)
-   'sa aa'=: ax tbl                  NB. → struct ptr pair, hand to PyArrow / Stratum
+   'sa aa'=: ax tbl                  NB. pending per-type J→Arrow builders
    tbl=:    ai sa;aa                 NB. import the same pair
 
 NB. compute kernels via Arrow function registry (gap 6)
@@ -158,9 +158,9 @@ NB. CSV / JSONL writers (gap 8)
    tbl wcsv   '~out.csv'
    tbl wjsonl '~out.jsonl'
 
-NB. Stratum extension types (gap 9)
-   sxreg ''                          NB. register quant4 / quant8 / embed_f32
-   sxq4   codes; scale; zero          NB. decode quant4 to floats
+NB. Custom extension types (gap 9)
+   extreg ''                          NB. register quant4 / quant8 / embed_f32
+   extq4   codes; scale; zero          NB. decode quant4 to floats
 ```
 
 The verb prefixes are the vocabulary:
@@ -173,24 +173,31 @@ The verb prefixes are the vocabulary:
 | `md`   | schema metadata               | 4 |
 | `af`   | Arrow function (compute)      | 6 |
 | `wcsv` | CSV / JSONL write             | 8 |
-| `sx`   | Stratum extension types       | 9 |
+| `ext`   | Custom extension types       | 9 |
 
-Some verbs are skeletons that depend on extra GLib bindings (added at
-the top of `arrow.ijs` as `extraIPCBindings` / `extraComputeBindings` /
-`extraCSVBindings`); call `libArrow cbind extra*` from the addon's init
-to register them.
+Some verbs are skeletons that depend on extra GLib bindings. JArrow now
+attempts those optional binds at load time and leaves unsupported symbols
+inactive on older Arrow GLib installations.
+
+`sbo`/`sbn` currently use a safe single-table fallback over
+`readArrowsTable`. The lower-level GLib `read_next` iterator crashes this
+J console build, so the public verb avoids that native path.
+
+`ax` is intentionally guarded with a controlled assertion until the per-type
+J table to `GArrowArray` builders are implemented. This avoids the prior crash
+path through an unfinished `read_next` batch-reader bridge.
 
 The IPC file (`.arrow`) and Feather v2 (`.feather`) formats are the
 random-access-preserving choice. `.arrows` (streaming, no footer) is
 the right shape for pipes and sockets. Parquet is the cross-ecosystem
 format.
 
-##### Bug fixes in 21.1.0
+##### Bug fixes in the Arrow GLib 24.0.0 refresh
 
 * The IPC reader verbs `readArrowTable`, `readArrowsTable`, and
   `readFileBufferTable` were defined with `=.` (local) instead of
   `=:` (global) — the public-interface transfers block at the bottom
   of `arrow.ijs` silently failed to expose them. Now fixed; these
   verbs are reachable as documented.
-* Added missing `garrow_output_stream_close` binding (needed by the
-  new writers to flush before deallocation).
+* Added IPC writer wrappers; writer close is used as the flush point
+  before deallocation.

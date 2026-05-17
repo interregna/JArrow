@@ -12,7 +12,7 @@ https://arrow.apache.org/docs/c_glib/arrow-glib/
 https://arrow.apache.org/docs/c_glib/parquet-glib/
 )
 
-VERSION=: '21.2.0'
+VERSION=: '24.0.0'
 
 RELEASE=:'j903'
 
@@ -23,6 +23,8 @@ LICENSE
 arrow.ijs
 test/make_test_parquet.ijs
 test/test1.ijs
+test/test_readme_examples.ijs
+test/test_unified_surface.ijs
 test/test1.csv
 test/test1.parquet
 test/test2.parquet

@@ -60,10 +60,6 @@ f * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
 * x * * x	garrow_double_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowDoubleArray *
 d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdouble
 *d * *x	garrow_double_array_get_values	(GArrowDoubleArray *array, gint64 *length); const gdouble *
-* x * * * x	garrow_base_binary_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowArray *
-* * x	garrow_base_binary_array_get_value	(GArrowArray *array, gint64 i); GBytes *
-* *	garrow_base_binary_array_get_data_buffer	(GArrowArray *array); GArrowBuffer *
-* *	garrow_base_binary_array_get_offsets_buffer	(GArrowArray *array); GArrowBuffer *
 * x * * * x	garrow_binary_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowBinaryArray *
 * * x	garrow_binary_array_get_value	(GArrowBinaryArray *array, gint64 i); GBytes *
 * *	garrow_binary_array_get_buffer	(GArrowBinaryArray *array); GArrowBuffer *
@@ -74,7 +70,6 @@ d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdoubl
 * *	garrow_large_binary_array_get_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
 * *	garrow_large_binary_array_get_data_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
 * *	garrow_large_binary_array_get_offsets_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
-*c * x	garrow_base_string_array_get_value	(GArrowArray *array, gint64 i); gchar *
 * x * * * x	garrow_string_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowStringArray *
 *c * x	garrow_string_array_get_string	(GArrowStringArray *array, gint64 i); gchar *
 * x * * * x	garrow_large_string_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowLargeStringArray *
@@ -142,13 +137,6 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/composite-data-type-classes.
 NB. =========================================================
 
 compositeArrayBindings =: lib 0 : 0
-* * x * * * x	garrow_base_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowArray *
-* *	garrow_base_list_array_get_value_type	(GArrowArray *array); GArrowDataType *
-* * x	garrow_base_list_array_get_value	(GArrowArray *array , gint64 i); GArrowArray *
-* *	garrow_base_list_array_get_values	(GArrowArray *array); GArrowArray *
-c i x	garrow_base_list_array_get_value_offset	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-c * x	garrow_base_list_array_get_value_length	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-*c * *x	garrow_base_list_array_get_value_offsets	(GArrowArray *array, gint64 *n_offsets); const typename LIST_ARRAY_CLASS::offset_type *
 * * x * * * * x	garrow_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowListArray *
 * *	garrow_list_array_get_value_type	(GArrowListArray *array); GArrowDataType *
 * * x	garrow_list_array_get_value	(GArrowListArray *array, gint64 i); GArrowArray *
@@ -164,7 +152,6 @@ x * x	garrow_large_list_array_get_value_offset	(GArrowLargeListArray *array, gin
 x * x	garrow_large_list_array_get_value_length	(GArrowLargeListArray *array, gint64 i); gint64
 *x * *x	garrow_large_list_array_get_value_offsets	(GArrowLargeListArray *array, gint64 *n_offsets); const gint64 *
 * * x * * x	garrow_struct_array_new	(GArrowDataType *data_type, gint64 length, GList *fields, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowStructArray *
-* *	garrow_struct_array_get_fields_internal	(GArrowStructArray *array); static GPtrArray *
 * * i	garrow_struct_array_get_field	(GArrowStructArray *array, gint i); GArrowArray *
 * *	garrow_struct_array_get_fields	(GArrowStructArray *array) GList *
 * * *	garrow_struct_array_flatten	(GArrowStructArray *array, GError **error); GList *
@@ -180,4 +167,4 @@ x * x	garrow_large_list_array_get_value_length	(GArrowLargeListArray *array, gin
 * *	garrow_dictionary_array_get_indices	(GArrowDictionaryArray *array); GArrowArray *
 * *	garrow_dictionary_array_get_dictionary	(GArrowDictionaryArray *array); GArrowArray *
 * *	garrow_dictionary_array_get_dictionary_data_type	(GArrowDictionaryArray *array); GArrowDictionaryDataType *
-) 
+)

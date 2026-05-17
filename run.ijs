@@ -8,7 +8,11 @@ load ProjPath,'/build.ijs'   NB. rebuild
 load ProjPath,'/arrow.ijs'   NB. reload
 NB. run tests here
 echo 'Running tests...'
+JARROW_TEST_LOADFILE=: ProjPath,'/arrow.ijs'
 load ProjPath,'/test/test1.ijs'
+load ProjPath,'/test/test_readme_examples.ijs'
+load ProjPath,'/test/test_unified_surface.ijs'
+echo 'All tests passed.'
 
 NB. Types that exist but are not set up:
 NB. 'int8Col':np.array(np.arange(200, 10, -190/8), dtype='int8'),

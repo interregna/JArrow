@@ -73,7 +73,6 @@ serverFlightBindings =: lib 0 : 0
 b * * *	gaflight_server_listen	(GAFlightServer *server, GAFlightServerOptions *options, GError **error); gboolean 
 i *	gaflight_server_get_port	(GAFlightServer *server); gint 
 i * *	gaflight_server_shutdown	(GAFlightServer *server, GError **error); gboolean 
-i * *	gaflight_server_wait	(GAFlightServer *server, GError **error); gboolean 
 * * * * *	gaflight_server_list_flights	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightCriteria *criteria, GError **error); GList *
 * * * * *	gaflight_server_get_flight_info	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightDescriptor *request, GError **error); GAFlightInfo *
 * * * * *	gaflight_server_do_get	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightTicket *ticket, GError **error); GAFlightDataStream *

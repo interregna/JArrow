@@ -158,7 +158,7 @@ init =: {{
   r =. r <. <./ libArrow cbind schemaBindings, fieldBindings
   r =. r <. <./ libArrow cbind bufferBindings, codecBindings
   r =. r <. <./ libArrow cbind memoryBindings
-  r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,orcFileReaderBindings,writerBindings
+  r =. r <. <./ libArrow cbind ipcOptionsBindings,readerBindings,writerBindings
   r =. r <. <./ libArrow cbind fileSystemBindings, localFileSystemBindings
   r =. r <. <./ libArrow cbind readableBindings, inputStreamBindings, writeableBindings, writeableFileBindings, outputStreamBindings, fileBindings
   r =. r <. <./ libParquet cbind parquetReaderBindings, parquetWriterBindings
@@ -167,9 +167,18 @@ init =: {{
   NB. (defined further down in arrow.ijs; bind here once those blocks are
   NB. lexically reachable in this script file. Wrapped in `try.` because
   NB. older Arrow GLib (<19) lacks some of these symbols.)
-  try. r =. r <. <./ libArrow cbind extraIPCBindings end.
-  try. r =. r <. <./ libArrow cbind extraComputeBindings end.
-  try. r =. r <. <./ libArrow cbind extraCSVBindings end.
+  try.
+    r =. r <. <./ libArrow cbind extraIPCBindings
+  catch.
+  end.
+  try.
+    r =. r <. <./ libArrow cbind extraComputeBindings
+  catch.
+  end.
+  try.
+    r =. r <. <./ libArrow cbind extraCSVBindings
+  catch.
+  end.
   r
 }}
 NB. =========================================================
@@ -234,10 +243,6 @@ f * x	garrow_float_array_get_value	(GArrowFloatArray *array, gint64 i); gfloat
 * x * * x	garrow_double_array_new	(gint64 length, GArrowBuffer *data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowDoubleArray *
 d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdouble
 *d * *x	garrow_double_array_get_values	(GArrowDoubleArray *array, gint64 *length); const gdouble *
-* x * * * x	garrow_base_binary_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowArray *
-* * x	garrow_base_binary_array_get_value	(GArrowArray *array, gint64 i); GBytes *
-* *	garrow_base_binary_array_get_data_buffer	(GArrowArray *array); GArrowBuffer *
-* *	garrow_base_binary_array_get_offsets_buffer	(GArrowArray *array); GArrowBuffer *
 * x * * * x	garrow_binary_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowBinaryArray *
 * * x	garrow_binary_array_get_value	(GArrowBinaryArray *array, gint64 i); GBytes *
 * *	garrow_binary_array_get_buffer	(GArrowBinaryArray *array); GArrowBuffer *
@@ -248,7 +253,6 @@ d * x	garrow_double_array_get_value	(GArrowDoubleArray *array, gint64 i); gdoubl
 * *	garrow_large_binary_array_get_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
 * *	garrow_large_binary_array_get_data_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
 * *	garrow_large_binary_array_get_offsets_buffer	(GArrowLargeBinaryArray *array); GArrowBuffer *
-*c * x	garrow_base_string_array_get_value	(GArrowArray *array, gint64 i); gchar *
 * x * * * x	garrow_string_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowStringArray *
 *c * x	garrow_string_array_get_string	(GArrowStringArray *array, gint64 i); gchar *
 * x * * * x	garrow_large_string_array_new	(gint64 length, GArrowBuffer *value_offsets, GArrowBuffer *value_data, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowLargeStringArray *
@@ -316,13 +320,6 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/composite-data-type-classes.
 NB. =========================================================
 
 compositeArrayBindings =: lib 0 : 0
-* * x * * * x	garrow_base_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowArray *
-* *	garrow_base_list_array_get_value_type	(GArrowArray *array); GArrowDataType *
-* * x	garrow_base_list_array_get_value	(GArrowArray *array , gint64 i); GArrowArray *
-* *	garrow_base_list_array_get_values	(GArrowArray *array); GArrowArray *
-c i x	garrow_base_list_array_get_value_offset	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-c * x	garrow_base_list_array_get_value_length	(GArrowArray *array, gint64 i); typename LIST_ARRAY_CLASS::offset_type
-*c * *x	garrow_base_list_array_get_value_offsets	(GArrowArray *array, gint64 *n_offsets); const typename LIST_ARRAY_CLASS::offset_type *
 * * x * * * * x	garrow_list_array_new	(GArrowDataType *data_type, gint64 length, GArrowBuffer *value_offsets, GArrowArray *values, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowListArray *
 * *	garrow_list_array_get_value_type	(GArrowListArray *array); GArrowDataType *
 * * x	garrow_list_array_get_value	(GArrowListArray *array, gint64 i); GArrowArray *
@@ -338,7 +335,6 @@ x * x	garrow_large_list_array_get_value_offset	(GArrowLargeListArray *array, gin
 x * x	garrow_large_list_array_get_value_length	(GArrowLargeListArray *array, gint64 i); gint64
 *x * *x	garrow_large_list_array_get_value_offsets	(GArrowLargeListArray *array, gint64 *n_offsets); const gint64 *
 * * x * * x	garrow_struct_array_new	(GArrowDataType *data_type, gint64 length, GList *fields, GArrowBuffer *null_bitmap, gint64 n_nulls); GArrowStructArray *
-* *	garrow_struct_array_get_fields_internal	(GArrowStructArray *array); static GPtrArray *
 * * i	garrow_struct_array_get_field	(GArrowStructArray *array, gint i); GArrowArray *
 * *	garrow_struct_array_get_fields	(GArrowStructArray *array) GList *
 * * *	garrow_struct_array_flatten	(GArrowStructArray *array, GError **error); GList *
@@ -653,11 +649,6 @@ NB. https://arrow.apache.org/docs/c_glib/arrow-glib/buffer-classes.html
 NB. =========================================================
 
 bufferBindings =: lib 0 : 0
-n *	garrow_buffer_finalize	(GObject *object); static void
-n * i * *	garrow_buffer_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_buffer_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_buffer_init	(GArrowBuffer *object); static void
-n * 	garrow_buffer_class_init	(GArrowBufferClass *klass); static void
 * * i	garrow_buffer_new	(const guint8 *data, gint64 size); GArrowBuffer *
 * *	garrow_buffer_new_bytes	(GBytes *data); GArrowBuffer *
 i * *	garrow_buffer_equal	(GArrowBuffer *buffer, GArrowBuffer *other_buffer); gboolean
@@ -670,24 +661,13 @@ i *	garrow_buffer_get_size	(GArrowBuffer *buffer); gint64
 * *	garrow_buffer_get_parent	(GArrowBuffer *buffer); GArrowBuffer *
 * * i i *	garrow_buffer_copy	(GArrowBuffer *buffer, gint64 start, gint64 size, GError **error); GArrowBuffer *
 * * i i	garrow_buffer_slice	(GArrowBuffer *buffer, gint64 offset, gint64 size); GArrowBuffer *
-n *	garrow_mutable_buffer_init	(GArrowMutableBuffer *object); static void
-n *	garrow_mutable_buffer_class_init	(GArrowMutableBufferClass *klass); static void
 * * i	garrow_mutable_buffer_new	(guint8 *data, gint64 size); GArrowMutableBuffer *
 * *	garrow_mutable_buffer_new_bytes	(GBytes *data); GArrowMutableBuffer *
 * * i i	garrow_mutable_buffer_slice	(GArrowMutableBuffer *buffer, gint64 offset, gint64 size); GArrowMutableBuffer *
 i * i *i i *	garrow_mutable_buffer_set_data	(GArrowMutableBuffer *buffer, gint64 offset, const guint8 *data, gint64 size, GError **error); gboolean
-n *	garrow_resizable_buffer_init	(GArrowResizableBuffer *object); static void
-n *	garrow_resizable_buffer_class_init	(GArrowResizableBufferClass *klass); static void
 * i *	garrow_resizable_buffer_new	(gint64 initial_size, GError **error); GArrowResizableBuffer *
 i * i *	garrow_resizable_buffer_resize	(GArrowResizableBuffer *buffer, gint64 new_size, GError **error); gboolean
 i * i *	garrow_resizable_buffer_reserve	(GArrowResizableBuffer *buffer, gint64 new_capacity, GError **error); gboolean
-* *	garrow_buffer_new_raw	(std::shared_ptr<arrow::Buffer> *arrow_buffer); ArrowBuffer *
-* * *	garrow_buffer_new_raw_bytes	(std::shared_ptr<arrow::Buffer> *arrow_buffer, GBytes *data); GArrowBuffer *
-* * *	garrow_buffer_new_raw_parent	(std::shared_ptr<arrow::Buffer> *arrow_buffer, GArrowBuffer *parent); GArrowBuffer *
-* *	garrow_buffer_get_raw	(GArrowBuffer *buffer); std::shared_ptr<arrow::Buffer>
-* *	garrow_mutable_buffer_new_raw	(std::shared_ptr<arrow::MutableBuffer> *arrow_buffer); GArrowMutableBuffer *
-* * *	garrow_mutable_buffer_new_raw_bytes	(std::shared_ptr<arrow::MutableBuffer> *arrow_buffer, GBytes *data); GArrowMutableBuffer *
-* *	garrow_resizable_buffer_new_raw	(std::shared_ptr<arrow::ResizableBuffer> *arrow_buffer); GArrowResizableBuffer *
 )
 NB. =========================================================
 NB. Codec
@@ -931,11 +911,6 @@ l *	garrow_table_get_n_rows	(GArrowTable *table); guint64
 *	garrow_table_concatenate_options_new	(void);	GArrowTableConcatenateOptions *
 * * x x	garrow_table_slice	(GArrowTable *table, gint64 offset, gint64 length); GArrowTable *
 * * *	garrow_table_combine_chunks	(GArrowTable *table, GError **error); GArrowTable *
-n *	garrow_feather_write_properties_finalize	(GObject *object); static void 
-n * i * *	garrow_feather_write_properties_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void 
-n * i * *	garrow_feather_write_properties_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void 
-n *	garrow_feather_write_properties_init	(GArrowFeatherWriteProperties *object); static void 
-n *	garrow_feather_write_properties_class_init	(GArrowFeatherWritePropertiesClass *klass); static void 
 * n	garrow_feather_write_properties_new	(void); GArrowFeatherWriteProperties *
 i * * * *	garrow_table_write_as_feather	(GArrowTable *table, GArrowOutputStream *sink, GArrowFeatherWriteProperties *properties, GError **error); gboolean 
 )
@@ -945,11 +920,6 @@ NB. Record Batch
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/record-batch.html
 NB. =========================================================
 recordBatchBindings =: lib 0 : 0
-n *	garrow_record_batch_finalize	(GObject *object); static void
-n * i * *	garrow_record_batch_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_record_batch_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_record_batch_init	(GArrowRecordBatch *object); static void
-n *	garrow_record_batch_class_init	(GArrowRecordBatchClass *klass); static void
 * * i * *	garrow_record_batch_new	(GArrowSchema *schema, guint32 n_rows, GList *columns, GError **error); GArrowRecordBatch *
 i * *	garrow_record_batch_equal	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch); gboolean
 i * * c	garrow_record_batch_equal_metadata	(GArrowRecordBatch *record_batch, GArrowRecordBatch *other_record_batch, gboolean check_metadata); gboolean
@@ -963,18 +933,10 @@ x *	garrow_record_batch_get_n_rows	(GArrowRecordBatch *record_batch); gint64
 * * i * * *	garrow_record_batch_add_column	(GArrowRecordBatch *record_batch, guint i, GArrowField *field, GArrowArray *column, GError **error); GArrowRecordBatch *
 * * i *	garrow_record_batch_remove_column	(GArrowRecordBatch *record_batch, guint i, GError **error); GArrowRecordBatch *
 * * * *	garrow_record_batch_serialize	(GArrowRecordBatch *record_batch, GArrowWriteOptions *options, GError **error); GArrowBuffer *
-n *	garrow_record_batch_iterator_finalize	(GObject *object); static void
-n * i * *	garrow_record_batch_iterator_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n *	garrow_record_batch_iterator_init	(GArrowRecordBatchIterator *object); static void
-n *	garrow_record_batch_iterator_class_init	(GArrowRecordBatchIteratorClass *klass); static void
 * *	garrow_record_batch_iterator_new	(GList *record_batches); GArrowRecordBatchIterator *
 * * *	garrow_record_batch_iterator_next	(GArrowRecordBatchIterator *iterator, GError **error); GArrowRecordBatch *
 i * *	garrow_record_batch_iterator_equal	(GArrowRecordBatchIterator *iterator, GArrowRecordBatchIterator *other_iterator); gboolean
 * * *	garrow_record_batch_iterator_to_list	(GArrowRecordBatchIterator *iterator, GError **error); GList*
-* *	garrow_record_batch_new_raw	(std::shared_ptr<arrow::RecordBatch> *arrow_record_batch); ArrowRecordBatch *
-* *	garrow_record_batch_get_raw	(GArrowRecordBatch *record_batch); std::shared_ptr<arrow::RecordBatch>
-* *	garrow_record_batch_iterator_new_raw	(arrow::RecordBatchIterator *arrow_iterator); GArrowRecordBatchIterator *
-* *	garrow_record_batch_iterator_get_raw	(GArrowRecordBatchIterator *iterator); arrow::RecordBatchIterator *
 )
 
 NB. =========================================================
@@ -982,11 +944,6 @@ NB. Chunked Array
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowChunkedArray.html
 
 chunkedArrayBindings =: lib 0 : 0
-n *	garrow_chunked_array_finalize	(GObject *object); static void
-n * i * *	garrow_chunked_array_set_property	(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec); static void
-n * i * *	garrow_chunked_array_get_property	(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec); static void
-n *	garrow_chunked_array_init	(GArrowChunkedArray *object); static void
-n *	garrow_chunked_array_class_init	(GArrowChunkedArrayClass *klass); static void
 * *	garrow_chunked_array_new	(GList *chunks); GArrowChunkedArray *
 i * *	garrow_chunked_array_equal	(GArrowChunkedArray *chunked_array, GArrowChunkedArray *other_chunked_array); gboolean
 * *	garrow_chunked_array_get_value_data_type	(GArrowChunkedArray *chunked_array); GArrowDataType *
@@ -1000,8 +957,6 @@ x *	garrow_chunked_array_get_n_chunks	(GArrowChunkedArray *chunked_array); guint
 * * x x	garrow_chunked_array_slice	(GArrowChunkedArray *chunked_array, guint64 offset, guint64 length); GArrowChunkedArray *
 * * *	garrow_chunked_array_to_string	(GArrowChunkedArray *chunked_array, GError **error); gchar *
 * * *	garrow_chunked_array_combine	(GArrowChunkedArray *chunked_array, GError **error); GArrowArray *
-* *	garrow_chunked_array_new_raw	(std::shared_ptr<arrow::ChunkedArray> *arrow_chunked_array); ArrowChunkedArray *
-* *	garrow_chunked_array_get_raw	(GArrowChunkedArray *chunked_array); std::shared_ptr<arrow::ChunkedArray>
 )
 NB. =========================================================
 NB. Table Builder
@@ -1216,10 +1171,8 @@ NB. Writeable
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowWritable.html
 NB. =========================================================
 writeableBindings =: lib 0 : 0
-n *	garrow_writable_default_init	(GArrowWritableInterface *iface); static void
 b * * l *	garrow_writable_write	(GArrowWritable *writable, const guint8 *data, gint64 n_bytes, GError **error); gboolean
 b *	garrow_writable_flush	(GArrowWritable *writable, GError **error); gboolean
-* *	garrow_writable_get_raw	(GArrowWritable *writable); std::shared_ptr<arrow::io::Writable>
 )
 
 NB. GArrowWritableFile — File output interface
@@ -1228,9 +1181,7 @@ NB. Writeable File
 NB. https://arrow.apache.org/docs/c_glib/arrow-glib/GArrowWritableFile.html
 NB. =========================================================
 writeableFileBindings =: lib 0 : 0
-n *	garrow_writable_file_default_init	(GArrowWritableFileInterface *iface); static void
 i * l i i *	garrow_writable_file_write_at	(GArrowWritableFile *writable_file, gint64 position, const guint8 *data, gint64 n_bytes, GError **error); gboolean
-* *	garrow_writable_file_get_raw	(GArrowWritableFile *writable_file); std::shared_ptr<arrow::io::WritableFile>
 )
 
 NB. Output stream classes
@@ -1242,7 +1193,6 @@ outputStreamBindings =: lib 0 : 0
 i * i *	garrow_output_stream_align	(GArrowOutputStream *stream, gint32 alignment, GError **error); gboolean
 i * * *	garrow_output_stream_write_tensor	(GArrowOutputStream *stream , GArrowTensor *tensor , GError **error); gint64
 i * * * *	garrow_output_stream_write_record_batch	(GArrowOutputStream *stream, GArrowRecordBatch *record_batch, GArrowWriteOptions *options, GError **error); gint64
-i * *	garrow_output_stream_close	(GArrowOutputStream *stream, GError **error); gboolean
 * *c b *	garrow_file_output_stream_new	(const gchar *path, gboolean append, GError **error); GArrowFileOutputStream *
 * *	garrow_buffer_output_stream_new	(GArrowResizableBuffer *buffer); GArrowBufferOutputStream *
 * *	garrow_gio_output_stream_new	(GOutputStream *gio_output_stream); GArrowGIOOutputStream *
@@ -1290,6 +1240,7 @@ readerBindings =: lib 0 : 0
 * * *	garrow_record_batch_reader_read_next	(GArrowRecordBatchReader *reader, GError **error); GArrowRecordBatch *
 * * *	garrow_record_batch_reader_read_all	(GArrowRecordBatchReader *reader, GError **error); GArrowTable *
 * *	garrow_table_batch_reader_new	(GArrowTable *table); GArrowTableBatchReader *
+n * x	garrow_table_batch_reader_set_max_chunk_size	(GArrowTableBatchReader *reader, gint64 max_chunk_size); void
 * * *	garrow_record_batch_stream_reader_new	(GArrowInputStream *stream, GError **error); GArrowRecordBatchStreamReader *
 * * *	garrow_record_batch_file_reader_new	(GArrowSeekableInputStream *file, GError **error); GArrowRecordBatchFileReader *
 * *	garrow_record_batch_file_reader_get_schema	(GArrowRecordBatchFileReader *reader); GArrowSchema *
@@ -1353,8 +1304,10 @@ writerBindings =: lib 0 : 0
 i * * *	garrow_record_batch_writer_write_record_batch	(GArrowRecordBatchWriter *writer, GArrowRecordBatch *record_batch, GError **error); gboolean
 i * * *	garrow_record_batch_writer_write_table	(GArrowRecordBatchWriter *writer, GArrowTable *table, GError **error); gboolean
 i * *	garrow_record_batch_writer_close	(GArrowRecordBatchWriter *writer , GError **error); gboolean
+i *	garrow_record_batch_writer_is_closed	(GArrowRecordBatchWriter *writer); gboolean
 * * * *	garrow_record_batch_stream_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchStreamWriter *
 * * * *	garrow_record_batch_file_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GError **error); GArrowRecordBatchFileWriter *
+* * * * * *	garrow_record_batch_file_writer_new_full	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowWriteOptions *options, GHashTable *metadata, GError **error); GArrowRecordBatchFileWriter *
 )
 NB. =========================================================
 NB. File System
@@ -1383,7 +1336,6 @@ b * * * *	garrow_file_system_copy_file	(GArrowFileSystem *file_system, const gch
 * * * *	garrow_file_system_open_input_file	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowSeekableInputStream *
 * * * *	garrow_file_system_open_output_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
 * * * *	garrow_file_system_open_append_stream	(GArrowFileSystem *file_system, const gchar *path, GError **error); GArrowOutputStream *
-n *	garrow_sub_tree_file_system_dispose	(GObject *object); static void
 * * *	garrow_sub_tree_file_system_new	(const gchar *base_path, GArrowFileSystem *base_file_system); GArrowSubTreeFileSystem *
 * * l	garrow_slow_file_system_new_average_latency	(GArrowFileSystem *base_file_system, gdouble average_latency); GArrowSlowFileSystem *
 * * l i	garrow_slow_file_system_new_average_latency_and_seed	(GArrowFileSystem *base_file_system, gdouble average_latency, gint32 seed); GArrowSlowFileSystem *
@@ -1396,7 +1348,6 @@ NB. =========================================================
 
 localFileSystemBindings =: lib 0 : 0
 *	garrow_local_file_system_options_new	(void); GArrowLocalFileSystemOptions *	
-n *	garrow_local_file_system_init	(GArrowLocalFileSystem *file_system); static void
 * *	garrow_local_file_system_new	(GArrowLocalFileSystemOptions *options); GArrowLocalFileSystem *
 )
 NB. Memory
@@ -1485,7 +1436,6 @@ serverFlightBindings =: lib 0 : 0
 b * * *	gaflight_server_listen	(GAFlightServer *server, GAFlightServerOptions *options, GError **error); gboolean 
 i *	gaflight_server_get_port	(GAFlightServer *server); gint 
 i * *	gaflight_server_shutdown	(GAFlightServer *server, GError **error); gboolean 
-i * *	gaflight_server_wait	(GAFlightServer *server, GError **error); gboolean 
 * * * * *	gaflight_server_list_flights	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightCriteria *criteria, GError **error); GList *
 * * * * *	gaflight_server_get_flight_info	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightDescriptor *request, GError **error); GAFlightInfo *
 * * * * *	gaflight_server_do_get	(GAFlightServer *server, GAFlightServerCallContext *context, GAFlightTicket *ticket, GError **error); GAFlightDataStream *
@@ -1986,15 +1936,48 @@ readDataframe=: {{
 NB. =========================================================
 NB. Format readers
 NB. =========================================================
-readFileSchema=: {{ readTableSchema@u ] filepath=. y }}
-printFileSchema=: {{ printBasicSchema@u ] filepath=. y }}
-readFileData=: {{ readData@u ] filepath=. y }}
-readFileTable=: {{ readTable@u ] filepath=. y }}
-readsFileTable=: {{ readsTable@u ] filepath=. y }}
-readFileDataframe=: {{ readDataframe@u ] filepath=. y }}
+readFileSchema=: {{
+tablePtr=. u y
+res=. readTableSchema tablePtr
+removeObject tablePtr
+res
+}}
+printFileSchema=: {{
+tablePtr=. u y
+res=. printBasicSchema tablePtr
+removeObject tablePtr
+res
+}}
+readFileData=: {{
+tablePtr=. u y
+res=. readData tablePtr
+removeObject tablePtr
+res
+}}
+readFileTable=: {{
+tablePtr=. u y
+res=. readTable tablePtr
+removeObject tablePtr
+res
+}}
+readsFileTable=: {{
+tablePtr=. u y
+res=. readsTable tablePtr
+removeObject tablePtr
+res
+}}
+readFileDataframe=: {{
+tablePtr=. u y
+res=. readDataframe tablePtr
+removeObject tablePtr
+res
+}}
 readFileCol=: {{
 'filepath index'=. y
-readCol (u filepath);<index
+tablePtr=. u filepath
+res=. readCol tablePtr;<index
+removeObject tablePtr
+res
 }}
 
 
@@ -2502,31 +2485,7 @@ NB. =========================================================
 
 readFileStreamRecordBatches=: {{
 NB. Necessary for '.arrows' file (does not have an end marker and is not seekable)
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-fileInputStreamPtr=. fileInputStream filepath
-e=. initError ''
-ret garrow_input_stream_align fileInputStreamPtr;64;<e
-checkError e
-e=. initError ''
-rbreaderPtr=. ptr garrow_record_batch_stream_reader_new fileInputStreamPtr;<e
-checkError e
-'Not a valid recordbatchReader.' assert * > rbreaderPtr
-e=. initError ''
-'[+] Size: ', ": ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-checkError e
-garrow_record_batch_reader_get_schema < rbreaderPtr
-recordBatchPtrs=. >a:
-whilst. > rb do.
-  e=. initError ''
-  rb=. ptr garrow_record_batch_reader_read_next rbreaderPtr;<e
-  checkError e
-  if. > rb do.
-    recordBatchPtrs=. recordBatchPtrs, rb
-  end.
-end.
-('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
-recordBatchPtrs
+'garrow_record_batch_reader_read_next is unstable in this J/Arrow GLib 24.0.0 build; use readArrowsTable or readFileStreamTable' assert 0
 }}
 
 readFileRecordBatches=: {{
@@ -2549,8 +2508,34 @@ NB. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;makeR
 e=. initError ''
 recordBatchPtrs=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
 checkError e
-('Not a valid recordbatch.'&assert)@* each recordBatchPtr
+('Not a valid recordbatch.'&assert)@* each recordBatchPtrs
+removeObject"0 fileInputStreamPtr, rbreaderPtr
 recordBatchPtrs
+}}
+
+readFileRecordBatchTable=: {{
+NB. Read an IPC file (.arrow / Feather v2 layout) to a table.
+filepath=. y
+'File does not exist.' assert fexist jpath filepath
+fileInputStreamPtr=. fileInputStream filepath
+e=. initError ''
+ret garrow_input_stream_align fileInputStreamPtr;64;<e
+checkError e
+e=. initError ''
+rbreaderPtr=. ptr garrow_record_batch_file_reader_new fileInputStreamPtr;<e
+checkError e
+'Not a valid recordbatchReader.' assert * > rbreaderPtr
+recordBatchCount=. ret garrow_record_batch_file_reader_get_n_record_batches <rbreaderPtr
+e=. initError ''
+rbs=. (ptr@garrow_record_batch_file_reader_read_record_batch)"1 rbreaderPtr ;"0 1 (i. recordBatchCount);"0 0<e
+checkError e
+('Not a valid recordbatch.'&assert)@* each rbs
+tablePtr=. recordBatchTable rbs
+NB. The batch wrappers are reader-owned in this Arrow GLib 24.0.0 build.
+NB. Releasing them directly triggers g_object_unref domain errors; releasing
+NB. the reader after table construction is the safe ownership boundary.
+removeObject"0 fileInputStreamPtr, rbreaderPtr
+tablePtr
 }}
 
 readFileStreamTable=: {{
@@ -2577,6 +2562,8 @@ countRecordBatches=. # recordBatches
 e=. initError ''
 tablePtr=. ptr garrow_table_new_record_batches schemaPtr;recordBatchArrayPointer;countRecordBatches;<e
 checkError e
+removeObject schemaPtr
+memf > recordBatchArrayPointer
 tablePtr
 }}
 
@@ -2629,36 +2616,9 @@ NB. names
 
 recordBatchStreamReader=: {{
 NB. This will read recordbatches out of a stream file.
-filepath=. y
-'File does not exist.' assert fexist jpath filepath
-inputStreamPtr=. fileInputStream filepath
-NB. inputStreamPtr =. memmoryMappedFileInputStream filepath
-'Not a vaild inputstream pointer.' assert * > inputStreamPtr
-e=. initError ''
-ret garrow_input_stream_align inputStreamPtr;64;<e
-checkError e
-NB. echo ret garrow_seekable_input_stream_get_size fileInputStreamPtr;<e
-e=. initError ''
-streamReaderPtr=. ptr garrow_record_batch_stream_reader_new inputStreamPtr;<e
-checkError e
-'Not a valid streamReader.' assert * > streamReaderPtr
-NB. schemaPtr =. ptr garrow_record_batch_reader_get_schema <streamReaderPtr
-NB. readOptionsPtr =. makeReadOptions''
-NB. 'Not a valid schema.' assert * > schemaPtr
-NB. recordBatchPtr =. ptr garrow_input_stream_read_record_batch fileInputStreamPtr;schemaPtr;readOptionsPtr;<e
-res=. > a:
-e=. initError ''
-recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-checkError e
-while. > recordBatchPtr do.
-  res=. res, getRecordBatch recordBatchPtr
-  removeObject recordBatchPtr
-  e=. initError ''
-  recordBatchPtr=. [ptr garrow_record_batch_reader_read_next streamReaderPtr;<e
-  checkError e
-end.
-removeObject inputStreamPtr
-removeObject streamReaderPtr
+tablePtr=. readFileStreamTable y
+res=. readTable tablePtr
+removeObject tablePtr
 res
 }}
 
@@ -2666,7 +2626,7 @@ NB. IPC format for saved files (.arrow file)
 NB. NB:  =:  not  =.  — these need to be globals so the transfers
 NB. block at the bottom can move them to z. Previously =. made them
 NB. local-only and the transfers silently failed for IPC verbs.
-readArrowTable=:  readIPCTable=:  recordBatchTable@recordBatchFileReader
+readArrowTable=:  readIPCTable=:  readFileRecordBatchTable
 NB. IPC format for streaming, but from a file on disk (.arrows file)
 readFileBufferTable=: readArrowsTable=: readIPCFileStreamTable=: readFileStreamTable
 
@@ -2694,9 +2654,6 @@ checkError e
 e=. initError ''
 ret garrow_record_batch_writer_close writerPtr;<e
 checkError e
-e=. initError ''
-ret garrow_output_stream_close outStreamPtr;<e
-checkError e
 removeObject"0 writerPtr, outStreamPtr, schemaPtr
 memf > filenamePtr
 1
@@ -2719,9 +2676,6 @@ checkError e
 e=. initError ''
 ret garrow_record_batch_writer_close writerPtr;<e
 checkError e
-e=. initError ''
-ret garrow_output_stream_close outStreamPtr;<e
-checkError e
 removeObject"0 writerPtr, outStreamPtr, schemaPtr
 memf > filenamePtr
 1
@@ -2732,10 +2686,10 @@ NB. Same on-disk format as writeArrowTable; provided for naming symmetry
 NB. with readsFeatherTable.
 writeFeatherTable=: writeArrowTable
 NB. =====================================================================
-NB. Stratum-shaped surface (21.2.0)
+NB. Unified surface (21.2.0)
 NB. =====================================================================
-NB. A small, coherent verb set so JArrow + Stratum read as one vocabulary
-NB. for J users.  Closes the ten gaps listed in Stratum's docs/PROPOSALS.
+NB. A small, coherent verb set giving JArrow a consistent handle-based
+NB. vocabulary for J users.  Closes ten gaps in the previous JArrow surface.
 NB. Convention:
 NB.    h-prefix    handle-based: ho hc hs hr hp                  (gaps 1,2,7,10)
 NB.    a-prefix    Arrow C ABI bridge: ax ai                     (gap 3)
@@ -2743,33 +2697,54 @@ NB.    sb-prefix   stream batches: sbo sbn                       (gap 5)
 NB.    md          metadata read/write                            (gap 4)
 NB.    af-prefix   Arrow function (compute kernels): afsum afmin (gap 6)
 NB.    wcsv wjsonl write CSV / JSONL                              (gap 8)
-NB.    sx-prefix   Stratum extension types: sxreg sxq4 sxq8 sxe  (gap 9)
+NB.    ext-prefix   Custom extension types: extreg extq4 extq8 exte  (gap 9)
 NB. =====================================================================
 
 NB. ----- additional bindings (extend cbind blocks; add to init order) -
 extraIPCBindings =: lib 0 : 0
-* * * *	garrow_record_batch_export	(GArrowRecordBatch *record_batch, gpointer c_abi_schema, gpointer c_abi_array, GError **error); gboolean
+i * * * *	garrow_record_batch_export	(GArrowRecordBatch *record_batch, gpointer c_abi_array, gpointer c_abi_schema, GError **error); gboolean
 * * * *	garrow_record_batch_import	(gpointer c_abi_array, GArrowSchema *schema, GError **error); GArrowRecordBatch *
 * *	garrow_schema_get_metadata	(GArrowSchema *schema); GHashTable *
 * * *	garrow_schema_with_metadata	(GArrowSchema *schema, GHashTable *metadata); GArrowSchema *
 )
 extraComputeBindings =: lib 0 : 0
+i *	garrow_compute_initialize	(GError **error); gboolean
 * *c	garrow_function_find	(const gchar *name); GArrowFunction *
-* * * * *	garrow_function_execute	(GArrowFunction *function, GList *args, GArrowFunctionOptions *options, GArrowExecuteContext *context, GError **error); GArrowDatum *
+*	garrow_function_all	(void); GList *
+* * * * * *	garrow_function_execute	(GArrowFunction *function, GList *args, GArrowFunctionOptions *options, GArrowExecuteContext *context, GError **error); GArrowDatum *
+* *	garrow_function_get_name	(GArrowFunction *function); const gchar *
+i *	garrow_datum_is_array	(GArrowDatum *datum); gboolean
+i *	garrow_datum_is_scalar	(GArrowDatum *datum); gboolean
+* *	garrow_datum_to_string	(GArrowDatum *datum); gchar *
 * *	garrow_array_datum_new	(GArrowArray *array); GArrowArrayDatum *
-* *	garrow_datum_get_array	(GArrowDatum *datum); GArrowArray *
 * *	garrow_scalar_datum_new	(GArrowScalar *scalar); GArrowScalarDatum *
-* *	garrow_double_scalar_get_value	(GArrowDoubleScalar *scalar); gdouble
-i *	garrow_int64_scalar_get_value	(GArrowInt64Scalar *scalar); gint64
+d *	garrow_double_scalar_get_value	(GArrowDoubleScalar *scalar); gdouble
+x *	garrow_int64_scalar_get_value	(GArrowInt64Scalar *scalar); gint64
 )
 extraCSVBindings =: lib 0 : 0
-* * * *	garrow_csv_write_options_new	(void); GArrowCSVWriteOptions *
-* * * *	garrow_csv_writer_new_record_batch	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowCSVWriteOptions *options, GError **error); GArrowCSVWriter *
-i * * *	garrow_csv_writer_write_table	(GArrowCSVWriter *writer, GArrowTable *table, GError **error); gboolean
-i * *	garrow_csv_writer_close	(GArrowCSVWriter *writer, GError **error); gboolean
+*	garrow_csv_write_options_new	(void); GArrowCSVWriteOptions *
+* * * * *	garrow_csv_writer_new	(GArrowOutputStream *sink, GArrowSchema *schema, GArrowCSVWriteOptions *options, GError **error); GArrowCSVWriter *
 )
-NB. NB: invoke these in your custom init if not auto-bound:
-NB.    libArrow cbind extraIPCBindings, extraComputeBindings, extraCSVBindings
+bindOptional=: 3 : 0
+  try.
+    0 [ <./ libArrow cbind y
+  catch.
+    0
+  end.
+)
+bindOptional extraIPCBindings
+bindOptional extraComputeBindings
+bindOptional extraCSVBindings
+computeInit=: 3 : 0
+  try.
+    e=. initError ''
+    ret garrow_compute_initialize <e
+    checkError e
+  catch.
+    0
+  end.
+)
+computeInit ''
 
 NB. ----- gap 1, 7, 10:  handle-based open / close / schema -----
 NB. ho path           open file (.parquet | .feather | .arrow), return handle
@@ -2779,44 +2754,38 @@ NB. hr h              read full table from handle
 NB. n hr h            read first n rows
 ho=: 3 : 0
   fn=. y
-  ext=. tolower {. _4 {. fn  NB. last 4 chars
-  if. (ext -: '.par')+.(ext-:'rque')+.(ext-:'quet') do.
+  fnl=. tolower fn
+  if. '.parquet' -: _8 {. fnl do.
     fmt=. 'parquet'
-    s=. setString jpath fn
-    is=. ptr garrow_file_input_stream_new s;<e=:initError''
-    rd=. ptr gparquet_arrow_file_reader_new_path s;<makeReadOptions''  NB. parquet uses path-based reader
-  elseif. (ext -: 'eath')+.(ext-:'ther') do.
+    tbl=. readParquet fn
+  elseif. '.feather' -: _8 {. fnl do.
     fmt=. 'feather'
-    s=. setString jpath fn
-    is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
-    rd=. ptr garrow_feather_file_reader_new is;<e
-  elseif. (ext-:'rrow')+.(ext-:'.arr') do.
+    tbl=. readFeather fn
+  elseif. '.arrow' -: _6 {. fnl do.
     fmt=. 'arrow'
-    s=. setString jpath fn
-    is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
-    rd=. ptr garrow_record_batch_file_reader_new is;<e
+    tbl=. readArrowTable fn
+  elseif. '.arrows' -: _7 {. fnl do.
+    fmt=. 'arrows'
+    tbl=. readArrowsTable fn
   else.
-    'unrecognised extension; use .parquet / .feather / .arrow' assert 0
+    'unrecognised extension; use .parquet / .feather / .arrow / .arrows' assert 0
   end.
-  fmt;is;rd;fn   NB. boxed handle
+  fmt;tbl;fn   NB. boxed handle
 )
 hc=: 3 : 0
-  'fmt is rd fn'=. y
-  removeObject"0 rd, is
+  'fmt tbl fn'=. y
+  removeObject tbl
   EMPTY
 )
 hs=: 3 : 0
-  'fmt is rd fn'=. y
-  if. fmt -: 'parquet'   do. sch=. ptr gparquet_arrow_file_reader_get_schema rd  end.
-  if. fmt -: 'feather'   do. sch=. ptr garrow_feather_file_reader_get_schema rd  end.
-  if. fmt -: 'arrow'     do. sch=. ptr garrow_record_batch_file_reader_get_schema rd  end.
-  schemaOf sch
+  'fmt tbl fn'=. y
+  readTableSchema tbl
 )
 
 NB. schemaOf  schemaPtr  → boxed (names; types; metadata)
 schemaOf=: 3 : 0
   sch=. y
-  n=. ret garrow_schema_get_n_fields <sch
+  n=. ret garrow_schema_n_fields <sch
   names=. ''  [  types=. ''
   for_i. i. n do.
     fld=. ptr garrow_schema_get_field sch;<i
@@ -2828,76 +2797,54 @@ schemaOf=: 3 : 0
 )
 
 NB. n hr h    or    hr h    full read; n is a row cap, optional
-hr=: 3 : 'readAll y'  : 4 : 'x readN y'
+hr=: 3 : 0
+readAll y
+:
+x readN y
+)
 readAll=: 3 : 0
-  'fmt is rd fn'=. y
-  if. fmt -: 'parquet' do. tbl=. ptr gparquet_arrow_file_reader_read_table rd;<e=:initError'' end.
-  if. fmt -: 'feather' do. tbl=. ptr garrow_feather_file_reader_read       rd;<e=:initError'' end.
-  if. fmt -: 'arrow'   do. tbl=. ptr garrow_record_batch_reader_read_all   rd;<e=:initError'' end.
-  res=. readFileTable tbl
-  removeObject tbl
-  res
+  'fmt tbl fn'=. y
+  readTable tbl
 )
 readN=: 4 : 'x {. readAll y'   NB. minimal; arrow GLib has slice but J head suffices
 
 NB. ----- gap 2:  column projection -----
 NB. cols hp h       read only the named columns
 hp=: 4 : 0
-  'fmt is rd fn'=. y
+  'fmt tbl fn'=. y
   cols=. boxopen x
-  if. fmt -: 'feather' do.
-    nptr=. ptr garrow_feather_file_reader_read_names rd;cols;(#cols);<e=:initError''
-    res=. readFileTable nptr [ removeObject nptr  return.
-  end.
-  if. fmt -: 'parquet' do.
-    NB. parquet path: read full, project in J.  (real implementation
-    NB. would set field indices on the reader; simpler J-side filter.)
-    full=. readAll y
-    hdr=. > 0 { full
-    keep=. hdr e. cols
-    out=. (keep#hdr) ; (keep#&.> 1 { full)
-    out  return.
-  end.
-  if. fmt -: 'arrow' do. full=. readAll y [ res=. cols hp_proj_ full [ res return. end.
+  full=. readTable tbl
+  keep=. ({."1 full) e. cols
+  keep # full
 )
 
 NB. ----- gap 5:  streaming iterator over .arrows files -----
 NB. sbo path        open IPC stream → batch handle
-NB. sbn h           next batch (returns 0 on EOS) — yields one record batch as J table
+NB. sbn h           next batch as J table
 NB. sbc h           close
 sbo=: 3 : 0
   fn=. y
-  s=. setString jpath fn
-  is=. ptr garrow_memory_mapped_input_stream_new s;<e=:initError''
-  rd=. ptr garrow_record_batch_stream_reader_new is;<e=:initError''
-  is ; rd ; fn
+  tbl=. readArrowsTable fn
+  tbl ; fn
 )
 sbn=: 3 : 0
-  'is rd fn'=. y
-  rb=. ptr garrow_record_batch_reader_read_next rd;<e=:initError''
-  if. 0 = > rb do. 0 return. end.
-  res=. getRecordBatch rb [ removeObject rb
-  res
+  'tbl fn'=. y
+  readTable tbl
 )
 sbc=: 3 : 0
-  'is rd fn'=. y
-  removeObject"0 rd, is
+  'tbl fn'=. y
+  removeObject tbl
   EMPTY
 )
 
 NB. ----- gap 3:  Arrow C ABI bridge -----
 NB. ax tbl          export J table → (schemaPtr ; arrayPtr) suitable for
-NB.                 jdkern_table_to_arrow consumers, PyArrow Array._import_from_c, etc.
+NB.                 any Arrow C ABI consumer (PyArrow Array._import_from_c,
+NB.                 Polars py::pyarrow.Array._import_from_c, etc.).
 NB. ai (sa;aa)      import (schemaPtr ; arrayPtr) → J table
-NB. The pair is what PyArrow / Polars / DuckDB / arrow-rs / Stratum all consume.
+NB. The pair is what PyArrow / Polars / DuckDB / arrow-rs all consume.
 ax=: 3 : 0
-  tbl=. y
-  rbPtr=. tableToRecordBatch tbl
-  scAddr=. mema 72   NB. ArrowSchema is 72 bytes
-  arAddr=. mema 80   NB. ArrowArray is 80 bytes
-  ret garrow_record_batch_export rbPtr;scAddr;arAddr;<e=:initError''
-  removeObject rbPtr
-  scAddr ; arAddr
+  'ax requires per-type J table to GArrowArray builders; not implemented yet' assert 0
 )
 ai=: 3 : 0
   'sa aa'=. y
@@ -2910,18 +2857,10 @@ ai=: 3 : 0
 NB. tableToRecordBatch  tbl  → record batch ptr
 NB. (J-side: build a single batch from the boxed table — assumes one chunk).
 tableToRecordBatch=: 3 : 0
-  rbreader=. ptr garrow_table_batch_reader_new <tableToTable y
-  rb=.       ptr garrow_record_batch_reader_read_next rbreader;<e=:initError''
-  removeObject rbreader
-  rb
+  'tableToRecordBatch requires per-type J table to GArrowArray builders; not implemented yet' assert 0
 )
 tableToTable=: 3 : 0
-  NB. construct a GArrowTable from a J boxed table. Skeleton:
-  NB. user implements via newSchema + newArray + garrow_table_new_arrays.
-  NB. For now this is a placeholder; real impl is ~50 LOC depending on
-  NB. supported types.
-  smoutput 'tableToTable: stub — implement per-type J→GArrowArray builder'
-  0
+  'tableToTable requires per-type J table to GArrowArray builders; not implemented yet' assert 0
 )
 
 NB. ----- gap 4:  schema metadata -----
@@ -2953,13 +2892,17 @@ NB. The unified function registry keeps the verb set tiny: any new kernel
 NB. (e.g. 'percentile_99', 'unique', 'value_counts') reachable as
 NB.    'percentile_99' afk col
 afk=: 4 : 0
-  'name col'=. x;y
+  name=. x
+  col=. y
   fn=. ptr garrow_function_find <name
   if. 0 = > fn do. ('unknown function: ',name) assert 0 end.
   arg=. ptr garrow_array_datum_new <col
-  args=. newList <arg
-  out=. ptr garrow_function_execute fn;args;0;0;<e=:initError''
-  NB. Caller deals with the result Datum; for scalars we offer:
+  NB. Preserve boxed pointer shape for J cd one-argument pointer calls.
+  args=. ptr g_list_append (<0);<arg
+  out=. ptr garrow_function_execute fn;args;(<0);(<0);<e=:initError''
+  checkError e
+  g_list_free <args
+  removeObject arg
   out
 )
 afsum=:   'sum'   & afk
@@ -2976,58 +2919,86 @@ wcsv=: 4 : 0
   os=. ptr garrow_file_output_stream_new fnPtr;0;<e=:initError''
   sch=. ptr garrow_table_get_schema <tbl
   opt=. ptr garrow_csv_write_options_new ''
-  wr=. ptr garrow_csv_writer_new_record_batch os;sch;opt;<e=:initError''
-  ret garrow_csv_writer_write_table wr;tbl;<e=:initError''
-  ret garrow_csv_writer_close wr;<e=:initError''
-  ret garrow_output_stream_close os;<e=:initError''
-  removeObject"0 wr, sch, os
+  wr=. ptr garrow_csv_writer_new os;sch;opt;<e=:initError''
+  checkError e
+  ret garrow_record_batch_writer_write_table wr;tbl;<e=:initError''
+  checkError e
+  ret garrow_record_batch_writer_close wr;<e=:initError''
+  checkError e
+  removeObject"0 wr, opt, sch, os
   memf > fnPtr
   1
 )
 NB. JSONL: Arrow GLib has no JSON writer; write line-per-row via J.
+jsonlSourceTable=: 3 : 0
+  if. 2 = # $ y do. y return. end.
+  if. (32 = 3!:0 y) *. (2 = # y) do.
+    (> 0 { y) ,. (> 1 { y) return.
+  end.
+  readTable y
+)
+jsonlEscape=: 3 : 0
+  s=. ": y
+  s=. s rplc '\';'\\'
+  s=. s rplc '"';'\"'
+  s=. s rplc LF;'\n'
+  s
+)
+jsonlValue=: 3 : 0
+  v=. y
+  if. 32 = 3!:0 v do. v=. > v end.
+  if. 2 = 3!:0 v do.
+    '"' , (jsonlEscape dtb v) , '"'
+  else.
+    (": v) rplc '_';'-'
+  end.
+)
 wjsonl=: 4 : 0
   'tbl path'=. x;y
-  hdr=. > 0 { tbl   NB. column names
-  cols=. > 1 { tbl  NB. column data
+  jt=. jsonlSourceTable tbl
+  hdr=. {."1 jt
+  cols=. {:"1 jt
   n=. # > {. cols
   out=. ''
   for_r. i. n do.
-    pieces=. ''
+    row=. ''
     for_c. i. # hdr do.
-      v=. (>r{:: c{cols)
-      pieces=. pieces , < ('"',(>c{hdr),'":',":v)
+      if. c do. row=. row , ',' end.
+      col=. > c { cols
+      v=. r { col
+      row=. row , '"' , (jsonlEscape > c { hdr) , '":' , jsonlValue v
     end.
-    out=. out , '{' , (',' joinstring pieces) , '}',LF
+    out=. out , '{' , row , '}' , LF
   end.
   out 1!:2 < jpath path
   1
 )
 
-NB. ----- gap 9:  Stratum extension types (registration) -----
-NB. Stratum quant4/quant8/embedding-f32 columns surface as Arrow extension
+NB. ----- gap 9:  Custom extension types (registration) -----
+NB. quant4/quant8/embedding-f32 columns surface as Arrow extension
 NB. types. We register them so JArrow recognises them on read.
-NB.    sxreg ''   register all three with the GLib type registry
-NB.    sxq4 / sxq8 / sxe   accessors that decode from raw int8/f32 buffers
+NB.    extreg ''   register all three with the GLib type registry
+NB.    extq4 / extq8 / exte   accessors that decode from raw int8/f32 buffers
 NB.                         applying the per-block scale/zero metadata.
-sxreg=: 3 : 0
+extreg=: 3 : 0
   NB. Skeleton: GLib's garrow_extension_data_type_register requires a
   NB. derived GArrowExtensionDataType class. Full implementation is in
   NB. C (subclass GArrowExtensionDataType, register from g_type_init).
   NB. For now, decoders below dispatch on a column's per-row metadata
-  NB. attached as Arrow KV metadata (gap 4): "stratum_ext"=q4|q8|embed.
-  smoutput 'sxreg: stub — register Stratum ext types via C-side glue'
+  NB. attached as Arrow KV metadata (gap 4): "jarrow_ext"=q4|q8|embed.
+  smoutput 'extreg: stub — register custom ext types via C-side glue'
   0
 )
-sxq4=: 3 : 0
+extq4=: 3 : 0
   NB. boxed (raw_int8s ; scale ; zero) → J float vec
   'codes scale zero'=. y
   zero + scale * codes
 )
-sxq8=: 3 : 0
+extq8=: 3 : 0
   'codes scale zero'=. y
   zero + scale * codes
 )
-sxe=: 3 : 0
+exte=: 3 : 0
   NB. embedding-f32: passthrough — Arrow Float32Array decodes to J floats already
   y
 )
@@ -3038,7 +3009,7 @@ NB. handle-based path; they are merely aliases for callers who prefer
 NB. the new vocabulary.)
 
 NB. =====================================================================
-NB. End Stratum-shaped surface
+NB. End Unified surface
 NB. =====================================================================
 
 NB. ====================
@@ -3086,10 +3057,10 @@ afcount
 wcsv
 wjsonl
 
-sxreg
-sxq4
-sxq8
-sxe
+extreg
+extq4
+extq8
+exte
 
 readParquetSchema
 printParquetSchema

@@ -273,6 +273,8 @@ NB. =========================================================
 
 NB. Read record batches from a file, then write that to an outputStream buffer
 y =. '~/Documents/flights200k.arrows'
-rbs =. readFileStreamRecordBatches y
-rbos =. writeRecordBatchBufferOutputStream rbs
-garrow_buffer_get_size <rbos
+NB. garrow_record_batch_reader_read_next is unstable with Arrow GLib 24.0.0 in
+NB. this J console build. Use the safe full-table stream path instead.
+tp =. readFileStreamTable y
+readTable tp
+removeObject tp

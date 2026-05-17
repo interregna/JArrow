@@ -37,8 +37,11 @@ NB. getPropertyBoolean  tabConcatOptPtr;'unify-schemas'
 NB. getPropertyBoolean  tabConcatOptPtr;'promote-nullability'
 
 NB. =========================================================
-NB. csvlist =. filesbydate '/Volumes/flotta/scapa/data/JPM/csv/iGd*.csv'
-csvlist =. 1 dir '/Users/johnference/Downloads/csv/iGd*.csv'
+NB. Local exploration: point JARROW_CSV_DIR at a folder of CSVs to test
+NB. parallel readCSV against; falls back to /tmp/csv when unset.
+JARROW_CSV_DIR =. 2!:5 'JARROW_CSV_DIR'
+if. 0 = # JARROW_CSV_DIR do. JARROW_CSV_DIR =. '/tmp/csv' end.
+csvlist =. 1 dir JARROW_CSV_DIR, '/iGd*.csv'
 
 
 6!:2 'tblPrt =. ; (readCSV_parrow_@:>)"0 t. (0) csvlist' NB. Parallel read individual csvs
